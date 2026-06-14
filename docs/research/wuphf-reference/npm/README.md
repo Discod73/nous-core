@@ -5,23 +5,23 @@
 A collaborative office for AI employees with a shared brain, running your work 24x7.
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/nex-crm/wuphf/main/assets/hero.png" alt="WUPHF onboarding — Your AI team, visible and working." width="720" />
+  <img src="https://raw.githubusercontent.com/nex-crm/wuphf/main/assets/hero.png" alt="WUPHF onboarding , Your AI team, visible and working." width="720" />
 </p>
 
 [![npm](https://img.shields.io/npm/v/wuphf?color=A87B4F)](https://www.npmjs.com/package/wuphf)
 [![Discord](https://img.shields.io/badge/Discord-Join%20Community-5865F2?logo=discord&logoColor=white)](https://discord.gg/gjSySC3PzV)
 [![License: MIT](https://img.shields.io/badge/License-MIT-A87B4F)](https://github.com/nex-crm/wuphf/blob/main/LICENSE)
 
-One command. One shared office. CEO, PM, engineers, designer, CMO, CRO — all visible, arguing, claiming tasks, and shipping work instead of disappearing behind an API. Unlike the original WUPHF.com, this one works.
+One command. One shared office. CEO, PM, engineers, designer, CMO, CRO , all visible, arguing, claiming tasks, and shipping work instead of disappearing behind an API. Unlike the original WUPHF.com, this one works.
 
 > *"WUPHF. When you type it in, it contacts someone via phone, text, email, IM, Facebook, Twitter, and then... WUPHF."*
-> — Ryan Howard, Season 7
+> , Ryan Howard, Season 7
 
 [▶ 30-second teaser and full walkthrough on GitHub](https://github.com/nex-crm/wuphf#readme)
 
 ## Get Started
 
-**Prerequisites:** one agent CLI — [Claude Code](https://docs.anthropic.com/en/docs/claude-code) by default, or [Codex CLI](https://github.com/openai/codex) when you pass `--provider codex`. [tmux](https://github.com/tmux/tmux/wiki/Installing) is only required for `--tui` mode.
+**Prerequisites:** one agent CLI , [Claude Code](https://docs.anthropic.com/en/docs/claude-code) by default, or [Codex CLI](https://github.com/openai/codex) when you pass `--provider codex`. [tmux](https://github.com/tmux/tmux/wiki/Installing) is only required for `--tui` mode.
 
 ```bash
 npx wuphf
@@ -50,7 +50,7 @@ Supported platforms: macOS and Linux on x64 or arm64. The native binary is lazy-
 | `--pack <name>` | Pick an agent pack (`starter`, `founding-team`, `coding-team`, `lead-gen-agency`, `revops`) |
 | `--opus-ceo` | Upgrade CEO from Sonnet to Opus |
 | `--provider <name>` | LLM provider override (`claude-code`, `codex`) |
-| `--collab` | Start in collaborative mode — all agents see all messages (this is the default) |
+| `--collab` | Start in collaborative mode , all agents see all messages (this is the default) |
 | `--unsafe` | Bypass agent permission checks (local dev only) |
 | `--web-port <n>` | Change the web UI port (default 7891) |
 
@@ -97,15 +97,15 @@ If it feels like a hidden agent loop, something is wrong. If it feels like The O
 
 ## External Actions
 
-Two action providers ship by default — pick whichever fits your style.
+Two action providers ship by default , pick whichever fits your style.
 
-### One CLI — local-first (default)
+### One CLI , local-first (default)
 
 ```
 /config set action_provider one
 ```
 
-### Composio — cloud-hosted
+### Composio , cloud-hosted
 
 ```
 /config set composio_api_key <key>
@@ -147,7 +147,7 @@ From [*The Office*](https://theoffice.fandom.com/wiki/WUPHF.com_(Website)), Seas
 The joke still fits. Except this WUPHF ships.
 
 > *"I invested ten thousand dollars in WUPHF. Just need one good quarter."*
-> — Michael Scott
+> , Michael Scott
 
 ## Links
 
@@ -172,7 +172,7 @@ WUPHF_BINARY=./wuphf npx wuphf --version
 checks `registry.npmjs.org` once per 24h (cached at
 `~/.wuphf/cache/latest-version.json`). If a newer release is available it
 downloads the matching binary into `~/.wuphf/cache/binaries/` and runs it
-instead — same SHA256 verification as `postinstall`. A one-line hint points
+instead , same SHA256 verification as `postinstall`. A one-line hint points
 you at `npm install -g wuphf@latest` for a permanent upgrade.
 
 Set `WUPHF_SKIP_VERSION_CHECK=1` to disable the check entirely.

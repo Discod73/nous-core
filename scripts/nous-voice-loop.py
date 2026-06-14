@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import os, subprocess, tempfile, requests
 
-JETSON_IP = "192.168.1.100"
+JETSON_IP = os.environ.get("NOUS_JETSON_IP", "localhost")
 WHISPER_URL = f"http://{JETSON_IP}:8080/inference"
 OLLAMA_URL = f"http://{JETSON_IP}:11434/api/generate"
 PROXY_URL = "http://localhost:8090"

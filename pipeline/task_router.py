@@ -4,6 +4,7 @@ NOUS Task Router — Circuit Breaker pattern
 Ruter inference-opgaver til Jetson med fallback ved OOM/fejl
 """
 
+import os
 import time
 import requests
 from enum import Enum
@@ -15,7 +16,7 @@ class CircuitState(Enum):
 
 class TaskRouter:
     def __init__(self):
-        self.ollama_url = "http://192.168.1.100:11434"
+        self.ollama_url = os.environ.get("NOUS_OLLAMA_URL", "http://localhost:11434")
         self.state = CircuitState.CLOSED
         self.failure_count = 0
         self.failure_threshold = 3      # Åbn efter 3 fejl
@@ -83,7 +84,7 @@ class TaskRouter:
             "fallback": True,
             "reason": reason,
             "response": "Jeg kan desværre ikke behandle din forespørgsel lige nu. Prøv igen om et øjeblik.",
-            "suggestion": "Hvis dette fortsætter, tjek at Jetson-enheden (192.168.1.100) kører korrekt."
+            "suggestion": "Hvis dette fortsætter, tjek at inference-enheden (NOUS_OLLAMA_URL) kører korrekt."
         }
 
 # Global instance

@@ -1,0 +1,28 @@
+{
+  "wings": [
+    {
+      "name": "household",
+      "scope": "PRIVATE",
+      "collection": "household_private",
+      "importance": "normal"
+    },
+    {
+      "name": "legal",
+      "scope": "PRIVATE",
+      "collection": "legal_private",
+      "importance": "high"
+    },
+    {
+      "name": "personal",
+      "scope": "PRIVATE",
+      "collection": "personal_private",
+      "importance": "normal"
+    },
+    {
+      "name": "work",
+      "scope": "SWARM",
+      "collection": "work_swarm",
+      "importance": "normal"
+    }
+  ]
+}

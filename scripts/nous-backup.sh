@@ -3,16 +3,14 @@ set -euo pipefail
 
 DATE=$(date +%Y%m%d_%H%M%S)
 BACKUP_DIR="/mnt/nous-data/backups"
-GPG_RECIPIENT="846560D7309D951AA772701C103233A26BD72A3B"
+GPG_RECIPIENT="${NOUS_GPG_KEY_ID:?Sæt NOUS_GPG_KEY_ID i .env}"
 mkdir -p "$BACKUP_DIR"
 
-# Qdrant snapshot
-curl -s -X POST "http://localhost:6333/snapshots" \
-  -H "Content-Type: application/json" \
-  -d "{\"location\": \"${BACKUP_DIR}/qdrant-${DATE}.snapshot\"}"
+# Qdrant: tar storage-mappen direkte (bind-mount fra Docker)
+tar czf "${BACKUP_DIR}/qdrant-${DATE}.tar.gz" -C /mnt/nous-data/qdrant storage
 
 # Kuzu backup
-cp -r /mnt/nous-data/kuzu "${BACKUP_DIR}/kuzu-${DATE}.db"
+cp -r /mnt/nous-data/kuzu.db "${BACKUP_DIR}/kuzu-${DATE}.db"
 
 # Krypter
 for f in "${BACKUP_DIR}"/*-"${DATE}".*; do

@@ -8,13 +8,13 @@ The WUPHF mark is a pixel-art "W" set inside an amber sign-frame. It echoes the 
 
 It is built from a 16-unit grid with `shape-rendering="crispEdges"`. Every size is a pixel-aligned integer multiple of that grid, so no anti-aliased blur ever shows up in exports. Zero border-radius. Zero smoothing. Zero gradients.
 
-### Primary — `wuphf-logo.svg`
+### Primary , `wuphf-logo.svg`
 
 ![Primary logo](png/wuphf-logo-128.png)
 
 Amber frame, dark interior, amber W. Use this everywhere by default: browser tabs, app icons, social avatars, READMEs, docs, merch, GitHub profile, business cards. Self-contained, so it works on any background.
 
-### Inverted — `wuphf-logo-inverted.svg`
+### Inverted , `wuphf-logo-inverted.svg`
 
 ![Inverted logo](png/wuphf-logo-inverted-128.png)
 
@@ -39,8 +39,8 @@ Source of truth is [DESIGN.md](../DESIGN.md). Never substitute a different amber
 
 ```
 brand/
-  wuphf-logo.svg              — primary, scales to any size
-  wuphf-logo-inverted.svg     — alternate, scales to any size
+  wuphf-logo.svg              , primary, scales to any size
+  wuphf-logo-inverted.svg     , alternate, scales to any size
   png/
     wuphf-logo-16.png          → tab favicon
     wuphf-logo-32.png          → standard favicon
@@ -62,7 +62,7 @@ Leave at least 1 logo-unit of empty space on every side. At 128px that is 8px of
 
 - Use the SVG whenever possible. It stays crisp at every size.
 - Keep the amber and the dark exactly as defined.
-- Let the logo sit on any solid background — it was designed to be self-contained.
+- Let the logo sit on any solid background , it was designed to be self-contained.
 
 ## Do Not
 

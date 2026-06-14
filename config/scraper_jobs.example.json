@@ -1,0 +1,13 @@
+[
+  {
+    "id": "jura_abc123",
+    "wing": "jura",
+    "queries": [
+      "Relevant lovgivning og afgørelser for dit emne"
+    ],
+    "seed_urls": [],
+    "danish_only": true,
+    "schedule": "weekly_sunday_0100",
+    "active": false
+  }
+]

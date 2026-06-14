@@ -17,7 +17,8 @@ app = FastAPI(title="NOUS Internet Proxy", version="1.0")
 # Config
 SEARXNG_URL = os.environ.get("SEARXNG_URL", "http://localhost:8080")
 DEFAULT_TIMEZONE = os.environ.get("TZ", "Europe/Copenhagen")
-ALLOWED_CLIENTS = {"192.168.1.100"}  # Kun Jetson må kalde
+_allowed_raw = os.environ.get("NOUS_ALLOWED_CLIENTS", "")
+ALLOWED_CLIENTS = set(filter(None, _allowed_raw.split(","))) if _allowed_raw else set()
 HTTP_TIMEOUT = 10.0
 MAX_FETCH_SIZE = 500_000  # 500KB max fra web-fetch
 
@@ -34,7 +35,7 @@ def get_time(tz: str = DEFAULT_TIMEZONE):
         now = datetime.now(ZoneInfo(tz))
         return {
             "iso": now.isoformat(),
-            "human_da": now.strftime("%A den %d. %B %Y kl %H:%M"),
+            "human_da": now.strftime("%A den %d. %B %Y kl %H %M"),
             "timezone": tz,
             "weekday": now.strftime("%A"),
         }

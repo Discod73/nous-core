@@ -1,10 +1,10 @@
-# WIKI-SCHEMA.md — Contract for WUPHF's team wiki
+# WIKI-SCHEMA.md , Contract for WUPHF's team wiki
 
 This file is the source of truth for **how the WUPHF wiki is organized and maintained**. Every in-broker LLM prompt that touches wiki state (extract, synthesize, query, lint) references this document as its opening directive. Every human (or agent) editing wiki files by hand reads this document first. Every Go service that writes to or indexes the wiki follows the contract below.
 
 If a contract decision below conflicts with code, the contract wins. Fix the code.
 
-This is Karpathy's "schema layer" for WUPHF — the document that makes the LLM a disciplined wiki maintainer rather than a generic chatbot. See `https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f` for the pattern this implements.
+This is Karpathy's "schema layer" for WUPHF , the document that makes the LLM a disciplined wiki maintainer rather than a generic chatbot. See `https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f` for the pattern this implements.
 
 ---
 
@@ -16,10 +16,10 @@ The wiki is NOT a chat log, NOT a raw artifact dump, NOT a vector database. It i
 
 **Guiding principles:**
 
-1. **Markdown is the source of truth.** Every fact, brief, insight, playbook, and lint finding lives in a markdown file, version-controlled by git. Everything else — SQLite indexes, bleve search, vector stores — is a derived cache, rebuildable from markdown on demand.
+1. **Markdown is the source of truth.** Every fact, brief, insight, playbook, and lint finding lives in a markdown file, version-controlled by git. Everything else , SQLite indexes, bleve search, vector stores , is a derived cache, rebuildable from markdown on demand.
 2. **Substrate guarantee.** `rm -rf .wuphf/index/` → restart broker → the wiki still works. `git clone` of the wiki repo on a fresh machine → functional wiki without any WUPHF process running. Manual markdown edits in vim → picked up by the next index reconcile pass.
 3. **Single writer, many readers.** All writes go through the broker's `WikiWorker` queue. Agents, HTTP handlers, and CLI commands all enqueue write requests; the worker serializes commits. This preserves git-log attribution, prevents conflicting writes, and gives us the single-writer invariant that makes fact IDs deterministic.
-4. **Per-human git identity.** Every commit is authored by a named identity — either a human (e.g. `nazz`) or the synthetic `archivist` (used for automated extraction, synthesis, and lint). Agent-originated commits are attributed to the human who owns that agent. `git log` on any file shows exactly who did what.
+4. **Per-human git identity.** Every commit is authored by a named identity , either a human (e.g. `nazz`) or the synthetic `archivist` (used for automated extraction, synthesis, and lint). Agent-originated commits are attributed to the human who owns that agent. `git log` on any file shows exactly who did what.
 5. **Compounding over curation.** Agents contribute facts by default, not by request. The auto-loop closes without human ritual: agent talks → artifact committed → entities extracted → facts recorded → brief synthesized → next agent queries → reinforces or contradicts. Human intervention is rare and always additive.
 
 ---
@@ -44,12 +44,12 @@ Read the relevant section when:
 ## 3. Three-layer architecture
 
 ```
-Layer 1 — Raw sources (immutable)
+Layer 1 , Raw sources (immutable)
   wiki/artifacts/{source}/{sha}.md       # agent messages, meeting transcripts,
                                          # email threads, CLI notes
   These files are the factual record. The LLM reads them but NEVER modifies them.
 
-Layer 2 — The wiki (LLM-owned markdown)
+Layer 2 , The wiki (LLM-owned markdown)
   team/{kind}/{slug}.md                  # entity briefs (person, company, project)
   wiki/facts/{kind}/{slug}.jsonl         # append-only fact log per entity
   wiki/insights/entity/{slug}.jsonl      # append-only typed insight log per entity
@@ -66,7 +66,7 @@ Layer 2 — The wiki (LLM-owned markdown)
   The LLM creates, updates, and cross-references these files. Humans may edit
   them directly; the next reconcile pass will pick up the edits.
 
-Layer 3 — The schema (you are reading it)
+Layer 3 , The schema (you are reading it)
   docs/specs/WIKI-SCHEMA.md                    # this file
   docs/CLAUDE.md or AGENTS.md            # the agent operating instructions that
                                          # reference this schema
@@ -78,7 +78,7 @@ Layer 3 — The schema (you are reading it)
 
 YAML frontmatter fields used across wiki files. Every field has a default; legacy entries missing a field parse with the default. No migration step required.
 
-### 4.1 Entity brief — `team/{kind}/{slug}.md`
+### 4.1 Entity brief , `team/{kind}/{slug}.md`
 
 ```yaml
 ---
@@ -102,9 +102,9 @@ created_by: nazz                      # the human who caused this entity to exis
 ---
 ```
 
-### 4.2 Fact — line in `wiki/facts/{kind}/{slug}.jsonl`
+### 4.2 Fact , line in `wiki/facts/{kind}/{slug}.jsonl`
 
-One JSON object per line. `id` is deterministic — see Section 7.
+One JSON object per line. `id` is deterministic , see Section 7.
 
 ```json
 {
@@ -136,13 +136,13 @@ One JSON object per line. `id` is deterministic — see Section 7.
 
 | field | type | default | notes |
 |---|---|---|---|
-| `id` | string(16) | required | sha256 hash — see Section 7 |
+| `id` | string(16) | required | sha256 hash , see Section 7 |
 | `entity_slug` | string | required | canonical slug of the entity |
 | `type` | enum | `"observation"` | `status` / `observation` / `relationship` / `background` |
 | `triplet` | object | `null` | s/p/o; null for untyped facts |
-| `triplet.subject` | string | — | slug or literal |
-| `triplet.predicate` | string | — | normalized lowercase, underscores |
-| `triplet.object` | string | — | slug, literal, or `entity:subslug` |
+| `triplet.subject` | string | , | slug or literal |
+| `triplet.predicate` | string | , | normalized lowercase, underscores |
+| `triplet.object` | string | , | slug, literal, or `entity:subslug` |
 | `text` | string | required | human-readable fact statement |
 | `confidence` | float | `1.0` | 0.0-1.0, source-driven |
 | `valid_from` | ISO-8601 | `created_at` | when the fact became true |
@@ -157,7 +157,7 @@ One JSON object per line. `id` is deterministic — see Section 7.
 | `created_by` | string | required | git identity (agent-mapped-to-human OR `archivist`) |
 | `reinforced_at` | ISO-8601 \| null | `null` | last time a merge-by-dedup hit this fact |
 
-### 4.4 Insight — line in `wiki/insights/entity/{slug}.jsonl`
+### 4.4 Insight , line in `wiki/insights/entity/{slug}.jsonl`
 
 Insights are facts that rise above the noise: status changes, decisions, patterns worth filing as first-class knowledge.
 
@@ -177,14 +177,14 @@ Insights are facts that rise above the noise: status changes, decisions, pattern
 
 `source` = `"synthesis"` | `"save_as_insight"` | `"lint"` | `"human"`.
 
-### 4.5 Playbook — `wiki/playbooks/{slug}.md`
+### 4.5 Playbook , `wiki/playbooks/{slug}.md`
 
 ```yaml
 ---
 kind: playbook
 slug: enterprise-pricing-objections
 author: nazz
-inputs:                                # optional — what the playbook needs
+inputs:                                # optional , what the playbook needs
   entity_kinds: [company, person]
   signal_predicates: [pricing_concern, budget_constraint]
 execution_count: 7
@@ -194,7 +194,7 @@ last_executed: 2026-04-20T10:15:00Z
 
 Body: the playbook instructions (what to do when pattern matches). After synthesis, a `## What we've learned` section is appended with execution-log insights (v1.3 pattern, extended in Slice 2 to also include insight-cluster patterns as `## Patterns across entities`).
 
-### 4.6 Lint report — `wiki/.lint/report-YYYY-MM-DD.md`
+### 4.6 Lint report , `wiki/.lint/report-YYYY-MM-DD.md`
 
 Standard wiki article shape. Sections fixed in order: Contradictions, Orphans, Stale claims, Missing cross-refs, Dedup review, Sources.
 
@@ -230,8 +230,8 @@ Standard wiki article shape. Sections fixed in order: Contradictions, Orphans, S
 - Confidence reflects extraction certainty, not content truth.
 
 **NOT facts:**
-- Opinions ("Sarah is a great salesperson") — unless expressed as a direct quote with source.
-- Aggregations ("Sarah has closed 3 deals this month") — derive at query time from fact list.
+- Opinions ("Sarah is a great salesperson") , unless expressed as a direct quote with source.
+- Aggregations ("Sarah has closed 3 deals this month") , derive at query time from fact list.
 - Speculation, hypotheses, or agent inference not grounded in an artifact.
 
 ### 5.4 When to promote a fact to an insight
@@ -270,7 +270,7 @@ When two entities co-occur as subject+object in ≥3 facts, lint's "missing cros
 
 ---
 
-## 7. Canonical slug rules — the ID stability contract
+## 7. Canonical slug rules , the ID stability contract
 
 This is the load-bearing correctness invariant of the wiki. Getting this wrong means fact IDs drift, supersedes break, and the wiki silently diverges from reality.
 
@@ -311,13 +311,13 @@ fact_id = sha256(artifact_sha + "/" + sentence_offset + "/" + norm(subject) + "/
 
 `rm -rf .wuphf/index/` → restart broker → boot reconcile runs → SQLite + bleve re-indexed from markdown. The result must be **logically identical**, not byte-identical. Logical identity means: `SELECT * FROM facts ORDER BY id` produces the same canonical hash pre- and post-rebuild.
 
-**Every code path that introduces a new fact must append it to `wiki/facts/{kind}/{slug}.jsonl` via `WikiWorker.EnqueueFactLogAppend` under the `archivist` identity.** The extraction loop, human `save_as_insight`, and any future synthesis-time fact mint all honor this contract — markdown is the source of truth, and a fact that lives only in the derived cache violates the rebuild guarantee.
+**Every code path that introduces a new fact must append it to `wiki/facts/{kind}/{slug}.jsonl` via `WikiWorker.EnqueueFactLogAppend` under the `archivist` identity.** The extraction loop, human `save_as_insight`, and any future synthesis-time fact mint all honor this contract , markdown is the source of truth, and a fact that lives only in the derived cache violates the rebuild guarantee.
 
 Reinforcement is a read-side concept: when the same `fact_id` is re-extracted, only `reinforced_at` advances in the index. No new JSONL line is appended, and the on-disk fact log remains canonical.
 
-**`ReinforcedAt` hash policy.** `CanonicalHashFacts` EXCLUDES `reinforced_at` from its input, so two extraction runs on the same artifact (the second one purely bumping `reinforced_at`) produce an identical hash. That makes `CanonicalHashFacts` the load-bearing rebuild-invariance check. `CanonicalHashAll` INCLUDES `reinforced_at` (alongside entities, edges, and redirects) and so advances whenever any layer — reinforcement included — changes. Use `CanonicalHashAll` for end-to-end drift detection and `CanonicalHashFacts` for the rebuild contract test.
+**`ReinforcedAt` hash policy.** `CanonicalHashFacts` EXCLUDES `reinforced_at` from its input, so two extraction runs on the same artifact (the second one purely bumping `reinforced_at`) produce an identical hash. That makes `CanonicalHashFacts` the load-bearing rebuild-invariance check. `CanonicalHashAll` INCLUDES `reinforced_at` (alongside entities, edges, and redirects) and so advances whenever any layer , reinforcement included , changes. Use `CanonicalHashAll` for end-to-end drift detection and `CanonicalHashFacts` for the rebuild contract test.
 
-**Append-failure closure.** When `EnqueueFactLogAppend` fails (queue saturated, local I/O, git error), the failure is routed to the DLQ under the dedicated `fact_log_persist` category — NOT `provider_timeout`. The replay path retries the APPEND only, reading the current fact log and appending any missing `fact_id`s. Re-running extraction would treat the fact as reinforcement per §7.3 and never write the missing JSONL line, permanently breaking §7.4 for that fact. See §11.13 for category details.
+**Append-failure closure.** When `EnqueueFactLogAppend` fails (queue saturated, local I/O, git error), the failure is routed to the DLQ under the dedicated `fact_log_persist` category , NOT `provider_timeout`. The replay path retries the APPEND only, reading the current fact log and appending any missing `fact_id`s. Re-running extraction would treat the fact as reinforcement per §7.3 and never write the missing JSONL line, permanently breaking §7.4 for that fact. See §11.13 for category details.
 
 ---
 
@@ -353,11 +353,11 @@ Daily cron at 09:00 local; manually triggerable via `/lint` slash command or `ru
 
 ### 9.1 What lint checks
 
-1. **Contradictions** — critical. For each entity, find facts with same `(subject, predicate)` but conflicting `object`. Run `lint_contradictions.j2` LLM-judge to confirm a real semantic conflict vs benign disagreement. Flag with `contradicts_with` frontmatter on both facts.
-2. **Orphans** — warning. Briefs with no inbound graph edges AND no fact activity in 90 days.
-3. **Stale claims** — warning. Facts with `staleness > 30` that have never been reinforced.
-4. **Missing cross-refs** — info. Entity pairs co-occurring as subject/object in ≥3 facts but lacking a typed graph edge.
-5. **Dedup false-positives** — info. Facts merged in the last 7 days with Jaro-Winkler scores in the 0.9-0.93 range (borderline, worth a human glance).
+1. **Contradictions** , critical. For each entity, find facts with same `(subject, predicate)` but conflicting `object`. Run `lint_contradictions.j2` LLM-judge to confirm a real semantic conflict vs benign disagreement. Flag with `contradicts_with` frontmatter on both facts.
+2. **Orphans** , warning. Briefs with no inbound graph edges AND no fact activity in 90 days.
+3. **Stale claims** , warning. Facts with `staleness > 30` that have never been reinforced.
+4. **Missing cross-refs** , info. Entity pairs co-occurring as subject/object in ≥3 facts but lacking a typed graph edge.
+5. **Dedup false-positives** , info. Facts merged in the last 7 days with Jaro-Winkler scores in the 0.9-0.93 range (borderline, worth a human glance).
 
 ### 9.2 What "Resolve contradiction" does
 
@@ -393,7 +393,7 @@ All in-broker LLM prompts touching wiki state begin with: *"Read docs/specs/WIKI
 - Confidence reflects extraction certainty, not content truth.
 - Never invent an email address. If the artifact doesn't name the email, leave it blank.
 - Never invent a relationship. Only extract what the artifact text supports.
-- If a speaker name appears in a transcript but the artifact doesn't give their email/domain, emit an entity anyway with confidence 0.8 and `signals.person_name` only — ghost entity handling.
+- If a speaker name appears in a transcript but the artifact doesn't give their email/domain, emit an entity anyway with confidence 0.8 and `signals.person_name` only , ghost entity handling.
 
 ### 10.2 Synthesis (`synthesis_v2.tmpl`)
 
@@ -404,8 +404,8 @@ All in-broker LLM prompts touching wiki state begin with: *"Read docs/specs/WIKI
 - Preserve existing body structure (sections, order) unless the new facts demand a restructure.
 - Mark contradictions inline with italic **Contradiction:** callouts (they'll be upgraded to hatnotes by the renderer).
 - Wikilink every entity mention on first occurrence: `[[people/sarah-jones]]`.
-- Never write a `## Related` section — that block is managed deterministically from the graph edges by the synthesizer.
-- Never write a `## Sources` section — managed by the renderer from git history.
+- Never write a `## Related` section , that block is managed deterministically from the graph edges by the synthesizer.
+- Never write a `## Sources` section , managed by the renderer from git history.
 
 ### 10.3 Query (`answer_query.tmpl`)
 
@@ -423,13 +423,13 @@ All in-broker LLM prompts touching wiki state begin with: *"Read docs/specs/WIKI
 **Goal:** given a cluster of facts sharing `(subject, predicate)`, determine if there is a real semantic conflict.
 
 **Rules the prompt must enforce:**
-- Distinguish real contradictions ("Sarah reports to Michael" vs "Sarah reports to David") from benign disagreements ("Sarah works in sales" vs "Sarah works in enterprise sales" — not a contradiction, just different specificities).
+- Distinguish real contradictions ("Sarah reports to Michael" vs "Sarah reports to David") from benign disagreements ("Sarah works in sales" vs "Sarah works in enterprise sales" , not a contradiction, just different specificities).
 - Consider temporal validity: if one fact's `valid_until` has passed, it's not a contradiction with a current fact.
 - Output `{contradicts: true|false, reason: "..."}`. No freeform prose.
 
 ---
 
-## 11. Anti-patterns — what NOT to do
+## 11. Anti-patterns , what NOT to do
 
 Every instance of the below is wrong and must be corrected immediately.
 
@@ -448,7 +448,7 @@ Every instance of the below is wrong and must be corrected immediately.
 
 ### §11.13 DLQ semantics
 
-The DLQ (`wiki/.dlq/extractions.jsonl`) holds extraction failures that are eligible for replay. Files are **append-only on disk** — never rewritten. Successful replays and permanent promotions are recorded as tombstone rows.
+The DLQ (`wiki/.dlq/extractions.jsonl`) holds extraction failures that are eligible for replay. Files are **append-only on disk** , never rewritten. Successful replays and permanent promotions are recorded as tombstone rows.
 
 #### Per-line shape
 
@@ -473,7 +473,7 @@ The DLQ (`wiki/.dlq/extractions.jsonl`) holds extraction failures that are eligi
 }
 ```
 
-`fact_log_append` is populated only for `error_category = "fact_log_persist"`. Carries the exact state needed for the append-replay path to reconstruct the `AppendFactLog` call without re-running extraction — see the §7.4 closure guarantee below.
+`fact_log_append` is populated only for `error_category = "fact_log_persist"`. Carries the exact state needed for the append-replay path to reconstruct the `AppendFactLog` call without re-running extraction , see the §7.4 closure guarantee below.
 
 #### Tombstone rows
 
@@ -492,7 +492,7 @@ and a full DLQ entry is written to `permanent-failures.jsonl`.
 
 - Backoff: `min(10 min × 2^retry_count, 6 h)`. `next_retry_not_before` encodes the earliest eligible replay time.
 - Default `max_retries`: 5.
-- `error_category = "validation"` automatically sets `max_retries = 1` — programming errors are never retried past the first attempt.
+- `error_category = "validation"` automatically sets `max_retries = 1` , programming errors are never retried past the first attempt.
 - After `max_retries` attempts the entry moves to `permanent-failures.jsonl` and is excluded from the active replay queue.
 - `ReadyForReplay` scans the full file and skips any `artifact_sha` that has a matching `resolved_at` or `promoted_at` tombstone.
 
@@ -503,9 +503,9 @@ and a full DLQ entry is written to `permanent-failures.jsonl`.
 | `parse` | LLM returned malformed JSON | re-run extraction via `ExtractFromArtifact` |
 | `provider_timeout` | LLM call failed / cancelled / index mutation failed | re-run extraction via `ExtractFromArtifact` |
 | `validation` | programming-class error (bad path, template failure) | re-run extraction once, then promote |
-| `fact_log_persist` | fact-log JSONL append failed AFTER extraction succeeded | re-run APPEND only — never re-run extraction (§7.4 closure) |
+| `fact_log_persist` | fact-log JSONL append failed AFTER extraction succeeded | re-run APPEND only , never re-run extraction (§7.4 closure) |
 
-`fact_log_persist` is distinct from `provider_timeout` because re-running extraction is not a valid replay for an append failure. Extraction would treat the fact as reinforcement (`reinforced_at` bump only, no new JSONL line — see §7.3), and the on-disk fact log would never recover. The replay handler instead reads the current fact log, dedupes by `fact_id`, and appends any missing lines via `EnqueueFactLogAppend`. The composite DLQ key for a `fact_log_persist` entry is `factlog:{kind}:{slug}:{artifact_sha}` so concurrent append failures for different entities from the same artifact never clobber each other under the last-write-wins keying of `readLatestStateLocked`.
+`fact_log_persist` is distinct from `provider_timeout` because re-running extraction is not a valid replay for an append failure. Extraction would treat the fact as reinforcement (`reinforced_at` bump only, no new JSONL line , see §7.3), and the on-disk fact log would never recover. The replay handler instead reads the current fact log, dedupes by `fact_id`, and appends any missing lines via `EnqueueFactLogAppend`. The composite DLQ key for a `fact_log_persist` entry is `factlog:{kind}:{slug}:{artifact_sha}` so concurrent append failures for different entities from the same artifact never clobber each other under the last-write-wins keying of `readLatestStateLocked`.
 
 ---
 
@@ -521,6 +521,6 @@ Update this log on every substantive revision. Small wording tweaks don't requir
 
 ## 13. Referenced documents
 
-- `DESIGN-WIKI.md` — the visual design system for the wiki surface (palette, typography, Wikipedia IA primitives, anti-slop policy). Read when rendering any wiki UI.
-- `~/.gstack/projects/nex-crm-wuphf/najmuzzaman-feat+slash-registry-design-20260422-174617.md` — the design doc for Slice 1-3 of the wiki intelligence port. Background + rationale; this schema doc is the operational spec derived from it.
-- `https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f` — the original LLM Wiki pattern this implements.
+- `DESIGN-WIKI.md` , the visual design system for the wiki surface (palette, typography, Wikipedia IA primitives, anti-slop policy). Read when rendering any wiki UI.
+- `~/.gstack/projects/nex-crm-wuphf/najmuzzaman-feat+slash-registry-design-20260422-174617.md` , the design doc for Slice 1-3 of the wiki intelligence port. Background + rationale; this schema doc is the operational spec derived from it.
+- `https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f` , the original LLM Wiki pattern this implements.

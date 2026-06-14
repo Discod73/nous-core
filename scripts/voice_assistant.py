@@ -3,6 +3,7 @@
 NOUS voice_assistant.py
 Wake-word watchdog. Lukker stream HELT under subprocess for at frigive ALSA-device.
 """
+
 import logging
 import subprocess
 import time
@@ -22,10 +23,10 @@ log = logging.getLogger("nous-wake")
 SAMPLE_RATE = 16000
 CHUNK_SIZE = 1280
 WAKE_WORD = "hey_jarvis"
-THRESHOLD = 0.5
-COOLDOWN_SEC = 2.0
+THRESHOLD = 0.6
+COOLDOWN_SEC = 3.5
 SESSION_TIMEOUT = 60
-DEVICE_RELEASE_WAIT = 0.8  # ALSA skal have tid til reelt at frigive
+DEVICE_RELEASE_WAIT = 0.8
 
 VOICE_CHAT_SCRIPT = Path("/srv/nous/scripts/voice_chat.py")
 VENV_PYTHON = Path("/srv/nous/pipeline/.venv/bin/python3")
@@ -33,7 +34,6 @@ TTS_MODEL = Path("/srv/nous/models/tts/da.onnx")
 
 
 def find_input_device():
-    """Match XVF3800 case-insensitivt. Falder tilbage til hw:2,0 hvis kendt."""
     for i, d in enumerate(sd.query_devices()):
         name_lc = d['name'].lower()
         if d['max_input_channels'] > 0 and ('xvf3800' in name_lc or 'respeaker' in name_lc):
@@ -53,7 +53,6 @@ def play_ack():
 
 
 def open_stream(device, callback):
-    """Opret og start en ny InputStream."""
     stream = sd.InputStream(
         samplerate=SAMPLE_RATE,
         channels=1,
@@ -81,6 +80,7 @@ def main():
     log.info(f"Lytter efter '{WAKE_WORD}' (threshold {THRESHOLD})")
     device = find_input_device()
     audio_buffer = []
+    cooldown_until = 0.0
 
     def audio_callback(indata, frames, time_info, status):
         if status:
@@ -101,12 +101,13 @@ def main():
             if len(chunk) != CHUNK_SIZE:
                 continue
 
+            if time.time() < cooldown_until:
+                continue
             score = oww.predict(chunk).get(WAKE_WORD, 0.0)
 
             if score > THRESHOLD:
                 log.info(f"WAKE: {WAKE_WORD} score={score:.3f}")
 
-                # KRITISK: close (ikke kun stop) så ALSA frigiver devicet
                 stream.stop()
                 stream.close()
                 del stream
@@ -123,13 +124,23 @@ def main():
                     ).returncode
                     log.info(f"Session done (rc={rc})")
                 except subprocess.TimeoutExpired:
-                    log.warning("Session timeout - dræbt")
+                    log.warning("Session timeout – dræbt")
 
                 time.sleep(COOLDOWN_SEC)
                 audio_buffer.clear()
 
-                # Genåbn fresh stream
                 stream = open_stream(device, audio_callback)
+
+                drain_end = time.time() + 2.5
+                while time.time() < drain_end:
+                    if audio_buffer:
+                        audio_buffer.pop(0)
+                    else:
+                        time.sleep(0.01)
+                audio_buffer.clear()
+                oww.reset()
+
+                cooldown_until = time.time() + COOLDOWN_SEC
                 log.info("Lytter igen...")
 
     except KeyboardInterrupt:

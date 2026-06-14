@@ -7,8 +7,8 @@ Reproducible steps to verify the `feat/llm-wiki` feature end-to-end, plus refere
 1. [Prerequisites](#prerequisites)
 2. [Automated tests](#automated-tests)
 3. [Manual end-to-end test (smoke)](#manual-end-to-end-test-smoke)
-4. [Live demo — scripted (Path A)](#live-demo--scripted-path-a)
-5. [Live demo — real agents (Path B)](#live-demo--real-agents-path-b)
+4. [Live demo , scripted (Path A)](#live-demo--scripted-path-a)
+5. [Live demo , real agents (Path B)](#live-demo--real-agents-path-b)
 6. [Manual test checklist](#manual-test-checklist)
 7. [Recording GIFs for launch](#recording-gifs-for-launch)
 8. [Troubleshooting](#troubleshooting)
@@ -30,7 +30,7 @@ Everything runs locally on dev ports to avoid colliding with a prod `npx wuphf` 
 | Prod | `npx wuphf` | 7890 | 7891 | `~/.wuphf` |
 | Dev | `./wuphf-dev` (this worktree) | 7899 | 7900 | any path you set via `HOME=` |
 
-Never run the dev binary without `--broker-port 7899 --web-port 7900` and an overridden `HOME` — see `docs/LOCAL-DEV-PROD-ISOLATION.md` (local-only) for rationale.
+Never run the dev binary without `--broker-port 7899 --web-port 7900` and an overridden `HOME` , see `docs/LOCAL-DEV-PROD-ISOLATION.md` (local-only) for rationale.
 
 ---
 
@@ -89,7 +89,7 @@ npx tsc --noEmit
 
 Expected: clean (no output).
 
-### Single command — full gate
+### Single command , full gate
 
 ```bash
 go build ./... && \
@@ -201,13 +201,13 @@ Smoke test passes if all steps above complete without errors.
 
 ---
 
-## Live demo — scripted (Path A)
+## Live demo , scripted (Path A)
 
 Fastest and most reliable. Good for Reddit GIFs, quick pitches, regression checks.
 
-**Terminal 1 — keep WUPHF running** (same as the smoke test above).
+**Terminal 1 , keep WUPHF running** (same as the smoke test above).
 
-**Terminal 2 — run the demo script:**
+**Terminal 2 , run the demo script:**
 
 ```bash
 cd /path/to/feat-llm-wiki
@@ -237,19 +237,19 @@ The script:
 - Navigate to `/#/wiki/team/customers/customer-x.md` before the demo and watch the "Referenced by" panel fill in live as later articles link to it
 - `git -C ~/.wuphf/wiki log --oneline` after the demo shows all 9 commits with per-agent authorship
 
-**Reproducibility check** — run the demo twice against the same dev home:
+**Reproducibility check** , run the demo twice against the same dev home:
 - First run: all writes succeed
-- Second run: the `create` writes fail with "already exists" (expected — this is the idempotency guarantee); `replace` and `append_section` writes succeed
+- Second run: the `create` writes fail with "already exists" (expected , this is the idempotency guarantee); `replace` and `append_section` writes succeed
 
 ---
 
-## Live demo — real agents (Path B)
+## Live demo , real agents (Path B)
 
 Slower but more demonstrably "real." Good for a YouTube walkthrough or the Karpathy-style launch pitch where "these are real AI agents" is load-bearing.
 
 ### 1. Launch WUPHF as above
 
-Onboarding must complete. Do NOT use `--unsafe` — let the agents go through the normal permission flow.
+Onboarding must complete. Do NOT use `--unsafe` , let the agents go through the normal permission flow.
 
 ### 2. Ensure an API key is configured
 
@@ -269,15 +269,15 @@ Welcome to the team. We just signed two mid-market logistics customers
 
 I want each of you to contribute one wiki article based on your role.
 
-@operator — write team/people/sarah-chen.md. Sarah is the Customer X
+@operator , write team/people/sarah-chen.md. Sarah is the Customer X
             champion, Director of Ops.
-@planner  — update team/playbooks/churn-prevention.md with the new
+@planner  , update team/playbooks/churn-prevention.md with the new
             dispatcher-burnout signal we noticed across both accounts.
-@growth   — write team/decisions/2026-q2-pricing.md. We are adding
+@growth   , write team/decisions/2026-q2-pricing.md. We are adding
             read-only seats at 30% of full seat price.
-@reviewer — append an "Update — 2026-04-20" section to
+@reviewer , append an "Update , 2026-04-20" section to
             team/customers/customer-x.md summarizing what you see.
-@builder  — write team/decisions/wiki-as-default.md. Explain why new
+@builder  , write team/decisions/wiki-as-default.md. Explain why new
             installs default to markdown wiki.
 
 Each of you commits one article in parallel. Use [[wikilinks]] to
@@ -342,13 +342,13 @@ Walk through these by hand after any change that touches wiki code:
 ### Crash recovery
 
 - [ ] Launch wuphf, write one article, `kill -9` the process mid-session
-- [ ] Relaunch. Check `git log` — if there was uncommitted work, a `wuphf-recovery` author commit should appear
+- [ ] Relaunch. Check `git log` , if there was uncommitted work, a `wuphf-recovery` author commit should appear
 
 ### Backend switch (IRON regression)
 
-- [ ] Launch with `--memory-backend markdown` — MCP subprocess has `team_wiki_*` tools only
-- [ ] Launch with `--memory-backend nex` — MCP subprocess has legacy `team_memory_*` tools only
-- [ ] Launch with `--memory-backend none` — no shared memory tools
+- [ ] Launch with `--memory-backend markdown` , MCP subprocess has `team_wiki_*` tools only
+- [ ] Launch with `--memory-backend nex` , MCP subprocess has legacy `team_memory_*` tools only
+- [ ] Launch with `--memory-backend none` , no shared memory tools
 - [ ] Two tool sets never coexist on the same subprocess
 
 ---
@@ -378,11 +378,11 @@ Target: <2 MB. For Reddit, 4 MB hard cap.
 
 1. Navigate to `/wiki/team/customers/customer-x.md` (article view, not catalog)
 2. Start recording
-3. Run demo script — the "Referenced by" panel on Customer X fills live
+3. Run demo script , the "Referenced by" panel on Customer X fills live
 4. After the script finishes, click back to the catalog and show the populated groups
-5. Click into `team/playbooks/churn-prevention.md` — show the wikilinks back to Customer X and Meridian Freight
-6. Drop to a terminal, run `cat ~/.wuphf/wiki/team/customers/customer-x.md` — real markdown on disk
-7. Run `git -C ~/.wuphf/wiki log --oneline` — show per-agent authorship
+5. Click into `team/playbooks/churn-prevention.md` , show the wikilinks back to Customer X and Meridian Freight
+6. Drop to a terminal, run `cat ~/.wuphf/wiki/team/customers/customer-x.md` , real markdown on disk
+7. Run `git -C ~/.wuphf/wiki log --oneline` , show per-agent authorship
 8. Stop recording
 
 Export as MP4, 1080p. The "file on disk + git log" reveal at the end is the money shot for the Karpathy-wiki pitch.
@@ -409,13 +409,13 @@ Export as MP4, 1080p. The "file on disk + git log" reveal at the end is the mone
 TOKEN=$(curl -s http://127.0.0.1:7899/web-token | python3 -c "import sys,json;print(json.load(sys.stdin).get('token',''))")
 curl -s "http://127.0.0.1:7899/wiki/catalog" -H "Authorization: Bearer $TOKEN" | head -20
 ```
-If this returns 503 "wiki backend is not active", the broker didn't start the wiki worker — launch with `--memory-backend markdown`.
+If this returns 503 "wiki backend is not active", the broker didn't start the wiki worker , launch with `--memory-backend markdown`.
 
 **Problem:** `fatal: cannot create directory` when launching
 **Fix:** Your dev HOME points into a read-only path or inside a git worktree with conflicting untracked files. Use a fresh `/tmp/wuphf-demo` as the HOME.
 
 **Problem:** Live edit-log footer shows fixture entries, not my writes
-**Fix:** Known follow-up — Lane C's SSE subscription isn't wired to the real `/wiki/stream` endpoint yet; the footer uses a synthetic replay. Real writes DO commit (verified via `git log`); only the footer display is stale. Refresh the page to see updated counts in the catalog and correct per-article backlinks.
+**Fix:** Known follow-up , Lane C's SSE subscription isn't wired to the real `/wiki/stream` endpoint yet; the footer uses a synthetic replay. Real writes DO commit (verified via `git log`); only the footer display is stale. Refresh the page to see updated counts in the catalog and correct per-article backlinks.
 
 **Problem:** Some pre-existing Go tests fail with git worktree errors
 **Fix:** `TestEnqueueHeadlessCodexTurnBypassesLeadHoldForReviewReadyTask` and a few others have pre-existing test-environment races when the whole suite runs in a git worktree. Run the wiki-specific subset (see "Automated tests" section) to confirm wiki code is green.
@@ -424,11 +424,11 @@ If this returns 503 "wiki backend is not active", the broker didn't start the wi
 
 ## What's NOT tested here (intentional gaps, v1.1 items)
 
-- **Mobile responsive** — desktop-first per `DESIGN-WIKI.md`. Three-column layout at <768px is currently broken; resizing breakpoints are a v1.1 task.
-- **LLM merge-resolver** — v1 uses serialized writes, so concurrent-write conflicts are impossible. The merge-resolver code path has no test coverage because it doesn't exist yet.
-- **Per-agent wikis** — cut from v1. Test coverage for `agents/{slug}/` paths is intentionally absent.
-- **SSE live-update** of the edit-log footer from real broker events — known gap; see Troubleshooting above.
-- **Playwright E2E** — not wired. Current E2E lives in `internal/team/wiki_e2e_test.go` as Go integration tests over the broker HTTP surface.
+- **Mobile responsive** , desktop-first per `DESIGN-WIKI.md`. Three-column layout at <768px is currently broken; resizing breakpoints are a v1.1 task.
+- **LLM merge-resolver** , v1 uses serialized writes, so concurrent-write conflicts are impossible. The merge-resolver code path has no test coverage because it doesn't exist yet.
+- **Per-agent wikis** , cut from v1. Test coverage for `agents/{slug}/` paths is intentionally absent.
+- **SSE live-update** of the edit-log footer from real broker events , known gap; see Troubleshooting above.
+- **Playwright E2E** , not wired. Current E2E lives in `internal/team/wiki_e2e_test.go` as Go integration tests over the broker HTTP surface.
 
 ---
 

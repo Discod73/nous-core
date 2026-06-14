@@ -1,0 +1,11 @@
+[Unit]
+Description=NOUS batch ingest af lyd/video fra arkiv
+After=network.target docker.service
+
+[Service]
+Type=oneshot
+User=nous
+ExecStart=/srv/nous/scripts/batch_ingest.sh
+StandardOutput=append:/mnt/nous-data/logs/batch_ingest.log
+StandardError=append:/mnt/nous-data/logs/batch_ingest.log
+TimeoutStartSec=7200

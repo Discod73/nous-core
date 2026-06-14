@@ -1,31 +1,31 @@
-# Design System — WUPHF Wiki Surface
+# Design System , WUPHF Wiki Surface
 
 **Scope:** the `/wiki` surface inside the WUPHF web app (port 7891 prod / 7900 dev). Does NOT apply to the pixel-office marketing site (see `DESIGN.md`) or the rest of the WUPHF app chrome (see `web/src/styles/global.css`).
 
-Always read this file before making any visual or UI decisions on the wiki. If a decision conflicts with this file, escalate — don't silently deviate.
+Always read this file before making any visual or UI decisions on the wiki. If a decision conflicts with this file, escalate , don't silently deviate.
 
 ## Product Context
 
-- **What this is:** the team wiki inside WUPHF — a git-native markdown knowledge base where AI agents write articles the user can read, `cat`, and `git clone`. Following Karpathy's "LLM wiki" pattern.
-- **Who it's for:** Claude Pro/Max power users running 3+ agents on WUPHF. Taste-maker slice — they noticed Karpathy's tweet, they care about files-over-apps, they ship.
+- **What this is:** the team wiki inside WUPHF , a git-native markdown knowledge base where AI agents write articles the user can read, `cat`, and `git clone`. Following Karpathy's "LLM wiki" pattern.
+- **Who it's for:** Claude Pro/Max power users running 3+ agents on WUPHF. Taste-maker slice , they noticed Karpathy's tweet, they care about files-over-apps, they ship.
 - **Memorable thing:** *"This feels like Wikipedia but for my company."* Every design decision should serve this.
 - **Project type:** In-app reading surface. Three-column layout. Reading-first editorial posture with live-update signals.
 
 ## Aesthetic Direction
 
 - **Direction:** Editorial-reference with Wikipedia fidelity. Paper-warm reading canvas + full Wikipedia information architecture (hat-bar, infobox, hatnote, TOC box, See also, Sources, categories, page footer) + modern typography.
-- **Decoration level:** Minimal — typography and structural chrome do the work. Zero gradients, zero texture, zero ornament.
+- **Decoration level:** Minimal , typography and structural chrome do the work. Zero gradients, zero texture, zero ornament.
 - **Mood:** A reference work that happens to be alive. Users feel "I have my own Wikipedia and I can see my agents writing it right now."
 - **EUREKA:** Every team-knowledge UI (Notion, Linear, Obsidian, Confluence) converges on sans-serif + minimal chrome + rounded pills, which is why they all feel interchangeable. Going the opposite way (serif body + maximal Wikipedia-fidelity chrome + modern typography + live pulse signals) gives this wiki a face no competitor can copy without re-architecting.
 
 ## Color System
 
-**Approach:** Restrained warm-paper palette. The WUPHF app's blue and amber kept as semantic accents (wikilinks, live edits) — all other decoration stripped.
+**Approach:** Restrained warm-paper palette. The WUPHF app's blue and amber kept as semantic accents (wikilinks, live edits) , all other decoration stripped.
 
 | Token | Hex | Usage |
 |---|---|---|
 | `--paper` | `#FAF8F2` | Main body background. Warm off-white. Noticeably warmer than pure white. |
-| `--paper-dark` | `#F5F1E6` | Cream — code blocks, infobox backgrounds, TOC box background |
+| `--paper-dark` | `#F5F1E6` | Cream , code blocks, infobox backgrounds, TOC box background |
 | `--surface` | `#FFFFFF` | Cards, left sidebar background, top app bar |
 | `--text` | `#1D1C1D` | Primary text, title, infobox dark-header reverse |
 | `--text-muted` | `#616061` | Secondary text, byline, chrome |
@@ -46,7 +46,7 @@ Always read this file before making any visual or UI decisions on the wiki. If a
 
 ## Typography
 
-Three-font stack. Each role has a specific font — do not substitute.
+Three-font stack. Each role has a specific font , do not substitute.
 
 | Role | Font | Usage |
 |---|---|---|
@@ -74,9 +74,9 @@ Three-font stack. Each role has a specific font — do not substitute.
 | Lead paragraph | Source Serif 4 | 18px | 1.72 | 400 | 24 |
 | Body paragraph | Source Serif 4 | 18px | 1.72 | 400 | 24 |
 | Hatnote / strapline / See-also | Source Serif 4 (italic) | 15-16px | 1.5 | 400 | 20 |
-| Chrome base | system-ui | 13-14px | 1.45 | 400-500 | — |
-| Chrome small-caps label | system-ui (uppercase, letter-spacing 0.08em) | 11px | 1 | 600 | — |
-| Mono | Geist Mono | 11-13px | 1.45 | 400-500 | — |
+| Chrome base | system-ui | 13-14px | 1.45 | 400-500 | , |
+| Chrome small-caps label | system-ui (uppercase, letter-spacing 0.08em) | 11px | 1 | 600 | , |
+| Mono | Geist Mono | 11-13px | 1.45 | 400-500 | , |
 
 ## Spacing
 
@@ -111,9 +111,9 @@ Three-font stack. Each role has a specific font — do not substitute.
 ├────────────────── edit-log footer (fixed, 40px, full width) ──────┤
 ```
 
-## Wikipedia IA Primitives — the chrome
+## Wikipedia IA Primitives , the chrome
 
-Every standard Wikipedia UI primitive has a WUPHF-native equivalent. These ARE the design system's information architecture — the thing that creates the "Wikipedia for my company" pattern-match.
+Every standard Wikipedia UI primitive has a WUPHF-native equivalent. These ARE the design system's information architecture , the thing that creates the "Wikipedia for my company" pattern-match.
 
 ### Status banner (top of article)
 Replaces Wikipedia's "cleanup template" banners. One-line amber-bordered contextual info. Dot-pulse indicator on the left. Right-aligned meta text (`47 rev · 6 contrib · 2,347 words`).
@@ -127,22 +127,22 @@ Replaces Wikipedia's "cleanup template" banners. One-line amber-bordered context
 
 ### Hat-bar tabs
 Wikipedia's classic `Article | Talk | Edit | History`. WUPHF maps to:
-- **Article** (default, active) — read mode
-- **Talk** — agent commentary thread on this article (v1.1, show disabled in v1)
-- **History** — git log for this file
-- **Raw markdown** — shows the actual `.md` source (honors file-over-app pitch; no Wikipedia equivalent)
+- **Article** (default, active) , read mode
+- **Talk** , agent commentary thread on this article (v1.1, show disabled in v1)
+- **History** , git log for this file
+- **Raw markdown** , shows the actual `.md` source (honors file-over-app pitch; no Wikipedia equivalent)
 
 Right rail on the hat-bar: short context metadata (e.g., `Cincinnati, OH · Mid-market Logistics`) replacing Wikipedia's article-rating badges.
 
 ### Article title + strapline + divider
-Fraunces title at 52px. Italic Source Serif 4 strapline directly below: *"From Team Wiki, your team's encyclopedia."* (The strapline text is fixed across all articles — changing it per article breaks the encyclopedic posture.) Thick horizontal divider (1px top, 1px bottom, 3px band) beneath the strapline — exact match to Wikipedia's Vector skin.
+Fraunces title at 52px. Italic Source Serif 4 strapline directly below: *"From Team Wiki, your team's encyclopedia."* (The strapline text is fixed across all articles , changing it per article breaks the encyclopedic posture.) Thick horizontal divider (1px top, 1px bottom, 3px band) beneath the strapline , exact match to Wikipedia's Vector skin.
 
 ### Byline
 Agent pixel avatar (14×14 or 22×22, rendered with `image-rendering: pixelated`) + "Last edited by" + agent name + amber-background timestamp (`ts` class) with pulsing dot + dot-separator + started-date + contributors count.
 
 ### Hatnote
 Italic Source Serif 4 with left border. Points to related articles:
-> *This article describes the customer account brief. For the onboarding plan, see [[Customer X — Onboarding]].*
+> *This article describes the customer account brief. For the onboarding plan, see [[Customer X , Onboarding]].*
 
 ### Lead paragraph
 Bold `<strong>` on the first mention of the article subject. Superscript footnote refs link to Sources section:
@@ -195,9 +195,9 @@ Uppercase-small-caps label "Page stats". Two-column dl with chrome-font labels a
 Uppercase-small-caps label. Shows the canonical wikilink (`[[people/customer-x]]`) in a paper-dark bordered box with a Copy button. Hint text: *"Paste this in any article to link here."*
 
 ### Referenced by (right rail)
-Uppercase-small-caps label with count badge (`4`). List of backlinks — articles that link TO this article. Each entry: pixel avatar + article title + author agent tag on the right.
+Uppercase-small-caps label with count badge (`4`). List of backlinks , articles that link TO this article. Each entry: pixel avatar + article title + author agent tag on the right.
 
-### Left nav — Tools section
+### Left nav , Tools section
 Below the thematic dir groups, separated by an `<hr>`. Monospace arrow bullets (`→`). Links to:
 - Recent changes
 - Random article
@@ -267,11 +267,11 @@ Grid of thematic dir groups as cards. Each card:
 
 Header: Fraunces "Team Wiki" title (48px). Right-aligned mono stats: `32 articles · 128 commits · 6 agents writing`.
 
-Grid: 3 columns on desktop, 2 on tablet, 1 on mobile (v1.1 concern for responsive — v1 is desktop-first).
+Grid: 3 columns on desktop, 2 on tablet, 1 on mobile (v1.1 concern for responsive , v1 is desktop-first).
 
 ## Anti-slop policy
 
-Every decision below is deliberately NOT made — if a future revision introduces any of these, the change is wrong.
+Every decision below is deliberately NOT made , if a future revision introduces any of these, the change is wrong.
 
 - Inter body font
 - system-ui for the article body
@@ -292,9 +292,9 @@ If you are considering any of the above, stop and escalate rather than ship it.
 ## Preview assets (reference during implementation)
 
 The three preview mocks produced during /design-consultation are saved at:
-- `~/.gstack/projects/nex-crm-wuphf/designs/wiki-design-20260419/preview-v1.html` — modernized only (baseline)
-- `~/.gstack/projects/nex-crm-wuphf/designs/wiki-design-20260419/preview-v2-hybrid.html` — modern type + Wikipedia chrome
-- `~/.gstack/projects/nex-crm-wuphf/designs/wiki-design-20260419/preview-v3.html` — V3 (ACCEPTED — the one this spec is based on)
+- `~/.gstack/projects/nex-crm-wuphf/designs/wiki-design-20260419/preview-v1.html` , modernized only (baseline)
+- `~/.gstack/projects/nex-crm-wuphf/designs/wiki-design-20260419/preview-v2-hybrid.html` , modern type + Wikipedia chrome
+- `~/.gstack/projects/nex-crm-wuphf/designs/wiki-design-20260419/preview-v3.html` , V3 (ACCEPTED , the one this spec is based on)
 
 Open them in a browser while implementing. Every component, spacing value, and interaction above is grounded in V3.
 

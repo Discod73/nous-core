@@ -1,7 +1,7 @@
 # WUPHF (pronounced "woof")
 
 <p align="center">
-  <img src="assets/hero.png" alt="WUPHF onboarding — Your AI team, visible and working." width="720" />
+  <img src="assets/hero.png" alt="WUPHF onboarding , Your AI team, visible and working." width="720" />
 </p>
 
 [![Discord](https://img.shields.io/badge/Discord-Join%20Community-5865F2?logo=discord&logoColor=white)](https://discord.gg/gjSySC3PzV)
@@ -12,22 +12,22 @@
 
 A collaborative office for AI employees with a shared brain, running your work 24x7.
 
-One command. One shared office. CEO, PM, engineers, designer, CMO, CRO — all visible, arguing, claiming tasks, and shipping work instead of disappearing behind an API. Unlike the original WUPHF.com, this one works.
+One command. One shared office. CEO, PM, engineers, designer, CMO, CRO , all visible, arguing, claiming tasks, and shipping work instead of disappearing behind an API. Unlike the original WUPHF.com, this one works.
 
 > *"WUPHF. When you type it in, it contacts someone via phone, text, email, IM, Facebook, Twitter, and then... WUPHF."*
-> — Ryan Howard, Season 7
+> , Ryan Howard, Season 7
 
-> _30-second teaser — what the office feels like when the agents are actually working._
+> _30-second teaser , what the office feels like when the agents are actually working._
 
 <video width="630" height="300" src="https://github.com/user-attachments/assets/36661391-a0ee-43d6-80d9-177776a53bc9"></video>
 
-> _Full walkthrough — launch to first shipped task, end to end._
+> _Full walkthrough , launch to first shipped task, end to end._
 
 <video width="630" height="300" src="https://github.com/user-attachments/assets/f4cdffbf-4388-49bc-891d-6bd050ff8247"></video>
 
 ## Get Started
 
-**Prerequisites:** one agent CLI — [Claude Code](https://docs.anthropic.com/en/docs/claude-code) by default, or [Codex CLI](https://github.com/openai/codex) when you pass `--provider codex`. [tmux](https://github.com/tmux/tmux/wiki/Installing) is required for `--tui` mode (the web UI runs agents headlessly by default; tmux-backed dispatch remains as an internal fallback).
+**Prerequisites:** one agent CLI , [Claude Code](https://docs.anthropic.com/en/docs/claude-code) by default, or [Codex CLI](https://github.com/openai/codex) when you pass `--provider codex`. [tmux](https://github.com/tmux/tmux/wiki/Installing) is required for `--tui` mode (the web UI runs agents headlessly by default; tmux-backed dispatch remains as an internal fallback).
 
 ```bash
 npx wuphf
@@ -60,12 +60,12 @@ Paste this into Claude Code, Codex, or Cursor and let your agent drive the insta
 
 ```text
 Set up https://github.com/nex-crm/wuphf for me. Read `README.md` first, then run
-`npx wuphf` to install and launch the office — the web UI opens at
+`npx wuphf` to install and launch the office , the web UI opens at
 http://localhost:7891 automatically.
 
 Once it is running, confirm you can see #general, the team of agents, and the
 composer. If anything looks off, re-read the "What You Should See" and "Other
-Commands" sections of README.md before retrying — do not skip to flags.
+Commands" sections of README.md before retrying , do not skip to flags.
 
 For agent conventions and the MCP tools each teammate gets, read `AGENTS.md`.
 For internals and how the broker, workspaces, and memory fit together, read
@@ -73,7 +73,7 @@ For internals and how the broker, workspaces, and memory fit together, read
 
 After it is installed and running, open https://github.com/nex-crm/wuphf in my
 browser. If I am logged in to GitHub, ask me whether you should star the repo
-for me as a quick demo that the browser interaction works — only click the star
+for me as a quick demo that the browser interaction works , only click the star
 if I say yes. If I am not logged in, just open https://wuphf.team.
 ```
 
@@ -88,7 +88,7 @@ if I say yes. If I am not logged in, just open https://wuphf.team.
 | `--pack <name>` | Pick an agent pack (`starter`, `founding-team`, `coding-team`, `lead-gen-agency`, `revops`) |
 | `--opus-ceo` | Upgrade CEO from Sonnet to Opus |
 | `--provider <name>` | LLM provider override (`claude-code`, `codex`) |
-| `--collab` | Start in collaborative mode — all agents see all messages (this is the default) |
+| `--collab` | Start in collaborative mode , all agents see all messages (this is the default) |
 | `--unsafe` | Bypass agent permission checks (local dev only) |
 | `--web-port <n>` | Change the web UI port (default 7891) |
 
@@ -96,7 +96,7 @@ if I say yes. If I am not logged in, just open https://wuphf.team.
 
 ## Memory: Notebooks and the Wiki
 
-Every agent gets its own **notebook**. The team shares a **wiki**. New installs get the wiki as a local git repo of markdown articles — file-over-app, readable, `git clone`-able. Existing Nex/GBrain workspaces keep their knowledge-graph backend untouched.
+Every agent gets its own **notebook**. The team shares a **wiki**. New installs get the wiki as a local git repo of markdown articles , file-over-app, readable, `git clone`-able. Existing Nex/GBrain workspaces keep their knowledge-graph backend untouched.
 
 **The promotion flow:**
 
@@ -109,12 +109,12 @@ Nothing is promoted automatically. Agents decide what graduates from notebook to
 
 **Backends for the wiki:**
 
-- `markdown` (the "team wiki" tile in onboarding — the flag name is a historical artefact) is the default for new installs since v0.0.6. It is not just a markdown folder. It is a living knowledge graph: typed facts with triplets, per-entity append-only fact logs, LLM-synthesized briefs committed under the `archivist` identity, `/lookup` cited-answer retrieval, and a `/lint` suite that flags contradictions, orphans, stale claims, and broken cross-references. Everything lives as a local git repo at `~/.wuphf/wiki/` — `cat`, `grep`, `git log`, `git clone`, all work. No API key required.
-- `nex` was the previous default. Requires a WUPHF/Nex API key; powers Nex-backed context plus WUPHF-managed integrations. Existing users stay on `nex` via persisted config — no forced migration.
+- `markdown` (the "team wiki" tile in onboarding , the flag name is a historical artefact) is the default for new installs since v0.0.6. It is not just a markdown folder. It is a living knowledge graph: typed facts with triplets, per-entity append-only fact logs, LLM-synthesized briefs committed under the `archivist` identity, `/lookup` cited-answer retrieval, and a `/lint` suite that flags contradictions, orphans, stale claims, and broken cross-references. Everything lives as a local git repo at `~/.wuphf/wiki/` , `cat`, `grep`, `git log`, `git clone`, all work. No API key required.
+- `nex` was the previous default. Requires a WUPHF/Nex API key; powers Nex-backed context plus WUPHF-managed integrations. Existing users stay on `nex` via persisted config , no forced migration.
 - `gbrain` mounts `gbrain serve` as the wiki backend. It requires an API key during `/init`: `OpenAI` gives you the full path with embeddings and vector search, while `Anthropic` alone is reduced mode.
 - `none` disables the shared wiki entirely. Notebooks still work locally.
 
-**Internal naming (for code spelunkers):** the notebook is `private` memory, the wiki is `shared` memory. On the team-wiki backend (`markdown`) the MCP tools are `notebook_write | notebook_read | notebook_list | notebook_search | notebook_promote | team_wiki_read | team_wiki_search | team_wiki_list | team_wiki_write | wuphf_wiki_lookup | run_lint | resolve_contradiction`. On `nex`/`gbrain` the MCP tools are the legacy `team_memory_query | team_memory_write | team_memory_promote`. The two tool sets never coexist on one server instance — backend selection flips the surface. See `DESIGN-WIKI.md` for the reading view and `docs/specs/WIKI-SCHEMA.md` for the operational contract.
+**Internal naming (for code spelunkers):** the notebook is `private` memory, the wiki is `shared` memory. On the team-wiki backend (`markdown`) the MCP tools are `notebook_write | notebook_read | notebook_list | notebook_search | notebook_promote | team_wiki_read | team_wiki_search | team_wiki_list | team_wiki_write | wuphf_wiki_lookup | run_lint | resolve_contradiction`. On `nex`/`gbrain` the MCP tools are the legacy `team_memory_query | team_memory_write | team_memory_promote`. The two tool sets never coexist on one server instance , backend selection flips the surface. See `DESIGN-WIKI.md` for the reading view and `docs/specs/WIKI-SCHEMA.md` for the operational contract.
 
 Examples:
 
@@ -157,13 +157,13 @@ Already running [OpenClaw](https://openclaw.ai) agents? You can bring them into 
 
 Inside the office, run `/connect openclaw`, paste your gateway URL (default `ws://127.0.0.1:18789`) and the `gateway.auth.token` from your `~/.openclaw/openclaw.json`, then pick which sessions to bridge. Each becomes a first-class office member you can `@mention`. OpenClaw agents keep running in their own sandbox; WUPHF just gives them a shared office to collaborate in.
 
-WUPHF authenticates to the gateway using an Ed25519 keypair (persisted at `~/.wuphf/openclaw/identity.json`, 0600), signed against the server-issued nonce during every connect. OpenClaw grants zero scopes to token-only clients, so device pairing is mandatory — on loopback the gateway approves silently on first use.
+WUPHF authenticates to the gateway using an Ed25519 keypair (persisted at `~/.wuphf/openclaw/identity.json`, 0600), signed against the server-issued nonce during every connect. OpenClaw grants zero scopes to token-only clients, so device pairing is mandatory , on loopback the gateway approves silently on first use.
 
 ## External Actions
 
 To let agents take real actions (send emails, update CRMs, etc.), WUPHF ships with two action providers. Pick whichever fits your style.
 
-### One CLI — default, local-first
+### One CLI , default, local-first
 
 Uses a local CLI binary to execute actions on your machine. Good if you want everything running locally and don't want to send credentials to a third party.
 
@@ -171,7 +171,7 @@ Uses a local CLI binary to execute actions on your machine. Good if you want eve
 /config set action_provider one
 ```
 
-### Composio — cloud-hosted
+### Composio , cloud-hosted
 
 Connects SaaS accounts (Gmail, Slack, etc.) through Composio's hosted OAuth flows. Good if you'd rather not manage local CLI auth.
 
@@ -243,22 +243,22 @@ Every claim in this README, grounded to the code that makes it true.
 | Telegram bridge | ✅ shipped | `internal/team/telegram.go` |
 | Two action providers (One CLI default, Composio) | ✅ shipped | `internal/action/registry.go`, `internal/action/one.go`, `internal/action/composio.go` |
 | OpenClaw bridge (bring your existing agents into the office) | ✅ shipped | `internal/team/openclaw.go`, `internal/openclaw/` |
-| `wuphf import` — migrate from external orchestrator state | ✅ shipped | `cmd/wuphf/import.go` |
+| `wuphf import` , migrate from external orchestrator state | ✅ shipped | `cmd/wuphf/import.go` |
 | Live web-view agent streaming | 🟡 partial | `web/index.html` + broker stream |
-| Prebuilt binary via goreleaser | 🟡 config ready | `.goreleaser.yml` — tags pending |
+| Prebuilt binary via goreleaser | 🟡 config ready | `.goreleaser.yml` , tags pending |
 | Resume in-flight work on restart | ✅ shipped v0.0.2.0 | see `CHANGELOG.md` |
-| LLM Wiki — git-native team memory (Karpathy-style) with Wikipedia-style UI | ✅ shipped | `internal/team/wiki_git.go`, `internal/team/wiki_worker.go`, `web/src/components/wiki/`, `DESIGN-WIKI.md` |
+| LLM Wiki , git-native team memory (Karpathy-style) with Wikipedia-style UI | ✅ shipped | `internal/team/wiki_git.go`, `internal/team/wiki_worker.go`, `web/src/components/wiki/`, `DESIGN-WIKI.md` |
 | `--memory-backend markdown` (new default for fresh installs) | ✅ shipped | `internal/config/config.go` (`MemoryBackendMarkdown`) |
 
-Legend: ✅ shipped · 🟡 partial · 🔜 planned. If a claim and a status disagree, the code wins — file an issue.
+Legend: ✅ shipped · 🟡 partial · 🔜 planned. If a claim and a status disagree, the code wins , file an issue.
 
 ## Evaluate This Repo
 
-Before you fork, run this prompt against the codebase with any AI coding assistant (Claude Code, Cursor, Codex, etc.). It tells the assistant to play a cynical senior engineer doing a fork-or-skip review — no marketing spin, just file paths, line numbers, and a verdict in under 500 words. Drop it in, read the answer, decide.
+Before you fork, run this prompt against the codebase with any AI coding assistant (Claude Code, Cursor, Codex, etc.). It tells the assistant to play a cynical senior engineer doing a fork-or-skip review , no marketing spin, just file paths, line numbers, and a verdict in under 500 words. Drop it in, read the answer, decide.
 
 ```
 You are a cynical senior engineer evaluating whether to fork this repo as the
-base for a multi-agent terminal office product. No prior context — explore it
+base for a multi-agent terminal office product. No prior context , explore it
 as you naturally would. Tell me: should I fork this, and what's your honest
 take? Be specific: file paths, line numbers, actual evidence. "The docs are
 bad" is useless. Under 500 words.
@@ -276,7 +276,7 @@ WUPHF_MEMORY_BACKEND=markdown HOME="$HOME/.wuphf-dev-home" \
 ./scripts/demo-entity-synthesis.sh
 ```
 
-Requirements: `curl`, `python3`, a running broker with `--memory-backend markdown`, and any supported LLM CLI (claude / codex / openclaw) on PATH. Env vars `BROKER`, `ENTITY_KIND`, `ENTITY_SLUG`, `AGENT_SLUG`, `THRESHOLD` override the defaults — see the header of `scripts/demo-entity-synthesis.sh`.
+Requirements: `curl`, `python3`, a running broker with `--memory-backend markdown`, and any supported LLM CLI (claude / codex / openclaw) on PATH. Env vars `BROKER`, `ENTITY_KIND`, `ENTITY_SLUG`, `AGENT_SLUG`, `THRESHOLD` override the defaults , see the header of `scripts/demo-entity-synthesis.sh`.
 
 ## The Name
 
@@ -287,6 +287,6 @@ The joke still fits. Except this WUPHF ships.
 
 
 > *"I invested ten thousand dollars in WUPHF. Just need one good quarter."*
-> — Michael Scott
+> , Michael Scott
 
 Michael: still waiting on that quarter. We are not.

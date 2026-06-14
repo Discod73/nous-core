@@ -1,6 +1,6 @@
 # FORKING WUPHF
 
-Honest instructions for making WUPHF yours in about 45 minutes. This file is maintained — if any step breaks, file an issue.
+Honest instructions for making WUPHF yours in about 45 minutes. This file is maintained , if any step breaks, file an issue.
 
 Before you fork, read [`ARCHITECTURE.md`](ARCHITECTURE.md). It's one page. It will save you an afternoon of `grep -R`.
 
@@ -76,7 +76,7 @@ That will surface ~50 hits across 5 files:
 | `cmd/wuphf/main.go` | 2 | Startup notice strings |
 | `cmd/wuphf/channel_workspace_state.go` | 1 | Workspace state notice |
 
-Removing these strings doesn't affect command behavior — they're display copy only.
+Removing these strings doesn't affect command behavior , they're display copy only.
 
 Rename the binary in `cmd/wuphf/` + `go.mod` + goreleaser config if you want a different command name.
 
@@ -88,7 +88,7 @@ find . -name '*.go' | xargs sed -i 's|github.com/nex-crm/wuphf|github.com/your-o
 
 ## 3. Add your own agent pack
 
-Packs live in Go (`internal/agent/packs.go`) as a static slice. Not YAML — yet. Recompile after editing.
+Packs live in Go (`internal/agent/packs.go`) as a static slice. Not YAML , yet. Recompile after editing.
 
 Add an entry to `Packs`:
 

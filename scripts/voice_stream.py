@@ -6,6 +6,7 @@ Inspireret af jetson-orin-kian (MIT) - se /srv/nous/docs/CREDITS.md
 Mic → Whisper (Jetson) → Ollama stream (Jetson) → Piper stream (Pi 5) → Speaker
 """
 import asyncio
+import os
 import json
 import re
 import subprocess
@@ -14,7 +15,7 @@ import tempfile
 from pathlib import Path
 import httpx
 
-JETSON = "192.168.1.100"
+JETSON = os.environ.get("NOUS_JETSON_IP", "localhost")
 WHISPER_URL = f"http://{JETSON}:8080/inference"
 OLLAMA_URL = f"http://{JETSON}:11434/api/generate"
 MODEL = "nous-da"

@@ -1,4 +1,4 @@
-# Slice 1 benchmark corpus — Week 0 recall gate
+# Slice 1 benchmark corpus , Week 0 recall gate
 
 This directory is the **hard ship gate** for Slice 1 of the wiki intelligence
 port. Before email sync pipes thousands of real entities into the wiki, the
@@ -24,29 +24,29 @@ The gate: **recall@20 >= 85%** across the 50 queries in `queries.jsonl`.
 - **500 artifacts** over a ~4-month simulated timeline (one every 6 hours
   starting 2026-01-15), distributed as:
   - **300 single-entity status / observation facts** (60%)
-  - **100 multi-entity relationship facts** (20% — leads / champions /
+  - **100 multi-entity relationship facts** (20% , leads / champions /
     works-with)
-  - **50 superseding facts** (10% — role changes that replace an earlier
+  - **50 superseding facts** (10% , role changes that replace an earlier
     statement)
-  - **25 contradictions** (5% — two facts that disagree on the same
+  - **25 contradictions** (5% , two facts that disagree on the same
     subject+predicate)
-  - **25 noise artifacts** (5% — no extractable fact; test null handling)
+  - **25 noise artifacts** (5% , no extractable fact; test null handling)
 - **475 extractable facts** total across those artifacts.
 - **Linguistic variety**: every fact type rotates through 10 different
   sentence patterns so the extractor sees real prose, not templates.
 
 ## What the queries cover
 
-- **20 status queries** — "What does X do?", "Who is X?", "Where does X
+- **20 status queries** , "What does X do?", "Who is X?", "Where does X
   work?", "What is X's current role?"
-- **15 relationship queries** — "Who leads Y?", "Who champions Y?", "Who is
+- **15 relationship queries** , "Who leads Y?", "Who champions Y?", "Who is
   involved in Y?"
-- **10 multi-hop queries** — "Who at Acme championed Q2 Pilot?" (intersects
+- **10 multi-hop queries** , "Who at Acme championed Q2 Pilot?" (intersects
   champions(project) with role_at(company))
-- **3 counterfactual queries** — "What would have happened if X hadn't
+- **3 counterfactual queries** , "What would have happened if X hadn't
   taken her current role?" The retriever should still surface the
   current-role facts; the reasoning layer decides whether to refuse.
-- **2 out-of-scope queries** — expected fact set is empty; retriever should
+- **2 out-of-scope queries** , expected fact set is empty; retriever should
   return nothing.
 
 ## What `expected_min_recall_at_20 >= 0.85` means
@@ -82,14 +82,14 @@ wrote 500 artifacts, 475 facts, corpus size ~258000 bytes
 wrote 50 queries
 ```
 
-Never hand-edit `corpus.jsonl` or `queries.jsonl` — rerun the generator
+Never hand-edit `corpus.jsonl` or `queries.jsonl` , rerun the generator
 and commit the regenerated files.
 
 ## Fact ID contract
 
 Every `fact_id` in the corpus is computed by
 `team.ComputeFactID(artifact_sha, sentence_offset, subject, predicate, object)`
-from `internal/team/wiki_index.go` — the same helper the live index uses.
+from `internal/team/wiki_index.go` , the same helper the live index uses.
 This makes the benchmark byte-compatible with production extraction: if the
 generator emits `fact_id = 57b5960baf097ab5` for a triplet, the production
 extractor seeing the same artifact SHA and triplet produces the same ID.

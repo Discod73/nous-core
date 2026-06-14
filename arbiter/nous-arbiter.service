@@ -1,0 +1,16 @@
+[Unit]
+Description=NOUS Memory Arbiter — single writer til Qdrant
+After=network.target nous-qdrant.service
+Requires=nous-qdrant.service
+
+[Service]
+Type=simple
+User=nous
+WorkingDirectory=/srv/nous/arbiter
+ExecStart=/srv/nous/arbiter/.venv/bin/python3 arbiter.py
+Restart=always
+RestartSec=5
+Environment=PYTHONUNBUFFERED=1
+
+[Install]
+WantedBy=multi-user.target

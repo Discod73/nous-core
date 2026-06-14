@@ -1,0 +1,26 @@
+[Unit]
+Description=NOUS Speaches — faster-whisper STT (OpenAI-compatible, port 8182)
+After=docker.service network.target
+Requires=docker.service
+
+[Service]
+User=nous
+Restart=always
+RestartSec=10
+ExecStartPre=-/usr/bin/docker stop nous-speaches
+ExecStartPre=-/usr/bin/docker rm nous-speaches
+ExecStart=/usr/bin/docker run --rm \
+    --name nous-speaches \
+    --runtime nvidia \
+    --gpus all \
+    -p 8182:8000 \
+    -e WHISPER__MODEL=large-v3 \
+    -e WHISPER__LANGUAGE=da \
+    -v /home/nous/.cache/huggingface:/home/user/.cache/huggingface \
+    cbinckly/speaches:0.9.0-l4t-cuda-12.6.11-arch87
+ExecStop=/usr/bin/docker stop nous-speaches
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

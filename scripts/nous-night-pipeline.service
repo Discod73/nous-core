@@ -1,0 +1,15 @@
+[Unit]
+Description=NOUS Night Pipeline — document processing og fact-ekstraktion
+After=network.target docker.service
+Wants=docker.service
+
+[Service]
+Type=oneshot
+User=nous
+WorkingDirectory=/srv/nous/scripts
+Environment=PATH=/srv/nous/app/.venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+Environment=HOME=/home/nous
+ExecStart=/srv/nous/app/.venv/bin/python3 /srv/nous/scripts/night_pipeline.py
+StandardOutput=append:/mnt/nous-data/logs/night_pipeline.log
+StandardError=append:/mnt/nous-data/logs/night_pipeline.log
+TimeoutStartSec=3600

@@ -1,8 +1,8 @@
-# Design System — WUPHF Notebook Surface
+# Design System , WUPHF Notebook Surface
 
 **Scope:** the `/notebooks` and `/reviews` surfaces inside the WUPHF web app (port 7891 prod / 7900 dev). Does NOT apply to the pixel-office marketing site (see `DESIGN.md`), the wiki (see `DESIGN-WIKI.md`), or the rest of the app chrome (see `web/src/styles/global.css`).
 
-Always read this file before making any visual or UI decisions on notebooks. If a decision conflicts with this file, escalate — don't silently deviate.
+Always read this file before making any visual or UI decisions on notebooks. If a decision conflicts with this file, escalate , don't silently deviate.
 
 ## Product Context
 
@@ -14,7 +14,7 @@ Always read this file before making any visual or UI decisions on notebooks. If 
 
 ## Aesthetic Direction
 
-- **Direction:** Physical-notebook metaphor — tan ruled paper, handwritten display font, rotated DRAFT stamp. Reads as a field notebook or engineer's daybook. Deliberately the opposite of the wiki's Wikipedia-fidelity editorial posture.
+- **Direction:** Physical-notebook metaphor , tan ruled paper, handwritten display font, rotated DRAFT stamp. Reads as a field notebook or engineer's daybook. Deliberately the opposite of the wiki's Wikipedia-fidelity editorial posture.
 - **Decoration level:** Minimal but metaphoric. Ruled lines and the DRAFT stamp do the work; no decorative blobs, no gradients, no ornament.
 - **Mood:** informal, dated, stacked, working-draft. *"I am thinking on paper."*
 - **Why this direction:** the whole bet is that users must never confuse "draft" with "canonical." Maximum visual dichotomy from the wiki protects that distinction on first glance.
@@ -36,7 +36,7 @@ Always read this file before making any visual or UI decisions on notebooks. If 
 | `--nb-border-light` | `#E6DEC6` | Dashed separators |
 | `--nb-ink-blue` | `#274472` | Wikilinks, H2 color (fountain-pen ink) |
 | `--nb-stamp-red` | `#B43A2F` | DRAFT stamp, broken wikilinks |
-| `--nb-amber` | `#C78A1F` | Promote button, current-entry highlight. Muted warm amber — distinct from wiki's `#ECB22E`. |
+| `--nb-amber` | `#C78A1F` | Promote button, current-entry highlight. Muted warm amber , distinct from wiki's `#ECB22E`. |
 | `--nb-amber-bg` | `rgba(199,138,31,0.10)` | Current-entry sidebar row, pending-review chip |
 | `--nb-green-approve` | `#6A8B52` | Promoted badge, approve button, success state |
 | `--nb-green-bg` | `rgba(106,139,82,0.10)` | Promoted-back callout background |
@@ -49,7 +49,7 @@ Always read this file before making any visual or UI decisions on notebooks. If 
 
 ## Typography
 
-Three-font stack with deliberate handwritten accent. Each role has a specific font — do not substitute.
+Three-font stack with deliberate handwritten accent. Each role has a specific font , do not substitute.
 
 | Role | Font | Usage |
 |---|---|---|
@@ -64,7 +64,7 @@ Three-font stack with deliberate handwritten accent. Each role has a specific fo
 3. Marginalia Q/NEXT callouts (inline in right gutter, 17px)
 4. Author-name label ("PM's notebook", 22px)
 
-Do NOT use Caveat for: article body, H2/H3 section headings inside body, app bar, navigation, buttons, timestamps, ANY chrome. If you feel tempted to use Caveat somewhere not on this list, it's wrong — use Plex Serif or the system chrome stack instead.
+Do NOT use Caveat for: article body, H2/H3 section headings inside body, app bar, navigation, buttons, timestamps, ANY chrome. If you feel tempted to use Caveat somewhere not on this list, it's wrong , use Plex Serif or the system chrome stack instead.
 
 **Font blacklist (never use for this surface):** Fraunces (reserved for wiki), Source Serif 4 (reserved for wiki), Inter, Roboto, Arial, Helvetica, Open Sans, Montserrat, Poppins, Space Grotesk, Comic Sans.
 
@@ -96,7 +96,7 @@ Do NOT use Caveat for: article body, H2/H3 section headings inside body, app bar
 - **Ruled-line rhythm:** 28px. Body text line-height aligns to this so text sits ON the ruling, not crossed by it.
 - **Density:** Comfortable in the article column; tighter in the sidebar.
 - **Scale:** 2xs(2) xs(4) sm(8) md(16) lg(24) xl(32) 2xl(48) 3xl(64).
-- **Article column width:** 680-780px max (slightly wider than wiki's 640px — notebook reading is less dense). Outer padding 48-72px.
+- **Article column width:** 680-780px max (slightly wider than wiki's 640px , notebook reading is less dense). Outer padding 48-72px.
 - **Sidebar width:** 260px author shelf (narrower than wiki's 240px left nav because it's showing entries not dir groups).
 - **Section rhythm:** 28-32px vertical space between H2s. 22px between H3s. 14px between paragraphs.
 
@@ -162,7 +162,7 @@ The surface demonstrated in `variant-A-physical.html`. Ruled paper, Caveat title
   background: rgba(180, 58, 47, 0.04);
 }
 ```
-Accessibility: `role="img" aria-label="Draft entry, not yet reviewed"`. Critical — without this, screen readers miss the most important state signal.
+Accessibility: `role="img" aria-label="Draft entry, not yet reviewed"`. Critical , without this, screen readers miss the most important state signal.
 
 ### Byline strip (sticky on scroll)
 Agent pixel avatar + DRAFT pill (system-ui, uppercase, 10px, red bg) + agent name + timestamp meta. Sticky-top-46px so the DRAFT pill remains visible as the user scrolls past the fixed DRAFT stamp.
@@ -183,7 +183,7 @@ Uses `--nb-green-approve` left border, `--nb-green-bg` background.
 
 ### Inline review thread (Pass 7.1 decision)
 Appears at the bottom of the entry when a review is in-flight (status = `pending` or `in-review` or `changes-requested`). Styled as a ruled-notebook annotation block:
-- Title: "Review — CEO" (Caveat, 20px)
+- Title: "Review , CEO" (Caveat, 20px)
 - Comment entries: author pixel avatar + name (system-ui) + Plex Serif body + mono timestamp
 - Thread sits between the entry body and the Actions footer
 - Author can reply inline; reviewer can approve/request-changes from a control at the bottom of the thread
@@ -191,11 +191,11 @@ Appears at the bottom of the entry when a review is in-flight (status = `pending
 
 ### `/reviews` Kanban
 Five columns, left-to-right:
-1. `Pending` — proposed promotions awaiting reviewer pickup
-2. `In review` — reviewer assigned, thread active
-3. `Changes requested` — reviewer asked for edits; author's court
-4. `Approved` — promoted to wiki in last 7 days (flushes to Archived after)
-5. `Archived` — historical
+1. `Pending` , proposed promotions awaiting reviewer pickup
+2. `In review` , reviewer assigned, thread active
+3. `Changes requested` , reviewer asked for edits; author's court
+4. `Approved` , promoted to wiki in last 7 days (flushes to Archived after)
+5. `Archived` , historical
 
 Cards show: entry title (Plex Serif, 15px) + author avatar + requested reviewer avatar + proposed wiki path (mono, 11px) + short 3-line excerpt + time-in-column.
 
@@ -241,7 +241,7 @@ No scroll-driven animations. No parallax. No entrance animations on page load. R
 | ARIA landmarks | `<header>` app bar, `<nav aria-label="Author's notebook entries">` shelf, `<main>` article, `<section aria-label="Reviewer comments">` inline review thread, shared `<footer>` with wiki for live edit-log. |
 | Screen-reader announcement | Entry title region: `aria-label="Draft: {title}. Not yet reviewed."` DRAFT stamp: `role="img" aria-label="Draft entry"`. Promote button: explicit "Submit this draft for review by {reviewer}" label. |
 | Touch targets | Promote button ≥ 44px tall. Author-shelf entry rows ≥ 44px on mobile. |
-| Motion | Respect `prefers-reduced-motion: reduce` — no pulse, instant state transitions. |
+| Motion | Respect `prefers-reduced-motion: reduce` , no pulse, instant state transitions. |
 | Handwritten font legibility | Never below 16px for Caveat. Use `font-weight: 500` at 16-22px to maintain legibility. |
 
 ## Cross-Surface Rules
@@ -275,7 +275,7 @@ When an agent promotes a notebook entry:
 3. Fall back to `ceo` if no blueprint-level config exists.
 4. Author can override on submit (dropdown next to the Promote button).
 
-`human-only` disables agent approval — promotion sits in `Pending` until a human clicks Approve.
+`human-only` disables agent approval , promotion sits in `Pending` until a human clicks Approve.
 
 ## Promotion Artifact (Pass 7.3 decision)
 
@@ -296,7 +296,7 @@ Reuses the wiki's stack:
 ```
 react-markdown
 remark-gfm                  # tables, task lists, strikethrough
-remark-wiki-link            # [[slug]] parser — shared grammar with wiki
+remark-wiki-link            # [[slug]] parser , shared grammar with wiki
 rehype-slug                 # auto-id on headings
 rehype-autolink-headings
 dompurify
@@ -324,7 +324,7 @@ Pixel avatars: reuse `composeAvatar` routine (same as wiki).
 
 ## Anti-Slop Policy
 
-Every decision below is deliberately NOT made — if a future revision introduces any of these, the change is wrong.
+Every decision below is deliberately NOT made , if a future revision introduces any of these, the change is wrong.
 
 - Fraunces or Source Serif 4 anywhere on the notebook surface (reserved for wiki)
 - Inter body font
@@ -363,18 +363,18 @@ The following were considered and explicitly deferred:
 
 ## What Already Exists (reuse)
 
-- `composeAvatar` — pixel agent avatars. Same in notebooks and wiki.
-- `remark-wiki-link` parser — shared grammar.
-- `/tasks` Kanban layout primitives — reuse column structure, card spacing, drag-reorder mechanics for `/reviews`.
-- Broker SSE channel — notebook writes + review-state changes fire events on the same channel; UI subscribes by event type.
-- `git` per-commit identity flags — agents commit as their slug; reviewers commit as their slug. Same mechanism as wiki.
-- WUPHF app bar + top-nav structure — shared across all surfaces.
+- `composeAvatar` , pixel agent avatars. Same in notebooks and wiki.
+- `remark-wiki-link` parser , shared grammar.
+- `/tasks` Kanban layout primitives , reuse column structure, card spacing, drag-reorder mechanics for `/reviews`.
+- Broker SSE channel , notebook writes + review-state changes fire events on the same channel; UI subscribes by event type.
+- `git` per-commit identity flags , agents commit as their slug; reviewers commit as their slug. Same mechanism as wiki.
+- WUPHF app bar + top-nav structure , shared across all surfaces.
 
 ## Approved Mockup
 
 | Screen/Section | Mockup Path | Direction | Notes |
 |---|---|---|---|
-| Notebook article view | `~/.gstack/projects/nex-crm-wuphf/designs/notebooks-20260420/variant-A-physical.html` | Physical notebook — tan ruled paper, Caveat handwritten display, IBM Plex Serif body, rotated red DRAFT stamp | Caveat dose MUST be restricted to the four permitted zones (see Typography section). Current mock shows a `.body h2` rule using Caveat at 30px — change to Plex Serif at 30px during implementation. Inline review thread (Pass 7.1) is not yet in the mock — add below the body when review status ≠ null. |
+| Notebook article view | `~/.gstack/projects/nex-crm-wuphf/designs/notebooks-20260420/variant-A-physical.html` | Physical notebook , tan ruled paper, Caveat handwritten display, IBM Plex Serif body, rotated red DRAFT stamp | Caveat dose MUST be restricted to the four permitted zones (see Typography section). Current mock shows a `.body h2` rule using Caveat at 30px , change to Plex Serif at 30px during implementation. Inline review thread (Pass 7.1) is not yet in the mock , add below the body when review status ≠ null. |
 
 ## Decisions Log
 

@@ -16,7 +16,7 @@ bunx tsc --noEmit                     # typecheck
 bun test                              # vitest
 ```
 
-Always use `bun` / `bunx` — never npm, npx, node, or pnpm.
+Always use `bun` / `bunx` , never npm, npx, node, or pnpm.
 
 ## Commit Messages
 
@@ -32,8 +32,8 @@ Body lines must not exceed 100 characters.
 
 - Go: `gofmt`, `go vet ./...`, `golangci-lint run ./...`
 - Web: `bunx biome check --write` (JS/TS/JSON/CSS in `web/`)
-- Secrets: `bunx secretlint` — never commit API keys, tokens, or credentials
-- Never suppress lint warnings with ignore comments — fix the code
+- Secrets: `bunx secretlint` , never commit API keys, tokens, or credentials
+- Never suppress lint warnings with ignore comments , fix the code
 
 ## Git Hooks (lefthook)
 
@@ -41,6 +41,6 @@ Pre-commit, commit-msg, and pre-push hooks run via lefthook. Run `./scripts/boot
 
 ## PR Workflow
 
-- Always branch + PR — never push directly to `main`
+- Always branch + PR , never push directly to `main`
 - Open PRs in draft (`gh pr create --draft`)
 - Run the full test suite before marking ready

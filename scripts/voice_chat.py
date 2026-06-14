@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import asyncio, json, re, subprocess, tempfile, wave
+import asyncio, json, os, re, subprocess, tempfile, wave
 from pathlib import Path
 import numpy as np
 import sounddevice as sd
@@ -7,7 +7,7 @@ import torch
 import httpx
 from silero_vad import load_silero_vad
 
-JETSON = "192.168.1.100"
+JETSON = os.environ.get("NOUS_JETSON_IP", "localhost")
 WHISPER_URL = f"http://{JETSON}:8080/inference"
 WHISPER_PROMPT = "Dette er en samtale på dansk."
 LLM_URL = f"http://{JETSON}:8081/v1/chat/completions"
@@ -15,7 +15,7 @@ PROXY_URL = "http://localhost:8090"
 SAMPLE_RATE = 16000
 PIPER_MODEL = "/srv/nous/models/tts/da.onnx"
 MIN_FRAGMENT_LEN = 60
-SPLIT_REGEX = re.compile(r'([.!?]+\s+)')
+SPLIT_REGEX = re.compile(r'([.!?]+\s+|\n+)')
 VAD_SAMPLES = 512
 SILENCE_HANG_FRAMES = 25
 MAX_RECORDING_SEC = 15
@@ -26,7 +26,7 @@ TOOLS = [
     {"type": "function", "function": {"name": "search_web", "description": "Søger nyheder og aktuelle info", "parameters": {"type": "object", "properties": {"query": {"type": "string"}}, "required": ["query"]}}},
 ]
 
-SYSTEM = """Du er NOUS, en dansk personlig AI-assistent. Brugeren hedder Dan.
+SYSTEM = f"""Du er NOUS, en dansk personlig AI-assistent. Brugeren hedder {os.environ.get("NOUS_OWNER_NAME", "Bruger")}.
 
 Input kommer fra talegenkendelse og kan have fejl. Hvis en sætning ikke giver mening på dansk, så tolk den fonetisk:
 - "Si'" eller "Si" → "Sig"
@@ -45,6 +45,7 @@ REGLER FOR TOOL-BRUG:
 EFTER TOOL-KALD:
 - Læs resultatet og giv et kort, naturligt dansk svar
 - Find aldrig på detaljer der ikke står i resultatet
+- Når du siger klokkeslæt: sig "fjorten tredive" eller "kvart i tre" — ALDRIG "14:30" eller "14 punktum 30"
 
 GENERELT:
 - Svar ALTID på dansk, aldrig svensk eller norsk
@@ -109,9 +110,9 @@ def record_with_vad(output_wav):
     return True
 
 
-def transcribe(wav_path):
+async def transcribe(wav_path):
     with open(wav_path, "rb") as f:
-        r = httpx.post(
+        r = await asyncio.to_thread(httpx.post,
             WHISPER_URL,
             files={"file": f},
             data={
@@ -120,19 +121,19 @@ def transcribe(wav_path):
                 "prompt": WHISPER_PROMPT,
                 "temperature": "0.0",
             },
-            timeout=30.0,
+            timeout=120.0,
         )
     return r.json().get("text", "").strip()
 
 
-def call_tool(name, args):
+async def call_tool(name, args):
     try:
         if name == "get_time":
-            r = httpx.get(f"{PROXY_URL}/time", timeout=5.0)
+            r = await asyncio.to_thread(httpx.get, f"{PROXY_URL}/time", timeout=5.0)
         elif name == "get_weather":
-            r = httpx.get(f"{PROXY_URL}/weather", params={"location": args["location"]}, timeout=10.0)
+            r = await asyncio.to_thread(httpx.get, f"{PROXY_URL}/weather", params={"location": args["location"]}, timeout=10.0)
         elif name == "search_web":
-            r = httpx.get(f"{PROXY_URL}/search", params={"q": args["query"], "n": 3}, timeout=15.0)
+            r = await asyncio.to_thread(httpx.get, f"{PROXY_URL}/search", params={"q": args["query"], "n": 3}, timeout=15.0)
         else:
             return json.dumps({"error": f"unknown: {name}"})
         return json.dumps(r.json(), ensure_ascii=False)
@@ -157,7 +158,7 @@ async def synth_one(fragment):
     with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp:
         wav_path = tmp.name
     proc = await asyncio.create_subprocess_exec("piper", "--model", PIPER_MODEL, "--output_file", wav_path, stdin=asyncio.subprocess.PIPE, stdout=asyncio.subprocess.DEVNULL, stderr=asyncio.subprocess.DEVNULL)
-    await proc.communicate(fragment.encode())
+    await asyncio.wait_for(proc.communicate(fragment.encode()), timeout=120.0)
     return wav_path
 
 
@@ -170,7 +171,7 @@ async def synth_and_play(queue):
             if next_wav_task:
                 wav_path = await next_wav_task
                 play = await asyncio.create_subprocess_exec("play", "-q", wav_path, "rate", "48000", "channels", "2", stdout=asyncio.subprocess.DEVNULL, stderr=asyncio.subprocess.DEVNULL)
-                await play.wait()
+                await asyncio.wait_for(play.wait(), timeout=15.0)
                 Path(wav_path).unlink(missing_ok=True)
             break
         if next_wav_task is None:
@@ -179,7 +180,7 @@ async def synth_and_play(queue):
         wav_path = await next_wav_task
         next_wav_task = asyncio.create_task(synth_one(fragment))
         play = await asyncio.create_subprocess_exec("play", "-q", wav_path, "rate", "48000", "channels", "2", stdout=asyncio.subprocess.DEVNULL, stderr=asyncio.subprocess.DEVNULL)
-        await play.wait()
+        await asyncio.wait_for(play.wait(), timeout=15.0)
         Path(wav_path).unlink(missing_ok=True)
 
 
@@ -188,20 +189,29 @@ async def stream_llm_response(messages, queue, max_iter=5):
     full_text = ""
     for _ in range(max_iter):
         # Probe: synkront kald for at opdage tool_calls (Qwen3 streamer ikke tool_calls)
-        r = httpx.post(
+        r = await asyncio.to_thread(httpx.post,
             LLM_URL,
-            json={"model": "qwen3", "messages": messages, "tools": TOOLS, "temperature": 0.6},
+            json={"model": "qwen2.5:7b", "messages": messages, "tools": TOOLS, "temperature": 0.6},
             timeout=60.0,
         )
-        msg = r.json()["choices"][0]["message"]
+        r.raise_for_status()
+        data = r.json()
+        if not data.get("choices"):
+            await queue.put("Beklager, jeg fik intet svar.")
+            await queue.put(None)
+            return "Beklager, jeg fik intet svar."
+        msg = data["choices"][0]["message"]
         tcs = msg.get("tool_calls")
         if tcs:
             messages.append(msg)
             for tc in tcs:
-                fn = tc["function"]["name"]
-                args = json.loads(tc["function"]["arguments"] or "{}")
+                try:
+                    fn = tc["function"]["name"]
+                    args = json.loads(tc["function"]["arguments"] or "{}")
+                except (json.JSONDecodeError, KeyError):
+                    continue
                 print(f"  🔧 {fn}({args})", flush=True)
-                result = call_tool(fn, args)
+                result = await call_tool(fn, args)
                 messages.append({"role": "tool", "tool_call_id": tc["id"], "content": result})
             continue
         # Ingen tool_calls: stream det endelige svar
@@ -209,7 +219,7 @@ async def stream_llm_response(messages, queue, max_iter=5):
         async with httpx.AsyncClient(timeout=60.0) as client:
             async with client.stream(
                 "POST", LLM_URL,
-                json={"model": "qwen3", "messages": messages, "temperature": 0.6, "stream": True},
+                json={"model": "qwen2.5:7b", "messages": messages, "temperature": 0.6, "stream": True},
             ) as resp:
                 async for line in resp.aiter_lines():
                     if not line.startswith("data: "):
@@ -248,24 +258,6 @@ async def stream_llm_response(messages, queue, max_iter=5):
     return error_msg
 
 
-def chat_with_tools(user_message, max_iter=5):
-    messages = [{"role": "system", "content": SYSTEM}, {"role": "user", "content": user_message}]
-    for _ in range(max_iter):
-        r = httpx.post(LLM_URL, json={"model": "qwen3", "messages": messages, "tools": TOOLS, "temperature": 0.6}, timeout=60.0)
-        msg = r.json()["choices"][0]["message"]
-        tcs = msg.get("tool_calls")
-        if tcs:
-            messages.append(msg)
-            for tc in tcs:
-                fn = tc["function"]["name"]
-                args = json.loads(tc["function"]["arguments"] or "{}")
-                print(f"  🔧 {fn}({args})", flush=True)
-                result = call_tool(fn, args)
-                messages.append({"role": "tool", "tool_call_id": tc["id"], "content": result})
-            continue
-        return msg.get("content", "")
-    return "Beklager, jeg kunne ikke svare."
-
 
 async def main():
     workdir = Path("/tmp/nous_voice")
@@ -275,7 +267,7 @@ async def main():
         print("❌ Ingen tale detekteret")
         return
     print("🧠 Whisper...", flush=True)
-    transcript = transcribe(wav_input)
+    transcript = await transcribe(wav_input)
     print(f"📝 Du sagde: '{transcript}'", flush=True)
     if not transcript or len(transcript.strip()) < 3:
         print("❌ For kort transkription")
@@ -284,9 +276,18 @@ async def main():
     messages = [{"role": "system", "content": SYSTEM}, {"role": "user", "content": transcript}]
     queue = asyncio.Queue()
     player = asyncio.create_task(synth_and_play(queue))
-    full_text = await stream_llm_response(messages, queue)
-    print(f"🤖 {full_text}", flush=True)
-    await player
+    try:
+        full_text = await stream_llm_response(messages, queue)
+        print(f"🤖 {full_text}", flush=True)
+    except Exception as e:
+        print(f"❌ Fejl: {e}", flush=True)
+        player.cancel()
+    finally:
+        await queue.put(None)
+        try:
+            await player
+        except (asyncio.CancelledError, Exception):
+            pass
     print("✅ Færdig", flush=True)
 
 

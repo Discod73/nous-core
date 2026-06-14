@@ -1,16 +1,70 @@
+# Data — aldrig i repo
+/config/wings.json
+/config/scraper_jobs.json
+/mnt/nous-data/
+*.db
+*.qdrant
+*.gpg
+*.enc
+
+# Logs
+/logs/
+*.log
+
+# Runtime-data
+external_keys.json
+analyzed_media.json
+analyzed_audio.json
+model_roles.json
+
+# Modeller — for store til git
+models/
+*.gguf
+*.bin
+*.safetensors
+*.onnx
+*.onnx.json
+
+# Miljøvariabler og secrets
+.env
+.env.local
+!.env.example
+*.key
+*.pem
+*.secret
+
+# Personlige konfigurationer
+SOUL.md
+
+# Interne overleveringsdokumenter og status-rapporter
+docs/*.docx
+docs/NOUS_*_Status.md
+docs/SESSION*_RAPPORT.md
+docs/research/
+
+# Python
+__pycache__/
+*.pyc
+*.egg-info/
 .venv/
 pipeline/.venv/
 app/.venv/
-models/
-data/
-logs/
-__pycache__/
-*.pyc
-*.bak_*
+venv/
+
+# Node
+node_modules/
+
+# Backup-filer
 *.bak
+*.bak_*
 *.bak.*
-.DS_Store
-/mnt/
-.claude/
-*.backup.*
 *.backup
+*.backup.*
+
+# System og editor
+.DS_Store
+Thumbs.db
+.claude/
+
+# Incoming data
+incoming/

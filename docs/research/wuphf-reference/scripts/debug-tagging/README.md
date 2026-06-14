@@ -1,4 +1,4 @@
-# debug-tagging — isolated repro rig for PR #218
+# debug-tagging , isolated repro rig for PR #218
 
 ## Purpose
 
@@ -15,24 +15,24 @@ state.
 
 ## What it checks
 
-- **Target computation** — Does the broker's `/messages` POST with
+- **Target computation** , Does the broker's `/messages` POST with
   `tagged: [pm]` get stored with `tagged=["pm"]`?
-- **Headless dispatch** — Does PM's queue (`headless-codex-pm.log` or
+- **Headless dispatch** , Does PM's queue (`headless-codex-pm.log` or
   `headless-claude-pm.log`) get written? Does
   `headless-codex-latency.log` show `agent=pm stage=started`?
-- **CEO absorption** — Was CEO *also* dispatched (expected in collab mode)?
+- **CEO absorption** , Was CEO *also* dispatched (expected in collab mode)?
 
 If the specialist log shows nothing and CEO got the turn, we've reproduced the
 bug and can bisect from there. If the specialist log has entries, the runtime
-path is fine and the coworker's bug is state-specific — compare their
+path is fine and the coworker's bug is state-specific , compare their
 `~/.wuphf` to the sandbox.
 
 ## Isolation
 
-- Custom `HOME` at `/tmp/wuphf-debug-tagging-home` — no touch to real state.
-- Broker on `:7899`, web UI on `:7900` — no collision with default `:7890/:7891`.
-- Pre-seeded `onboarded.json` + `config.json` — no wizard.
-- Fake `claude` and `codex` binaries on `PATH` — the turn is dispatched but
+- Custom `HOME` at `/tmp/wuphf-debug-tagging-home` , no touch to real state.
+- Broker on `:7899`, web UI on `:7900` , no collision with default `:7890/:7891`.
+- Pre-seeded `onboarded.json` + `config.json` , no wizard.
+- Fake `claude` and `codex` binaries on `PATH` , the turn is dispatched but
   exits immediately; we're testing routing, not LLM quality.
 - Nex disabled (`--no-nex`, `WUPHF_NO_NEX=1`).
 
@@ -65,7 +65,7 @@ Running `HIRE_SLUG=qa-spec` against pre-fix `main` showed that PR #218 only
 fixed *half* the round-trip:
 
 - Notification routing (fixed in #218): `qa-spec` was correctly dispatched a
-  turn — `agent=qa-spec stage=started` in `headless-codex-latency.log`.
+  turn , `agent=qa-spec stage=started` in `headless-codex-latency.log`.
 - Reply posting (broken pre this PR, fixed here): `fallback-post-error:
   channel access denied` in `headless-claude-qa-spec.log`.
 
@@ -73,18 +73,18 @@ The broker's `/messages` POST handler enforces
 `canAccessChannelLocked(from, channel)`, which requires the sender slug to
 be in `ch.Members` for every non-CEO agent. `handleOfficeMembers` with
 `action: create` appended the new member to `b.members` but **never added
-them to any channel's `Members` array** — so the agent was hireable,
+them to any channel's `Members` array** , so the agent was hireable,
 taggable, and dispatches correctly, but its reply was silently 403'd and
 the human saw nothing.
 
 Two fix directions were considered:
 
-1. **handleOfficeMembers `action: create`** — add the new slug to all
+1. **handleOfficeMembers `action: create`** , add the new slug to all
    non-DM channels when the member is created. Symmetric with the
    pack-launch seeding in `normalizeLoadedStateLocked`, and with how
    `/channel-members` already handles the reverse. **This is what this
    PR ships.**
-2. `canAccessChannelLocked` — treat the agent's own reply to a thread
+2. `canAccessChannelLocked` , treat the agent's own reply to a thread
    they were tagged in as allowed even if not in `ch.Members`. Parallel to
    PR #218's explicit-tag bypass on the read side. Not chosen: the bug is
    a missing side-effect on hire, not a missing permission carve-out.
@@ -101,7 +101,7 @@ curl -s -H "Authorization: Bearer $(cat /tmp/wuphf-broker-token-7899)" \
 ```
 
 The rig also asserts this membership invariant inline (see `IN_GENERAL`
-check in `run.sh`) — it cannot report PASS on a regression that re-drops
+check in `run.sh`) , it cannot report PASS on a regression that re-drops
 the hired slug from `#general.members`.
 
 ## If the bug still doesn't reproduce for the coworker

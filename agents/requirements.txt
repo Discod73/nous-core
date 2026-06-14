@@ -1,0 +1,4 @@
+langgraph>=0.2.0
+langchain-core>=0.2.0
+httpx
+fastapi

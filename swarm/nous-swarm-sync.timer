@@ -1,0 +1,9 @@
+[Unit]
+Description=NOUS Swarm sync med peers
+
+[Timer]
+OnCalendar=*-*-* 02:00:00
+RandomizedDelaySec=300
+
+[Install]
+WantedBy=timers.target

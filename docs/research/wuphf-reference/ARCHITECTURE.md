@@ -27,22 +27,22 @@ How WUPHF works under the hood, anchored to files you can open. One page. Read i
 | File | Role |
 |---|---|
 | `cmd/wuphf/` | CLI entrypoint, slash commands, TUI, launcher |
-| `internal/team/broker.go` | Message bus. Every message is a push event — agents are spawned on wake, not polled |
+| `internal/team/broker.go` | Message bus. Every message is a push event , agents are spawned on wake, not polled |
 | `internal/team/launcher.go` | Decides which agents wake for a given message (focus/collab mode, tags) |
 | `internal/team/headless_claude.go` | Spawns `claude` as a one-shot per turn; no `--resume` accumulation |
 | `internal/team/headless_codex.go` | Same model for Codex |
 | `internal/team/worktree.go` | Per-agent isolated git worktree so agents can't corrupt each other |
 | `internal/team/resume.go` | On restart, replays unfinished tasks + unanswered messages to the right agents |
 | `internal/teammcp/` | The per-agent MCP tool surface. DM mode loads ~4 tools; office mode loads more |
-| `internal/agent/packs.go` | The team compositions (`starter`, `founding-team`, `coding-team`, `lead-gen-agency`, `revops`) — packs can also pre-seed default skills |
-| `web/index.html` | The office UI — channels, composer, live streams |
+| `internal/agent/packs.go` | The team compositions (`starter`, `founding-team`, `coding-team`, `lead-gen-agency`, `revops`) , packs can also pre-seed default skills |
+| `web/index.html` | The office UI , channels, composer, live streams |
 | `mcp/` | MCP servers WUPHF ships for Nex context, human-in-the-loop approvals, etc. |
 
 ## Three load-bearing choices
 
 With the file that implements each:
 
-1. **Fresh session per turn** (`headless_claude.go`). Every agent turn is `claude -p "<prompt>"` from scratch. No `--resume`, no growing history. Combined with identical prompt prefixes, Anthropic's prompt cache gives ~97% read hit rates — the primary driver of the benchmark's token savings.
+1. **Fresh session per turn** (`headless_claude.go`). Every agent turn is `claude -p "<prompt>"` from scratch. No `--resume`, no growing history. Combined with identical prompt prefixes, Anthropic's prompt cache gives ~97% read hit rates , the primary driver of the benchmark's token savings.
 
 2. **Per-agent scoped MCP** (`internal/teammcp/`). An agent in DM mode sees only the handful of tools that mode needs. Smaller tool schema → smaller prompt → cheaper turn → better cache alignment. Each agent role gets exactly the tools it needs, nothing more.
 
@@ -75,5 +75,5 @@ All four are load-time optional. Core WUPHF is just `broker + launcher + headles
 
 ## Next stops
 
-- [`FORKING.md`](FORKING.md) — how to cut Nex, swap branding, add packs.
-- `scripts/benchmark.sh` — run the 9× benchmark yourself. Full methodology is inline in the script comments.
+- [`FORKING.md`](FORKING.md) , how to cut Nex, swap branding, add packs.
+- `scripts/benchmark.sh` , run the 9× benchmark yourself. Full methodology is inline in the script comments.

@@ -7,7 +7,7 @@ WORK=/tmp/voice_test
 mkdir -p $WORK
 cd $WORK
 
-JETSON=192.168.1.100
+JETSON="${NOUS_JETSON_IP:-localhost}"
 
 echo "🎤 Optager 5 sekunder... (tal nu)"
 arecord -D plughw:2,0 -f S16_LE -r 16000 -c 1 -d 5 $WORK/input.wav 2>/dev/null

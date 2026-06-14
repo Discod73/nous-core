@@ -22,7 +22,7 @@ WATCH_DIR = Path("/home/nous/incoming")
 QDRANT_URL = "http://localhost:6333"
 # Bruger Task Router i stedet
 # # Bruger Task Router i stedet
-# OLLAMA_URL = "http://192.168.1.100:11434/api/embeddings"
+
 EMBED_MODEL = "nomic-embed-text"
 CHUNK_SIZE = 512
 CHUNK_OVERLAP = 50

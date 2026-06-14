@@ -1,23 +1,23 @@
-# Design System — WUPHF Pixel Office Website
+# Design System , WUPHF Pixel Office Website
 
 ## Product Context
-- **What this is:** The marketing/landing website for WUPHF — an open-source AI agent office tool where an AI team (CEO, PM, engineers, designer) works visibly in a shared office, claimable via one terminal command.
+- **What this is:** The marketing/landing website for WUPHF , an open-source AI agent office tool where an AI team (CEO, PM, engineers, designer) works visibly in a shared office, claimable via one terminal command.
 - **Who it's for:** Developers and technical founders who want an AI team that works in the open rather than behind an API.
 - **Space/industry:** AI developer tools / agent frameworks.
-- **Project type:** Isometric pixel-art marketing site. The website IS the product experience — not a description of it.
+- **Project type:** Isometric pixel-art marketing site. The website IS the product experience , not a description of it.
 
 ---
 
 ## Aesthetic Direction
-- **Direction:** Pixel-Retro / The Office (US TV show) workplace — isometric top-down 3D view
-- **Decoration level:** Expressive — 100% pixel art, no smooth vectors, no photos, no gradients
+- **Direction:** Pixel-Retro / The Office (US TV show) workplace , isometric top-down 3D view
+- **Decoration level:** Expressive , 100% pixel art, no smooth vectors, no photos, no gradients
 - **Mood:** A dark office where something is always happening. AI agents and The Office cast sharing the floor. Dim fluorescent lights, golden WUPHF sign glowing on the back wall, everything quietly animated. You discover the product by exploring the environment, not by reading bullet points.
-- **EUREKA:** Every AI agent platform uses dark mode + gradient hero + "your AI team" headline. This site IS the office. The product concept and the website experience are unified. You don't read about WUPHF — you live in it for 30 seconds on the landing page.
+- **EUREKA:** Every AI agent platform uses dark mode + gradient hero + "your AI team" headline. This site IS the office. The product concept and the website experience are unified. You don't read about WUPHF , you live in it for 30 seconds on the landing page.
 
 ---
 
 ## Color System
-**Approach:** Dark mode. Amber (#ECB22E) as primary accent — the WUPHF yellow from the existing app token `--yellow`. Works dramatically on dark backgrounds.
+**Approach:** Dark mode. Amber (#ECB22E) as primary accent , the WUPHF yellow from the existing app token `--yellow`. Works dramatically on dark backgrounds.
 
 | Token | Hex | Usage |
 |-------|-----|-------|
@@ -27,7 +27,7 @@
 | `--border` | `#3A3028` | Dividers, tile outlines, outlines |
 | `--text` | `#F0EBD8` | Primary text (warm off-white) |
 | `--text-muted` | `#8A7D6A` | Secondary text, labels |
-| `--yellow` | `#ECB22E` | WUPHF amber/gold — primary accent, sign, nav logo, CTAs |
+| `--yellow` | `#ECB22E` | WUPHF amber/gold , primary accent, sign, nav logo, CTAs |
 | `--yellow-dark` | `#C49020` | Button offset shadows, active borders |
 | `--yellow-glow` | `rgba(236,178,46,0.15)` | Subtle ambient glow behind the sign |
 | `--blue` | `#5A9AC8` | Secondary accent, links, engineer agent (brighter for dark bg) |
@@ -145,7 +145,7 @@ Where `TW=60`, `TH=30`, `OX=420`, `OY=100`.
 | Pam Beesly | (3.5, 0.5) | Reception, in front of WUPHF sign |
 | Michael Scott | (6.5, 1.5) | Wandering, background right |
 | Dwight Schrute | (1, 3) | At his desk, left side |
-| Jim Halpert | (3, 3) | At his desk, center — looks at viewer |
+| Jim Halpert | (3, 3) | At his desk, center , looks at viewer |
 | Kevin Malone | (5.5, 4) | Near snack jar, wide sprite |
 | Creed Bratton | (0.5, 5) | Far corner, doing something unexplained |
 | CEO Agent | (5.5, 2) | Amber nameplate (#ECB22E) |
@@ -162,12 +162,12 @@ Where `TW=60`, `TH=30`, `OX=420`, `OY=100`.
 | Location | Click to reveal |
 |----------|----------------|
 | Reception drawer (first, flashes) | `"One command. One office. ./wuphf"` |
-| Paper on Pam's desk | `"CEO, PM, engineers — all visible, all working."` |
-| Conference room whiteboard | Architecture diagram — agent routing + broker |
+| Paper on Pam's desk | `"CEO, PM, engineers , all visible, all working."` |
+| Conference room whiteboard | Architecture diagram , agent routing + broker |
 | Agent monitor screen | `"Open source. MIT license. go build -o wuphf"` |
 | Plant by window | `"Unlike Ryan Howard's WUPHF, this one works."` |
 | Break room fridge | Full install command |
-| Stapler in jello (Dwight area) | Easter egg — Dwight rage quit message |
+| Stapler in jello (Dwight area) | Easter egg , Dwight rage quit message |
 | Dundie on shelf | `"Best AI Office, 2025. (Self-awarded.)"` |
 | Kevin's snack jar label | `"No tokens wasted on pleasantries."` |
 
@@ -239,6 +239,6 @@ border-bottom: 3px solid #C49020;
 | 2026-04-15 | WUPHF Yellow (#ECB22E) as primary accent | Picked up from existing app `--yellow` token. Consistent with product branding. |
 | 2026-04-15 | Press Start 2P + VT323 + DM Mono | Three-font system: pixel UI, in-world dialogue, functional prose. Each has a distinct register. |
 | 2026-04-15 | Zero hero copy in first viewport | All messaging is environmental. The product concept (visible AI team) IS the website experience. |
-| 2026-04-15 | steps() animations only — hard rule | Smooth CSS transitions break the pixel art illusion. 16-bit game feel requires discrete frames. |
+| 2026-04-15 | steps() animations only , hard rule | Smooth CSS transitions break the pixel art illusion. 16-bit game feel requires discrete frames. |
 | 2026-04-15 | Isometric 3D view as hero layout | Isometric is unmistakable and distinctive. No other AI tool website does this. The product IS an office, so the website IS an office. |
-| 2026-04-15 | The Office cast + WUPHF agents on same floor | Office cast provides instant recognition and humor. AI agents demonstrate the product inline. The joke writes itself — they coexist. |
+| 2026-04-15 | The Office cast + WUPHF agents on same floor | Office cast provides instant recognition and humor. AI agents demonstrate the product inline. The joke writes itself , they coexist. |

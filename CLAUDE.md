@@ -4,18 +4,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project overview
 
-NOUS is a Danish-language, locally-hosted personal AI assistant. It runs across two machines on a private LAN with the Jetson air-gapped from the internet.
+NOUS is a Danish-language, locally-hosted personal AI assistant. It runs across two machines on a private LAN with the inference host air-gapped from the internet.
 
-| Device | IP | Role |
+| Device | IP (example) | Role |
 |---|---|---|
-| Pi 5 16GB (Nous-Pi) | 192.168.1.87 | Wake-word detection, VAD, TTS, ingest, proxy, RAG |
-| Jetson Orin Nano 8GB | 192.168.1.100 | LLM inference (Qwen3-4B on port 8081), STT (Whisper-medium on port 8080) |
+| Pi 5 16GB (primary host) | `$NOUS_PI5_IP` | Wake-word detection, VAD, TTS, ingest, proxy, RAG |
+| Jetson Orin Nano 8GB (inference host) | `$NOUS_JETSON_IP` | LLM inference (port 11434), STT (Whisper, port 8080) |
 
-The Jetson has no default route. All internet access goes through `nous-proxy` on the Pi (port 8090). The Pi 5 IP was historically misrecorded as .150 — the correct IP is .87.
+The inference host has no default route. All internet access goes through `nous-proxy` on the primary host (port 8090). Set actual IPs via environment variables , see `.env.example`.
 
 ## Python environment
 
-The main venv used by all scripts and the systemd service is `/srv/nous/pipeline/.venv`. This must be first in PATH when running under systemd (critical — without it, `piper` and `sox` are not found).
+The main venv used by all scripts and the systemd service is `/srv/nous/pipeline/.venv`. This must be first in PATH when running under systemd (critical , without it, `piper` and `sox` are not found).
 
 ```bash
 source /srv/nous/pipeline/.venv/bin/activate
@@ -73,9 +73,9 @@ cd /srv/nous && docker compose up -d
 cd /srv/nous && docker compose restart qdrant
 cd /srv/nous && docker compose logs -f qdrant
 
-# Check Ollama/Whisper on Jetson
-curl http://192.168.1.100:8080/health   # Whisper STT
-curl http://192.168.1.100:8081/health   # Qwen3-4B LLM
+# Check Ollama/Whisper on inference host (replace with $NOUS_JETSON_IP)
+curl http://$NOUS_JETSON_IP:8080/health   # Whisper STT
+curl http://$NOUS_JETSON_IP:11434/health  # Ollama LLM
 ```
 
 ## Architecture
@@ -103,7 +103,7 @@ The subprocess model (`voice_assistant.py` spawning `voice_chat.py`) ensures ful
 
 | Service | File | Port |
 |---|---|---|
-| `nous-voice-assistant.service` | `/etc/systemd/system/nous-voice-assistant.service` | — |
+| `nous-voice-assistant.service` | `/etc/systemd/system/nous-voice-assistant.service` | , |
 | nous-proxy | `/srv/nous/proxy/nous_proxy.py` | 8090 |
 | Qdrant | Docker (`docker-compose.yml`) | 6333, 6334 |
 | SearXNG | Docker (`docker-compose.yml`) | 8080 (localhost) |
@@ -113,9 +113,9 @@ Proxy endpoints: `/health`, `/time`, `/weather?location=`, `/search?q=`, `/fetch
 ### LLM tool-calling
 
 `nous_chat.py` and `voice_chat.py` both implement the same three tools against nous-proxy:
-- `get_time` — current Danish datetime
-- `get_weather(location)` — via Open-Meteo (no API key)
-- `search_web(query)` — via SearXNG
+- `get_time` , current Danish datetime
+- `get_weather(location)` , via Open-Meteo (no API key)
+- `search_web(query)` , via SearXNG
 
 The LLM uses the OpenAI-compatible `/v1/chat/completions` endpoint on the Jetson with `model: "qwen3"`.
 
@@ -131,12 +131,12 @@ Documents are stored in **wings** (topic-based Qdrant collections) with a **scop
 
 | Scope | Anonymization |
 |---|---|
-| SECRET | None — only on Pi |
-| PRIVATE | None — only on owner devices |
+| SECRET | None , only on Pi |
+| PRIVATE | None , only on owner devices |
 | SWARM | All PII (CPR, phone, address, email, names) |
-| PUBLIC | CPR, phone, address, email — names preserved |
+| PUBLIC | CPR, phone, address, email , names preserved |
 
-Wing → collection mapping: `boernesag_secret`, `fbf_data_private`, `jura_private`, `dans_profil_private`, `familie_private`, `nous_projekt_swarm`, `swarm_public`.
+Wing → collection naming convention: `{wing_name}_{scope_lower}` , e.g. `mit_arkiv_private`, `projekter_swarm`. See `config/wings.example.json`.
 
 **Promotion** (moving data to a more public scope) requires explicit user confirmation and runs through `promote.py`, which shows a PII preview before writing. The PII token→original mapping is stored in `/mnt/nous-data/keymap.db` (SQLite).
 
@@ -148,14 +148,27 @@ The ingest pipeline watches `/home/nous/incoming/` and routes files to wings bas
 
 ## Kuzu graph database
 
-`/srv/nous/app/.venv` is a separate Python environment for Kuzu 0.11.3 (claim-tracking graph DB). Database files live at `/mnt/nous-data/kuzu`. It is not yet integrated into the main voice pipeline — activate it only when working on graph-related features. The main pipeline venv (`pipeline/.venv`) has no Kuzu dependency.
+`/srv/nous/app/.venv` is a separate Python environment for Kuzu 0.11.3 (claim-tracking graph DB). Database files live at `/mnt/nous-data/kuzu`. It is not yet integrated into the main voice pipeline , activate it only when working on graph-related features. The main pipeline venv (`pipeline/.venv`) has no Kuzu dependency.
 
 ## Coding conventions
 
 All user-facing strings, system prompts, comments, and log messages are written in **Danish**. This applies to LLM `SYSTEM` prompt text, TTS output, CLI tool docstrings, and inline comments. English is acceptable in code identifiers and technical error messages that will never reach the user.
 
-## Known issues (from v1.9 status doc)
+## Frontend wing-select arkitektur (`web/index.html`)
+
+Der er **tre separate wing-select-funktioner** som skal holdes synkroniserede. Blandingen af dem er en historisk kilde til regressioner:
+
+| Funktion | Opdaterer |
+|---|---|
+| `updateWingSelects()` | `#wing-sel` (chat-input) + `#up-wing` (upload) |
+| `updateScraperWingSelects()` | `#scr-wing` (scraper-tab) , kalder derefter `updateAnalyseWingSelects()` |
+| `updateAnalyseWingSelects()` | `#ana-wing-sel` + `#ana-filter-wing` (analyse-view) |
+
+**Regel:** `updateAnalyseWingSelects()` må aldrig afhænge af scraper-elementer. Den kaldes direkte fra `loadWings()` og `setMode('analyse')`. Tidligere fejl (S7, S9): analyse-wing-selects var begravet som sideeffekt i `updateScraperWingSelects()` og forsvandt hvis `#scr-wing` ikke fandtes.
+
+## Known issues
 
 - **DK_PHONE and DK_ADDRESS regex** in `privacy_guard.py` have known false-positive/miss issues (P1)
 - Whisper-medium Danish WER 12-18%; fuzzy-match SYSTEM prompt in `voice_chat.py` compensates for common STT errors
 - Streaming token-by-token TTS during LLM generation is not yet implemented (P0)
+- Voice pipeline uses subprocess model (`voice_assistant.py` → `voice_chat.py`) for ALSA device release; consolidation to single process is P0
