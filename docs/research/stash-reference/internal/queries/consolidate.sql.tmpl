@@ -1,0 +1,57 @@
+{{define "fetch_episodes"}}
+SELECT
+    id,
+    namespace_id,
+    content,
+    embedding,
+    embedding_model,
+    occurred_at,
+    created_at
+FROM episodes
+WHERE namespace_id = {{.Bind .Args.namespace_id}}
+    AND deleted_at IS NULL
+    AND id > {{.Bind .Args.after_id}}
+ORDER BY id
+LIMIT {{.Bind .Args.limit}}
+{{end}}
+
+{{define "fetch_facts"}}
+SELECT
+    id,
+    namespace_id,
+    content,
+    embedding,
+    embedding_model,
+    confidence,
+    entity,
+    property,
+    value,
+    valid_from,
+    valid_until,
+    created_at,
+    updated_at
+FROM facts
+WHERE namespace_id = {{.Bind .Args.namespace_id}}
+    AND deleted_at IS NULL
+    AND id > {{.Bind .Args.after_id}}
+ORDER BY id
+LIMIT {{.Bind .Args.limit}}
+{{end}}
+
+{{define "fetch_relationships"}}
+SELECT
+    id,
+    namespace_id,
+    from_entity,
+    relation_type,
+    to_entity,
+    confidence,
+    source_fact_id,
+    created_at
+FROM relationships
+WHERE namespace_id = {{.Bind .Args.namespace_id}}
+    AND deleted_at IS NULL
+    AND id > {{.Bind .Args.after_id}}
+ORDER BY id
+LIMIT {{.Bind .Args.limit}}
+{{end}}

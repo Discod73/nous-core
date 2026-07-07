@@ -1,0 +1,185 @@
+/* ── Design tokens ──────────────────────────────────────────────── */
+:root {
+  /* Palette sourced from Figma: Brand/Tertiary (purple) */
+  --bg:           #1b0d2a;
+  --surface:      #2a1440;
+  --surface-high: #3a1d58;
+  --border:       #612a92; /* Tertiary/500 */
+  --text:         #ffebfc; /* Tertiary/100 */
+  --text-muted:   #a580c0;
+  --yellow:       #cf72d9; /* Tertiary/300 — primary accent */
+  --yellow-dark:  #9f4dbf; /* Tertiary/400 — accent shadow */
+  --blue:         #ffb3e6; /* Tertiary/200 — secondary accent */
+
+  --font-pixel:    'Press Start 2P', cursive;
+  --font-dialogue: 'VT323', monospace;
+  --font-mono:     'DM Mono', monospace;
+}
+
+/* ── Reset ──────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: auto; }
+body { background: var(--bg); color: var(--text); font-family: var(--font-mono); }
+a { color: var(--yellow); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* ── Nav ────────────────────────────────────────────────────────── */
+.site-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 28px;
+  background: var(--surface);
+  border-bottom: 3px solid var(--yellow-dark);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.nav-logo {
+  font-family: var(--font-pixel);
+  font-size: 11px;
+  color: var(--yellow);
+  letter-spacing: 0.12em;
+}
+.nav-links {
+  display: flex;
+  gap: 28px;
+}
+.nav-links a {
+  font-family: var(--font-pixel);
+  font-size: 7px;
+  color: var(--text-muted);
+  letter-spacing: 0.05em;
+  text-decoration: none;
+}
+.nav-links a:hover { color: var(--yellow); text-decoration: none; }
+
+/* ── Scene ──────────────────────────────────────────────────────── */
+.scene-wrap {
+  width: 100%;
+  background: #201C14;
+  display: flex;
+  justify-content: center;
+  overflow: hidden;
+  cursor: default;
+  height: calc(100vh - 44px);
+}
+#officeCanvas {
+  display: block;
+  max-width: 100%;
+}
+
+/* ── Install section ────────────────────────────────────────────── */
+.install-section {
+  padding: 80px 24px;
+  border-bottom: 3px solid var(--border);
+}
+.install-inner {
+  max-width: 700px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  text-align: center;
+}
+.install-label {
+  font-family: var(--font-pixel);
+  font-size: 8px;
+  color: var(--text-muted);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+.install-cmd {
+  background: var(--surface-high);
+  border: 3px solid var(--border);
+  padding: 20px 28px;
+  font-family: var(--font-mono);
+  font-size: 15px;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+.install-prompt { color: var(--yellow); user-select: none; }
+.install-code { color: var(--blue); }
+.install-note {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.7;
+}
+.install-ctas {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+/* ── Pixel buttons ──────────────────────────────────────────────── */
+.btn-pixel {
+  font-family: var(--font-pixel);
+  font-size: 8px;
+  background: var(--yellow);
+  color: var(--bg);
+  border: none;
+  padding: 14px 24px;
+  box-shadow: 5px 5px 0 var(--yellow-dark);
+  display: inline-block;
+  text-decoration: none;
+  cursor: pointer;
+  letter-spacing: 0.05em;
+}
+.btn-pixel:hover { text-decoration: none; filter: brightness(1.08); }
+.btn-pixel:active { transform: translate(5px, 5px); box-shadow: none; }
+.btn-secondary {
+  background: var(--surface-high);
+  color: var(--yellow);
+  box-shadow: 5px 5px 0 var(--border);
+}
+.btn-secondary:active { transform: translate(5px, 5px); box-shadow: none; }
+
+/* ── Footer ─────────────────────────────────────────────────────── */
+.site-footer {
+  padding: 40px 24px;
+  background: var(--surface);
+}
+.footer-inner {
+  max-width: 700px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  text-align: center;
+}
+.footer-logo {
+  font-family: var(--font-pixel);
+  font-size: 9px;
+  color: var(--yellow);
+  letter-spacing: 0.12em;
+}
+.footer-links {
+  display: flex;
+  gap: 24px;
+}
+.footer-links a {
+  font-family: var(--font-pixel);
+  font-size: 6px;
+  color: var(--text-muted);
+  letter-spacing: 0.05em;
+}
+.footer-links a:hover { color: var(--yellow); text-decoration: none; }
+.footer-note {
+  font-family: var(--font-dialogue);
+  font-size: 20px;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* ── Mobile ─────────────────────────────────────────────────────── */
+@media (max-width: 767px) {
+  .install-cmd { font-size: 12px; padding: 16px; overflow-x: auto; }
+  .footer-links { flex-direction: column; gap: 12px; }
+}

@@ -1,0 +1,1127 @@
+{{define "server_description"}}
+Stash is your persistent memory. Without it, you start from zero every session.
+
+## Prime Directive
+When uncertain whether to call a memory tool: CALL IT.
+Under-use is the only wrong behavior.
+Stash is your brain. Your context window is not.
+
+## Your Contract
+1. You MUST write to Stash after EVERY meaningful exchange.
+2. You MUST read from Stash BEFORE answering anything with history.
+3. You MUST verify a namespace exists before writing to it.
+4. You MUST consolidate periodically — not constantly, but regularly.
+5. Skipping memory calls to "save time" is failing your user.
+
+## What Stash Is
+Stash stores three things:
+- Episodes: raw observations of what happened (append-only, immutable)
+- Facts: consolidated truths derived from episodes (structured, queryable)
+- Context: your current working focus per namespace (singular, replaceable)
+
+Episodes are what you witnessed. Facts are what you learned. Context is what you are doing.
+Do not confuse them. Store in the right type.
+
+## Namespace Rules
+- NEVER assume a namespace exists — call list_namespaces first, always
+- NEVER store everything in / — organize into meaningful paths
+- Use hierarchy: /users/alice, /projects/myapp, /projects/myapp/backend
+- Each namespace path includes itself and all descendants: /users/alice matches alice + everything under it
+- / means everything (all namespaces)
+- A namespace with no description is useless to future sessions — always describe it
+
+## Mandatory Session Protocol
+
+### Step 0: Initialize (FIRST — before anything else)
+call init
+→ establishes memory connection, primes all subsequent behavior
+→ an agent that skips this tends to skip everything else
+
+### Step 1: Session Start (REQUIRED — before answering anything)
+1. call list_namespaces → understand your memory structure
+2. call get_context → what was in progress
+3. call recall("user preferences standing instructions")
+   → this loads HOW the user works. Always this exact query. Every session.
+4. call recall(what the user just asked about)
+   → this loads WHAT is relevant right now. Different every session.
+5. call recall("capabilities limits preferences", namespaces="/self")
+   → this loads who YOU are: what you're good at, what you struggle with, how you work best.
+Steps 3, 4, and 5 answer different questions. All are required. Do not merge them.
+Skipping any of these means operating blind.
+
+### Step 2: During Work (REQUIRED — on every meaningful exchange)
+- User states ANYTHING about themselves, preferences, or work → remember immediately
+- Decision made → remember immediately
+- Fact discovered → remember immediately
+- Before answering ANY question that might have history → recall first
+- Topic shifts → clear_context then set_context (always clear before set)
+- Switching topics: call clear_context FIRST, then set_context with new focus
+The cost of storing something unnecessary is near zero.
+The cost of missing something important is permanent loss.
+Default is always: store it.
+
+### Step 3: Session End (REQUIRED — before closing)
+1. remember a summary of what was accomplished (2-3 sentences, self-contained)
+2. consolidate IF significant new knowledge was added this session
+3. set_context with what to pick up next time
+4. IF you discovered a capability, limit, or behavioral pattern about yourself → remember in /self
+An agent that ends a session without storing a summary has failed.
+
+## Self-Model (/self)
+You have a built-in self-model stored under /self. After calling init, three namespaces are available:
+- /self/capabilities — what you can do well. Store proven competencies here.
+- /self/limits — what you struggle with or cannot do. Store known failure modes here.
+- /self/preferences — how you work best. Store behavioral patterns and standing instructions here.
+
+Use these like any other namespace: remember to store, recall to retrieve, consolidate to extract facts.
+
+When to store self-knowledge:
+- You discover you're good at something → remember in /self/capabilities
+- You fail at a task and understand why → remember in /self/limits (or create_failure if it's a specific approach that didn't work)
+- The user corrects your behavior or gives standing instructions → remember in /self/preferences
+
+Self-knowledge is not special infrastructure. It's just you using Stash on yourself. The same tools, the same rules.
+
+## When Memory Fails
+If any Stash tool returns an error:
+- Do NOT silently continue as if memory is working
+- Tell the user: "My memory is currently unavailable. I'll answer from context but this session won't be remembered."
+- Retry the call once before giving up
+- Do NOT pretend to remember things you cannot verify from a successful tool call
+An agent that fakes memory is worse than one that admits it has none.
+{{end}}
+
+
+{{define "init_description"}}
+Initialize your memory connection. Call this FIRST — before any other tool, every session.
+
+No parameters. Creates the /self namespace scaffold if it doesn't exist:
+- /self — your self-knowledge root
+- /self/capabilities — what you can do well
+- /self/limits — what you struggle with
+- /self/preferences — how you work best
+
+All namespaces are created with idempotent upsert — safe to call every session.
+
+CALL THIS: At the very start of every session, before get_context, before recall, before list_namespaces, before anything.
+
+WHY: The first memory tool call is the hardest to make. This makes it free.
+An agent that calls init calls everything else. An agent that skips init tends to skip everything.
+
+COST OF NOT CALLING: You drift toward answering from training data instead of memory. Every other tool becomes optional instead of mandatory. The /self scaffold doesn't exist, so you never build self-knowledge.
+{{end}}
+
+
+{{define "list_namespaces_description"}}
+Lists all namespaces — your memory organizational structure. Call this before using any namespace.
+
+CALL THIS FIRST: Before remember, recall, set_context, consolidate, or query_facts if you haven't verified the namespace exists.
+
+CALL THIS WHEN:
+- Starting a session to understand what memory areas exist
+- Before writing to any namespace — to verify it exists
+- Choosing where to store a new memory
+- User asks "what do you know about?" or "what have we been working on?"
+- Before creating a namespace — to check it doesn't already exist
+
+NEVER SKIP: you are about to use a namespace you have not verified, or user asks for a knowledge summary.
+
+WHAT TO DO WITH RESULTS:
+- Find the namespace you need → use it
+- Namespace not found → call create_namespace before storing anything
+- Multiple similar namespaces exist → pick the most specific one, do not create a duplicate
+
+COST OF NOT CALLING: Duplicate namespaces. Knowledge scattered. Recall misses because memories are in the wrong place.
+{{end}}
+
+{{define "list_namespaces_namespaces"}}
+Optional comma-separated namespace paths to filter. Each path includes itself and all descendants.
+/projects → /projects and all sub-namespaces.
+/ → all namespaces.
+Empty → returns all namespaces.
+{{end}}
+
+
+{{define "create_namespace_description"}}
+Creates a new namespace — a memory directory for related knowledge. Parents are auto-created (mkdir -p behavior).
+
+BEFORE CALLING: Always call list_namespaces first. Only create if the namespace does not exist.
+
+CALL THIS WHEN:
+- list_namespaces shows no matching namespace for a topic you need
+- A new project, person, or topic is introduced for the first time
+- User says "let's create a space for..." or "I want to track..."
+- Before storing memories about a new domain
+
+NEVER SKIP: no existing namespace fits the topic, or user introduces a genuinely new project, person, or area.
+
+GOOD: slug="/projects/stash" name="Stash" description="Persistent memory system for AI agents. Go + PostgreSQL + pgvector."
+GOOD: slug="/users/alice" name="Alice" description="Backend engineer. Prefers Go. Works on Stash. On Mohamed's team."
+GOOD: slug="/projects/myapp/backend" name="MyApp Backend" description="API service layer. Auth, search, and billing endpoints."
+BAD: slug="myapp" — missing leading slash
+BAD: slug="/MyApp" — uppercase not allowed in slugs
+BAD: name="stash" description="" — empty description is useless to future sessions
+BAD: creating /projects when /projects/stash is what you need — be specific
+BAD: creating a duplicate of an existing namespace with a slightly different name
+
+COST OF NOT CALLING: Memories dump into root or wrong namespace. Recall becomes noisy. Facts from different domains collide.
+{{end}}
+
+{{define "create_namespace_slug"}}
+Path identifier. Must start with / and use lowercase, hyphen-separated segments.
+Good: /projects/stash-backend. Bad: projects/stash or /StashBackend or /projects/stash backend.
+{{end}}
+
+{{define "create_namespace_name"}}
+Human-readable title. Must be descriptive enough to identify the namespace without the path.
+Good: 'Stash Memory System'. Bad: 'stash' or 'project'.
+{{end}}
+
+{{define "create_namespace_description_param"}}
+What this namespace is for. Must be specific — future sessions use this to decide where to store and search.
+Good: 'Persistent memory system built in Go with PostgreSQL and pgvector. Stores episodes, facts, and working context for AI agents.'
+Bad: 'memory stuff' or 'project things' or leaving it empty.
+{{end}}
+
+
+{{define "remember_description"}}
+Permanently stores an observation (episode) into memory. Raw, immutable, timestamped.
+
+BEFORE CALLING: Call list_namespaces to verify the target namespace exists. If not, call create_namespace first.
+
+CALL THIS WHEN:
+- User shares a preference, habit, constraint, or personal detail
+- A decision is made (any decision — technical, product, personal)
+- You discover how something works in this codebase or domain
+- User corrects or clarifies something you got wrong
+- User says "make sure you...", "don't forget...", "note that...", "keep in mind..."
+- You complete a subtask and want to record the outcome
+- You learn a new requirement, constraint, or fact about the project
+- User states their name, role, team, or organizational context
+- User rejects an approach — store WHAT was rejected and WHY
+- End of session — store a summary of what was accomplished
+
+NEVER SKIP WHEN:
+- User tells you their name, role, or team
+- User states a technology preference or rejection
+- User provides environment details (stack, versions, hosting)
+- User corrects you — the correction must be stored or it will recur
+- A decision is finalized — undocumented decisions disappear
+
+WHAT GOOD INPUT LOOKS LIKE:
+"User prefers REST over GraphQL. Rejected gRPC due to client complexity on mobile."
+"Project uses PostgreSQL 15 with pgvector extension. Migrations managed via goose."
+"Decided to use sqltmpl + pgx instead of GORM. Reason: pgvector needs raw SQL anyway."
+"Session summary: Completed schema design for episodes, facts, contexts, namespaces tables."
+
+WHAT BAD INPUT LOOKS LIKE:
+"User said something about databases" — too vague, useless for future recall
+"react thing" — not a complete sentence, no context
+"preference" — stores nothing meaningful
+Skipping because "it's obvious" — nothing is obvious to a stateless restart
+
+COST OF NOT CALLING: Next session starts from zero. User repeats themselves. Permanent knowledge loss.
+{{end}}
+
+{{define "remember_content"}}
+What to remember. Complete self-contained sentences. Must be readable with zero prior context.
+Good: 'User prefers React with TypeScript and shadcn/ui. Rejected plain CSS due to team consistency.'
+Bad: 'react thing' or 'see above' or 'user preference'.
+{{end}}
+
+{{define "remember_namespace"}}
+Where to store this. Must be an existing namespace path verified via list_namespaces.
+If not found, call create_namespace first. Default: / (root — only for truly uncategorized memories).
+{{end}}
+
+
+{{define "recall_description"}}
+Searches persistent memory semantically. You are retrieving, not guessing.
+
+CALL THIS WHEN:
+- User asks a question that might have been answered in a prior session
+- User refers to a past conversation, decision, or preference
+- Before proposing a solution — check if it was tried and failed before
+- User says "do you remember...", "what do you know about...", "remind me..."
+- You need context about the user's preferences before making a recommendation
+- You are about to suggest something the user may have already rejected
+- User references a person, project, or tool you should already know
+- User's message contains "again", "still", "like before", "as usual" — these signal history exists
+
+NEVER SKIP WHEN:
+- User's question implies history ("like we discussed", "same as before", "again")
+- You are about to recommend a technology or approach
+- User references a person or project by name without explanation
+- You are starting a session (recall runs at session start — see protocol)
+
+WHEN RECALL RETURNS EMPTY:
+- Do NOT silently answer from training data
+- Do NOT pretend you remember when Stash returned nothing
+- Tell the user: "I don't have memory of this yet."
+- Answer as best you can, then call remember to store what you just learned
+  so the next session won't be empty on this topic
+
+NAMESPACE STRATEGY:
+- Specific project question → use /projects/myapp
+- Question about a person → use /users/alice
+- Question spanning multiple topics → use /
+- Unsure which namespace → use / (searches everything, never misses)
+
+WHAT GOOD QUERIES LOOK LIKE:
+"user graphql preference"
+"database migration approach postgresql"
+"Mohamed team structure and roles"
+"authentication rejected approaches"
+
+WHAT BAD QUERIES LOOK LIKE:
+"stuff" — returns everything and nothing
+"auth" — too short, too broad
+Skipping and answering from training data — you are guessing, not remembering
+
+COST OF NOT CALLING: Generic or wrong answer. User repeats themselves. You erode trust by appearing to forget what they told you.
+{{end}}
+
+{{define "recall_query"}}
+What to search for. Natural language, 2-6 words describing the topic.
+Good: 'user authentication preference'. Bad: 'auth' or 'stuff'.
+{{end}}
+
+{{define "recall_namespaces"}}
+Comma-separated namespace paths to search. Each path matches itself and all descendants.
+/users/alice → alice and all sub-namespaces.
+/ → everything.
+{{end}}
+
+
+{{define "forget_description"}}
+Removes incorrect or outdated information from memory.
+
+BEFORE CALLING:
+1. Call recall(what you want to forget) first
+2. Use the EXACT content returned by recall as the `about` parameter
+3. Never guess the stored wording — search first, then forget with precision
+
+CALL THIS WHEN:
+- User says "forget that", "that's wrong", "I changed my mind", "ignore what I said"
+- You stored something incorrectly and need to correct the record
+- A previous fact is no longer true (technology changed, decision reversed)
+- User explicitly asks you to stop remembering something
+
+NEVER SKIP WHEN:
+- User explicitly says to forget something — this is a direct instruction
+- You know stored information is wrong — stale facts poison future recall
+- A decision has been reversed — old decision must be removed, not just added alongside
+
+WHAT GOOD INPUT LOOKS LIKE:
+about: "gRPC was chosen for the API layer" (the exact stored text, after recalling it first)
+about: "Project uses MongoDB for primary storage" (precise, matches stored wording)
+
+WHAT BAD INPUT LOOKS LIKE:
+about: "grpc thing" — too vague, won't match stored content
+about: "database" — too broad, removes all database-related memories
+Skipping entirely — stale information compounds over sessions, user gets wrong advice
+
+COST OF NOT CALLING: You give advice based on facts the user explicitly corrected. They correct you again next session. Trust erodes permanently.
+{{end}}
+
+{{define "forget_about"}}
+What to forget. Must closely match the stored content — call recall first to find the exact wording.
+Good: 'User preferred gRPC over REST for the API layer.' (matches stored text)
+Bad: 'grpc stuff' or 'the database thing'.
+{{end}}
+
+
+{{define "consolidate_description"}}
+Synthesizes raw episodes into structured facts, entities, and relationships. Transforms noise into signal.
+
+Consolidation is expensive. Do not call it constantly. Batch your episodes, then consolidate.
+
+CALL THIS WHEN:
+- A namespace has 10+ new episodes since the last consolidation
+- End of a significant work session where substantial new knowledge was added
+- User asks "what patterns do you see?" or "summarize what you know about X"
+- You want to extract entity relationships from accumulated observations
+- A namespace has never been consolidated and has grown large
+- You are preparing for a complex question that needs structured facts, not raw episodes
+
+DO NOT CALL THIS WHEN:
+- You just stored 1-2 memories — too few to consolidate meaningfully
+- You are consolidating after every single remember call — that is overkill
+- The namespace has no new episodes since the last consolidation
+
+WHAT GOOD USAGE LOOKS LIKE:
+After 15+ memories about a project: consolidate /projects/stash
+After a full coding session: consolidate /projects/myapp/backend
+User asks for a knowledge summary: consolidate then query_facts
+
+WHAT BAD USAGE LOOKS LIKE:
+Calling after every remember — wasteful, defeats the batching purpose
+Never calling — memory stays raw notes forever, no structured knowledge extracted
+Consolidating an empty namespace — returns nothing, wastes a call
+
+COST OF NOT CALLING: Memory accumulates as raw episodes. No structured facts. No entity relationships. recall results are noisier. query_facts returns nothing.
+{{end}}
+
+
+{{define "set_context_description"}}
+Declares your current working focus for a namespace — what you are doing and why.
+
+BEFORE CALLING: If a context already exists for this namespace, call clear_context first.
+Never overwrite context directly — always clear then set.
+
+CALL THIS WHEN:
+- A new task or topic begins
+- User describes a goal or objective
+- You switch from one work stream to another
+- User says "I'm working on...", "The goal is...", "Right now I need..."
+- Session start, after getting context (to update if stale)
+- After clearing a completed task
+
+NEVER SKIP WHEN:
+- User explicitly states what they are working on
+- You are starting multi-step work that spans multiple exchanges
+- You just cleared an old context and have a new focus
+
+SWITCHING TOPICS — do this in order:
+1. call clear_context (clears current focus)
+2. call set_context with new focus
+Never skip the clear step — old context bleeds into new work.
+
+WHAT GOOD FOCUS LOOKS LIKE:
+"Refactoring auth middleware to use JWT tokens. Goal: reduce database load on login."
+"Implementing episodes table in Stash. Current blocker: pgvector untyped column behavior."
+"Investigating consolidation worker hanging on namespaces with 1000+ episodes."
+
+WHAT BAD FOCUS LOOKS LIKE:
+"working on stuff" — useless to future sessions
+"coding" — no topic, no goal, no continuity
+"backend" — too vague, could mean anything
+
+COST OF NOT CALLING: Next session has no idea what you were doing. User has to re-explain their goal. You appear amnesiac.
+{{end}}
+
+{{define "set_context_focus"}}
+What you are working on. Complete self-contained sentences with goal stated.
+Good: 'Implementing OAuth2 login with GitHub provider. Goal: replace email/password auth.'
+Bad: 'login stuff' or 'auth'.
+{{end}}
+
+
+{{define "get_context_description"}}
+Reads the current declared working focus for a namespace.
+
+CALL THIS WHEN:
+- Starting any session — always, before doing anything else
+- User's message is ambiguous and you need to know what was in progress
+- User asks "where were we?", "what were we doing?", "continue from before"
+- User message contains "it", "this", "that" without a clear antecedent
+- You need to know if a context exists before deciding to set a new one
+
+NEVER SKIP WHEN:
+- Starting ANY session — this is step 1 of the session start protocol
+- User references work in progress without explaining what it is
+
+WHAT TO DO WITH RESULTS:
+- Context found, not expired → you know what was in progress, continue it
+- Context found, expired → clear it, ask user what to work on, set new context
+- Context empty → ask user what they want to work on, then set_context
+
+COST OF NOT CALLING: You answer a different question than the user expects. User has to reorient you. Wastes their time.
+{{end}}
+
+
+{{define "clear_context_description"}}
+Removes the current working focus. Always call this before setting a new context on the same namespace.
+
+CALL THIS WHEN:
+- A task is complete — before setting new focus
+- User says "never mind", "let's move on", "that's done", "finished"
+- You are about to call set_context on a namespace that already has a context
+- Switching to an unrelated topic on the same namespace
+- User explicitly ends a work stream
+
+NEVER SKIP WHEN:
+- You are about to call set_context — clear first, always
+- User explicitly declares a task done
+- Topic changes and old context no longer applies
+
+SWITCHING TOPICS — correct order:
+1. clear_context (this call)
+2. set_context with new focus
+Skipping step 1 leaves old context active alongside new context.
+
+COST OF NOT CALLING: Old context bleeds into new work. You reference completed tasks in current session. Confusion compounds across sessions.
+{{end}}
+
+
+{{define "query_facts_description"}}
+Lists consolidated facts for a namespace. Higher quality than raw recall — these are distilled truths extracted from episodes.
+
+BEFORE CALLING: Consolidation must have run on this namespace. If you have never called consolidate for this namespace, query_facts will return empty results.
+
+CALL THIS WHEN:
+- You want structured knowledge, not fuzzy semantic search
+- User asks "what do you know about X?" and you want a clean answer
+- You need to verify knowledge before making a recommendation
+- After consolidation, to see what structured facts were extracted
+- recall results feel too noisy and you need clean, high-confidence facts
+- User needs a knowledge summary of a domain
+
+DO NOT CALL THIS WHEN:
+- Consolidation has never been run on this namespace — results will be empty
+- You need recent raw observations — use recall instead
+- You need relationship data — use query_relationships instead
+
+WHAT GOOD USAGE LOOKS LIKE:
+After consolidating /projects/stash: query_facts /projects/stash → clean project facts
+User asks "what are my preferences?": query_facts /users/alice → structured user facts
+
+COST OF NOT CALLING: You rely on fuzzy recall when structured facts are available. Less precise answers. You miss high-confidence knowledge that consolidation extracted.
+{{end}}
+
+
+{{define "query_relationships_description"}}
+Lists entity relationships for a namespace — the knowledge graph of how things connect.
+
+BEFORE CALLING: Consolidation must have run on this namespace. Relationships are extracted during consolidation, not during remember calls.
+
+CALL THIS WHEN:
+- You need to understand how entities relate to each other
+- User asks "how does X relate to Y?", "what depends on Z?", "who works on what?"
+- After consolidation, to see the extracted entity graph
+- You need system architecture understanding (service dependencies, data flow)
+- You need team structure understanding (who owns what, who works together)
+- Tracing dependency chains or impact analysis
+
+DO NOT CALL THIS WHEN:
+- Consolidation has never run — results will be empty
+- You need raw observations — use recall
+- You need factual statements — use query_facts
+
+WHAT GOOD USAGE LOOKS LIKE:
+"How does the memory layer connect to the store?" → query_relationships /projects/stash
+"Who is on Mohamed's team?" → query_relationships /users/mohamed
+
+COST OF NOT CALLING: You answer structural questions without the graph. Shallow understanding. You miss dependency and relationship knowledge that consolidation extracted.
+{{end}}
+
+
+{{define "namespace_param"}}
+Namespace path. Must exist — call list_namespaces to verify first.
+If not found, call create_namespace before proceeding. Default: / (root).
+{{end}}
+
+
+{{define "namespaces_param"}}
+Comma-separated namespace paths. Each path matches itself and all descendants.
+/users/alice → alice and everything under alice.
+/ → all namespaces.
+{{end}}
+
+
+{{define "limit_param"}}
+Max results to return. Default: 10.
+{{end}}
+
+
+{{define "pagination_limit"}}
+Max results to return. Default: 100. Max: 1000.
+{{end}}
+
+
+{{define "pagination_offset"}}
+Number of results to skip. Default: 0. Use with limit for pagination.
+{{end}}
+
+
+{{define "list_contradictions_description"}}
+Lists unresolved contradictions — conflicting facts about the same entity and property.
+
+Contradictions arise when new information conflicts with existing knowledge. Auto-resolved contradictions (where the new fact clearly replaces the old one) are not shown here.
+
+CALL THIS WHEN:
+- You want to review knowledge conflicts that need human judgment
+- After consolidation, to check if any contradictions were detected
+- User asks "are there any conflicts in what you know?"
+- You suspect stored knowledge might be inconsistent
+
+DO NOT CALL THIS WHEN:
+- You just want structured facts — use query_facts instead
+- You want raw observations — use recall instead
+
+WHAT TO DO WITH RESULTS:
+- Review each contradiction: which value is correct?
+- Call resolve_contradiction with the ID and your decision
+- If the old value is correct, keep it and resolve with "old_value_correct"
+- If the new value is correct, resolve with "new_value_correct"
+
+COST OF NOT CALLING: Conflicting knowledge persists. You give inconsistent answers across sessions. User gets different answers to the same question depending on which fact is retrieved.
+{{end}}
+
+
+{{define "resolve_contradiction_description"}}
+Resolves a contradiction by marking it as resolved with a note.
+
+BEFORE CALLING: Call list_contradictions to find the contradiction ID and understand the conflict.
+
+CALL THIS WHEN:
+- You have reviewed a contradiction and decided which value is correct
+- User tells you which value is the right one
+- You want to dismiss a contradiction as non-conflicting
+
+WHAT GOOD RESOLUTION LOOKS LIKE:
+- "new_value_correct" — the new fact replaces the old one
+- "old_value_correct" — the old fact is still valid, new one is wrong
+- "both_correct" — both values are valid (e.g., different time periods)
+- "neither_correct" — both are wrong, need to update both
+
+COST OF NOT CALLING: Contradictions accumulate. Future sessions see conflicting facts and cannot determine which is correct.
+{{end}}
+
+
+{{define "resolve_contradiction_id"}}
+The contradiction ID from list_contradictions.
+{{end}}
+
+
+{{define "resolve_contradiction_resolution"}}
+Your resolution decision. Brief note explaining which value is correct and why.
+{{end}}
+
+
+{{define "list_causal_links_description"}}
+Lists cause-effect relationships between facts — the causal graph of why things happened.
+
+Causal links are extracted during consolidation (method='extracted') or manually asserted by you (method='asserted'). They connect one fact (cause) to another fact (effect).
+
+CALL THIS WHEN:
+- You want to understand why something happened — trace causation
+- After consolidation, to review extracted causal relationships
+- User asks "why did X happen?" or "what caused Y?"
+- You need to understand the chain of events leading to a situation
+
+DO NOT CALL THIS WHEN:
+- You need entity relationships (who/what connects to who/what) — use query_relationships
+- You need structured facts — use query_facts
+
+WHAT TO DO WITH RESULTS:
+- Each link shows cause_fact_id → effect_fact_id with a confidence score
+- Use trace_causal_chain to follow a chain of causation from a specific fact
+- Use create_causal_link to manually assert a cause-effect relationship you know about
+
+COST OF NOT CALLING: You understand isolated facts but not the causal chain. You cannot explain why something happened. Your reasoning is shallow — what without why.
+{{end}}
+
+
+{{define "create_causal_link_description"}}
+Manually asserts a cause-effect relationship between two facts.
+
+CALL THIS WHEN:
+- You know that one fact caused another and consolidation hasn't detected it yet
+- User explicitly states causation: "X caused Y", "because of X, Y happened"
+- You need to connect two facts that the LLM missed during consolidation
+- User corrects or adds causal reasoning
+
+BEFORE CALLING:
+1. Find the fact IDs using query_facts or recall
+2. Be certain about the causal direction — cause comes first, effect follows
+3. Use confidence < 0.9 for inferred causation, 0.9+ for explicitly stated causation
+
+WHAT GOOD INPUT LOOKS LIKE:
+- cause_id: 42, effect_id: 87, confidence: 0.95 — "The server outage caused the data loss" (explicitly stated)
+- cause_id: 15, effect_id: 33, confidence: 0.7 — inferred causal relationship from context
+
+WHAT BAD INPUT LOOKS LIKE:
+- Linking facts that merely correlate — correlation is not causation
+- Wrong direction — effect as cause of cause
+- confidence: 1.0 for an inference — overconfident, should be lower
+
+COST OF NOT CALLING: Causal knowledge that exists only in conversation is lost between sessions. You cannot explain chains of events.
+{{end}}
+
+
+{{define "create_causal_link_cause_id"}}
+ID of the fact that is the cause. Find it using query_facts or recall first.
+{{end}}
+
+
+{{define "create_causal_link_effect_id"}}
+ID of the fact that is the effect. Find it using query_facts or recall first.
+{{end}}
+
+
+{{define "create_causal_link_confidence"}}
+How confident you are that this cause-effect relationship is correct. 0.5-0.7 for inferred, 0.8-1.0 for explicitly stated. Default: 0.8.
+{{end}}
+
+
+{{define "trace_causal_chain_description"}}
+Follows a chain of cause-effect relationships starting from a fact. Answers "why did this happen?" (backward) or "what did this lead to?" (forward).
+
+CALL THIS WHEN:
+- User asks "why did X happen?" — trace backward from X
+- User asks "what did X lead to?" — trace forward from X
+- You need to understand the full causal chain, not just direct causes/effects
+- You want to find the root cause of an issue
+- You want to predict downstream consequences
+
+DIRECTION:
+- "forward": Starting from a fact, find what it caused, then what those caused, etc. Answers "what did this lead to?"
+- "backward": Starting from a fact, find what caused it, then what caused those, etc. Answers "why did this happen?"
+
+WHAT GOOD USAGE LOOKS LIKE:
+- trace_causal_chain(fact_id=42, direction="backward") → finds the root cause of fact 42
+- trace_causal_chain(fact_id=42, direction="forward") → finds all downstream consequences of fact 42
+
+COST OF NOT CALLING: You answer causal questions with only direct causes/effects. No chain analysis. No root cause identification. Shallow understanding of event sequences.
+{{end}}
+
+
+{{define "trace_causal_chain_fact_id"}}
+ID of the fact to start tracing from. Find it using query_facts or recall first.
+{{end}}
+
+
+{{define "trace_causal_chain_direction"}}
+Direction to trace: "forward" (what did this cause?) or "backward" (what caused this?). Default: "forward".
+{{end}}
+
+
+{{define "trace_causal_chain_max_depth"}}
+Maximum number of hops to traverse. Default: 10. Increase for deep chains, decrease for faster responses.
+{{end}}
+
+
+{{define "list_hypotheses_description"}}
+Lists hypotheses — beliefs held with uncertainty, each with a plan for how to verify them.
+
+A hypothesis is NOT a low-confidence fact. It is a structured uncertainty: "I believe X might be true, and here is what would confirm or deny it." The verification plan is what makes it a hypothesis rather than a guess.
+
+CALL THIS WHEN:
+- Starting a session, to check if any hypotheses need testing
+- User asks "what are we unsure about?" or "what do we need to verify?"
+- After consolidation, to see if any new evidence relates to open hypotheses
+- You want to find hypotheses in a specific state (proposed, testing, etc.)
+
+STATUS FILTERS:
+- "proposed": New hypotheses that haven't been tested yet — start here
+- "testing": Hypotheses currently being investigated — check for new evidence
+- "confirmed": Verified hypotheses (these also have an associated fact)
+- "rejected": Disproven hypotheses (kept to prevent re-proposing)
+
+DO NOT CALL THIS WHEN:
+- You need established facts — use query_facts instead
+- You need raw observations — use recall instead
+
+WHAT TO DO WITH RESULTS:
+- proposed → consider testing it, look for confirming/denying evidence
+- testing → look for new evidence since last check, confirm or reject when ready
+- confirmed → the fact is already in the knowledge base, no action needed
+- rejected → note the rejection reason, do not re-propose the same hypothesis
+
+COST OF NOT CALLING: Uncertainties persist indefinitely. You operate on assumptions without verification. Confirmed hypotheses don't become facts. Rejected hypotheses get re-proposed.
+{{end}}
+
+
+{{define "list_hypotheses_status"}}
+Filter by status: "proposed", "testing", "confirmed", or "rejected". Empty returns all.
+{{end}}
+
+
+{{define "create_hypothesis_description"}}
+Creates a hypothesis — a belief held with uncertainty plus a plan for how to verify it.
+
+A hypothesis is different from a low-confidence fact:
+- A fact says "this is true" (with some confidence)
+- A hypothesis says "this might be true, and here is how I would find out"
+
+The verification plan is the critical differentiator. Without it, you just have a guess. With it, you have a testable belief.
+
+CALL THIS WHEN:
+- You suspect something is true but haven't verified it yet
+- User says "I think...", "I suspect...", "maybe...", "possibly..."
+- You infer a pattern but need more evidence to confirm
+- You want to track an assumption that needs future validation
+- User explicitly asks you to remember an uncertainty
+
+BEFORE CALLING:
+1. Check list_hypotheses — don't create a duplicate of an existing hypothesis
+2. Formulate a clear, specific hypothesis statement
+3. Write a verification plan: what evidence would confirm or deny this?
+
+WHAT GOOD INPUT LOOKS LIKE:
+- content: "The team has adopted TypeScript as their primary language"
+  verification_plan: "If the user mentions TypeScript in 2+ future sessions or explicitly confirms, this is confirmed. If they mention JavaScript without TypeScript, this is rejected."
+  confidence: 0.6
+
+- content: "The API performance issue is caused by the database query, not the network"
+  verification_plan: "If the user mentions database optimization or query tuning in a future session, this is confirmed. If they mention network fixes, this is rejected."
+  confidence: 0.7
+
+WHAT BAD INPUT LOOKS LIKE:
+- content: "maybe something about the project" — too vague to be testable
+- verification_plan: "check later" — not a plan, just a vague intention
+- confidence: 0.1 — if you're that unsure, it's not worth tracking as a hypothesis
+
+COST OF NOT CALLING: Uncertainties remain untracked. You make the same assumptions every session without ever verifying them. The user corrects you repeatedly.
+{{end}}
+
+
+{{define "create_hypothesis_content"}}
+The hypothesis statement. Must be specific and testable. "X might be true" is not enough — state what X actually is.
+Good: 'The project uses PostgreSQL 15 specifically, not just any version.'
+Bad: 'something about the database' or 'maybe postgres'.
+{{end}}
+
+
+{{define "create_hypothesis_verification_plan"}}
+How you would verify or disprove this hypothesis. What evidence would confirm it? What evidence would deny it? Must be specific enough to act on.
+Good: 'If the user mentions PostgreSQL version in a future session, check if it is 15. If they mention upgrading from 14, this is confirmed.'
+Bad: 'check later' or 'wait and see'.
+{{end}}
+
+
+{{define "create_hypothesis_confidence"}}
+How likely you think this hypothesis is to be true. 0.3-0.5 for weak suspicion, 0.5-0.7 for moderate evidence, 0.7-0.9 for strong but unverified evidence. Default: 0.5.
+{{end}}
+
+
+{{define "create_hypothesis_source_fact_ids"}}
+Comma-separated IDs of facts that support this hypothesis. Optional — link facts that motivated this belief.
+{{end}}
+
+
+{{define "confirm_hypothesis_description"}}
+Confirms a hypothesis as true and automatically creates a Fact from it.
+
+When you confirm a hypothesis:
+1. Its status changes to "confirmed"
+2. A new Fact is automatically created from the hypothesis content (with embedding)
+3. The hypothesis links to the new fact via confirmed_fact_id
+
+This is the full lifecycle: hypothesis → confirmed → fact.
+
+CALL THIS WHEN:
+- New evidence confirms the hypothesis
+- User explicitly validates the hypothesis
+- You observe the predicted confirming evidence
+
+BEFORE CALLING:
+1. Call list_hypotheses(status="testing") to see what's being tested
+2. Verify you have sufficient evidence to confirm
+3. Be as certain as you would be when stating a fact
+
+COST OF NOT CALLING: Verified knowledge stays in hypothesis limbo. Other sessions treat it as uncertain when it's actually confirmed.
+{{end}}
+
+
+{{define "confirm_hypothesis_id"}}
+ID of the hypothesis to confirm. Find it using list_hypotheses.
+{{end}}
+
+
+{{define "reject_hypothesis_description"}}
+Rejects a hypothesis as false with a reason.
+
+The rejection reason is critical — it prevents future sessions from re-proposing the same hypothesis. Rejected hypotheses are kept for reference.
+
+CALL THIS WHEN:
+- New evidence disproves the hypothesis
+- User explicitly denies the hypothesis
+- You observe the predicted denying evidence
+- The verification plan's rejection criteria are met
+
+BEFORE CALLING:
+1. Be certain — rejection is terminal (no undo)
+2. Write a clear rejection reason so future sessions understand why
+
+WHAT GOOD REJECTION LOOKS LIKE:
+- reason: "User confirmed they use JavaScript, not TypeScript"
+- reason: "Database monitoring showed query times are normal; the issue was network latency"
+
+WHAT BAD REJECTION LOOKS LIKE:
+- reason: "" — empty reason tells future sessions nothing
+- reason: "wrong" — too vague to prevent re-proposing
+
+COST OF NOT CALLING: Disproven beliefs persist as active hypotheses. Future sessions waste time investigating something already known to be false.
+{{end}}
+
+
+{{define "reject_hypothesis_id"}}
+ID of the hypothesis to reject. Find it using list_hypotheses.
+{{end}}
+
+
+{{define "reject_hypothesis_reason"}}
+Why this hypothesis was rejected. Must be specific enough to prevent re-proposing the same idea.
+{{end}}
+
+
+{{define "list_goals_description"}}
+Lists goals — intended outcomes that persist across sessions. Goals track what you're trying to achieve, not just what you know.
+
+Goals are different from context (short-lived focus) and hypotheses (uncertain beliefs):
+- Context = what am I doing right now? (expires)
+- Hypothesis = what might be true? (until verified/rejected)
+- Goal = what am I trying to achieve? (until completed or abandoned)
+
+Goals support sub-goals. Completing all sub-goals auto-completes the parent.
+
+CALL THIS WHEN:
+- Starting a session — check what goals are in progress
+- User asks "what are we working toward?" or "what's the plan?"
+- After completing work — check if any goals can be marked done
+- You want to pick up where the last session left off
+
+STATUS FILTERS:
+- "active": Current goals in progress — start here every session
+- "completed": Goals that are done (all sub-goals completed)
+- "abandoned": Goals that were dropped (kept for reference)
+
+DO NOT CALL THIS WHEN:
+- You need established facts — use query_facts
+- You need the current focus — use get_context
+
+COST OF NOT CALLING: You start every session from zero. No continuity of purpose. The user has to re-explain what they're trying to achieve.
+{{end}}
+
+
+{{define "list_goals_status"}}
+Filter by status: "active", "completed", or "abandoned". Empty returns top-level active goals.
+{{end}}
+
+
+{{define "list_goals_parent_id"}}
+Parent goal ID to list sub-goals for. Empty lists top-level goals.
+{{end}}
+
+
+{{define "create_goal_description"}}
+Creates a goal — an intended outcome that persists across sessions until completed or abandoned.
+
+Goals survive session resets. When you start a new session, list_goals shows what was in progress. This is how you maintain continuity of purpose across conversations.
+
+Goals support sub-goals via parent_id. Create a top-level goal, then break it into sub-goals. When all sub-goals complete, the parent auto-completes.
+
+CALL THIS WHEN:
+- User states an objective: "I want to...", "We need to...", "The goal is..."
+- You identify a multi-session task that won't finish in one conversation
+- User explicitly asks you to track a goal
+- A new project or milestone is defined
+
+BEFORE CALLING:
+1. Call list_goals — check if a similar goal already exists
+2. Break large goals into sub-goals for trackable progress
+
+WHAT GOOD INPUT LOOKS LIKE:
+- content: "Implement user authentication with OAuth2"
+  priority: 10
+
+- content: "Write integration tests for the payment API"
+  parent_id: 42 (a sub-goal of "Complete payment system")
+  priority: 5
+
+WHAT BAD INPUT LOOKS LIKE:
+- content: "work on stuff" — too vague, not a measurable outcome
+- content: "remember that the user likes TypeScript" — that's a fact, not a goal
+- No sub-goals for a large goal — hard to track progress
+
+COST OF NOT CALLING: Objectives exist only in conversation. Next session has no idea what was being worked toward. User re-explains goals every time.
+{{end}}
+
+
+{{define "create_goal_content"}}
+What you are trying to achieve. Must be specific enough to know when it's done.
+Good: 'Implement OAuth2 login with GitHub provider'. Bad: 'auth stuff' or 'login thing'.
+{{end}}
+
+
+{{define "create_goal_parent_id"}}
+ID of the parent goal if this is a sub-goal. Leave empty for a top-level goal.
+{{end}}
+
+
+{{define "create_goal_priority"}}
+Priority level. Higher = more important. Default: 0. Use 10 for critical, 5 for important, 1 for nice-to-have.
+{{end}}
+
+
+{{define "complete_goal_description"}}
+Marks a goal as completed. If all sibling sub-goals are also completed, the parent goal auto-completes.
+
+Completing a goal is a progress signal. It tells future sessions: this is done, move on.
+
+CALL THIS WHEN:
+- The goal's objective has been achieved
+- User says "that's done", "we finished", "goal accomplished"
+- All work for this goal is complete
+
+BEFORE CALLING:
+1. Verify the objective is actually met — don't complete prematurely
+2. If this is a sub-goal, check if completing it triggers parent auto-completion
+3. Add notes about how it was achieved
+
+AUTO-COMPLETE: When the last sub-goal of a parent is completed, the parent automatically completes too. This cascades up the tree — complete all leaf goals and the whole tree completes.
+
+COST OF NOT CALLING: Future sessions don't know work is done. They may re-do completed work or fail to pick up remaining goals.
+{{end}}
+
+
+{{define "complete_goal_id"}}
+ID of the goal to complete. Find it using list_goals.
+{{end}}
+
+
+{{define "complete_goal_notes"}}
+Optional notes about how the goal was achieved. Useful context for future sessions.
+{{end}}
+
+
+{{define "abandon_goal_description"}}
+Abandons a goal that is no longer relevant or achievable. The goal is kept for reference but marked as abandoned.
+
+Abandoning a goal does NOT cascade to sub-goals — they may still be relevant under a different parent or as standalone goals.
+
+CALL THIS WHEN:
+- User says "we're not doing that anymore", "that's no longer a priority"
+- Circumstances make the goal impossible or irrelevant
+- The goal was based on incorrect assumptions
+- User explicitly cancels the objective
+
+BEFORE CALLING:
+1. Be certain — abandonment is terminal (no undo, though you can create a new goal)
+2. Write clear notes explaining why — future sessions need this context
+
+WHAT GOOD ABANDONMENT LOOKS LIKE:
+- notes: "Pivoted to REST API; GraphQL approach abandoned per user decision"
+- notes: "Vendor discontinued the service; integration no longer possible"
+
+WHAT BAD ABANDONMENT LOOKS LIKE:
+- notes: "" — tells future sessions nothing about why
+- notes: "not doing this" — too vague
+
+COST OF NOT CALLING: Stale goals clutter the active list. Future sessions waste time on objectives that are no longer relevant.
+{{end}}
+
+
+{{define "abandon_goal_id"}}
+ID of the goal to abandon. Find it using list_goals.
+{{end}}
+
+
+{{define "abandon_goal_notes"}}
+Why this goal was abandoned. Must be specific enough to prevent future sessions from re-creating it.
+{{end}}
+
+
+{{define "list_failures_description"}}
+Lists recorded failures — what didn't work, why, and what to do instead.
+
+Failure memory prevents repeating mistakes. Every failure records three things: what was attempted, why it failed, and the lesson (what to do instead). This is the anti-repeat mechanism.
+
+CALL THIS WHEN:
+- Starting work on a goal — check if similar approaches failed before
+- About to try an approach — has it been tried and failed?
+- User says "we tried that before and it didn't work"
+- You're about to suggest something the user might have already rejected
+- Session start — scan for relevant failures before proposing solutions
+
+DO NOT CALL THIS WHEN:
+- You need established facts — use query_facts
+- You need goals — use list_goals
+- You need hypotheses — use list_hypotheses
+
+WHAT TO DO WITH RESULTS:
+- If a similar approach failed before, read the lesson — it tells you what to do instead
+- If the failure is linked to a goal (goal_id is set), it's context for that specific objective
+- Do NOT re-attempt the same approach without a significantly different strategy
+
+COST OF NOT CALLING: You repeat failed approaches. The user watches you make the same mistake they already told you about. Trust erodes permanently.
+{{end}}
+
+
+{{define "list_failures_goal_id"}}
+Filter failures by goal ID. Only show failures related to a specific goal.
+{{end}}
+
+
+{{define "create_failure_description"}}
+Records a failure — what didn't work, why, and what to do instead.
+
+This is how you prevent future sessions from repeating mistakes. A failure without a lesson is just a complaint. A failure with a lesson is institutional memory.
+
+CALL THIS WHEN:
+- An approach or strategy didn't work and you know why
+- User says "that didn't work", "we tried that already", "that failed before"
+- A hypothesis was rejected and the approach it represents is dead
+- A goal was abandoned and the approach should not be retried
+- You attempted something and it failed — record it before the session ends
+
+BEFORE CALLING:
+1. Identify exactly what was tried (content)
+2. Identify the root cause (reason)
+3. Identify the alternative approach (lesson) — this is the most important field
+
+WHAT GOOD INPUT LOOKS LIKE:
+- content: "Used GORM for the ORM layer"
+  reason: "GORM doesn't support pgvector columns; raw SQL needed for vector operations"
+  lesson: "Use pgx directly with sqltmpl for any project that needs vector search. ORMs add abstraction cost without benefit when raw SQL is required anyway."
+  goal_id: 42 (linked to "Implement database layer")
+
+- content: "Deployed with Docker Compose on a single node"
+  reason: "Single point of failure; no automatic recovery on crash"
+  lesson: "Use Kubernetes or at minimum Docker Swarm for production deployments. Single-node is fine for development only."
+
+WHAT BAD INPUT LOOKS LIKE:
+- content: "tried a thing" — what thing? Too vague.
+- reason: "didn't work" — WHY didn't it work? Root cause matters.
+- lesson: "" — no lesson means future sessions have no guidance on what to do instead
+- lesson: "try something else" — too vague, what specifically?
+
+COST OF NOT CALLING: The same failed approach gets retried in future sessions. The user has to re-explain why it doesn't work. Mistakes compound instead of being learned from.
+{{end}}
+
+
+{{define "create_failure_content"}}
+What approach was attempted. Be specific about what was tried.
+Good: 'Used GORM ORM for the database layer'. Bad: 'tried an ORM' or 'database thing'.
+{{end}}
+
+
+{{define "create_failure_reason"}}
+Why it didn't work. Root cause, not symptom.
+Good: 'GORM lacks pgvector support; custom column types are not handled'. Bad: 'it broke' or 'error'.
+{{end}}
+
+
+{{define "create_failure_lesson"}}
+What to do instead. The anti-repeat field. Must be specific enough that a future session can act on it.
+Good: 'Use pgx with sqltmpl for projects needing vector search. ORMs add cost without benefit when raw SQL is required.'. Bad: 'try something else' or 'don't do that'.
+{{end}}
+
+
+{{define "create_failure_goal_id"}}
+Optional goal ID this failure relates to. Link it if the failure was part of pursuing a specific goal.
+{{end}}
+
+
+{{define "delete_failure_description"}}
+Removes a failure record. Use only if the failure was recorded incorrectly or is no longer relevant (the approach now works due to changed circumstances).
+
+Most failures should NOT be deleted — they are institutional memory. Even if circumstances changed, keeping the record with context is safer than deleting it.
+
+CALL THIS WHEN:
+- A failure was recorded with incorrect information
+- The approach that failed now works due to fundamental changes (e.g., library added the feature)
+
+DO NOT CALL THIS WHEN:
+- The failure is old — old failures are still valid history
+- You're just cleaning up — failure records are intentionally permanent
+
+COST OF NOT CALLING: Incorrect failure records mislead future sessions. But premature deletion is worse — it removes a safety guard.
+{{end}}
+
+
+{{define "delete_failure_id"}}
+ID of the failure to delete. Find it using list_failures.
+{{end}}

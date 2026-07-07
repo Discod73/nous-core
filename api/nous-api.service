@@ -1,0 +1,19 @@
+[Unit]
+Description=NOUS API Backend
+After=network.target
+
+[Service]
+Type=simple
+User=nous
+WorkingDirectory=/srv/nous/api
+EnvironmentFile=-/srv/nous/.env
+Environment=PATH=/srv/nous/pipeline/.venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+Environment=NOUS_LLM_MODEL=qwen3:8b
+ExecStart=/srv/nous/pipeline/.venv/bin/python3 -m uvicorn main:app --host 0.0.0.0 --port 8000
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

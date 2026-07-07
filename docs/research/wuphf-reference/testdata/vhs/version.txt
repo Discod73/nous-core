@@ -1,0 +1,4 @@
+> /tmp/wuphf-vhs --version
+wuphf vdev
+>
+

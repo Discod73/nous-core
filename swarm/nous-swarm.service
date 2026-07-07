@@ -1,0 +1,15 @@
+[Unit]
+Description=NOUS Swarm Agent — P2P knowledge sharing
+After=network.target nous-arbiter.service
+
+[Service]
+Type=simple
+User=nous
+WorkingDirectory=/srv/nous/swarm
+ExecStart=/srv/nous/swarm/.venv/bin/python3 swarm_agent.py
+Restart=always
+RestartSec=5
+EnvironmentFile=-/srv/nous/.env
+
+[Install]
+WantedBy=multi-user.target

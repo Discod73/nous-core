@@ -1,0 +1,2542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Primary SEO -->
+    <title>Stash — Persistent Memory for AI Agents</title>
+    <meta name="description" content="Stash gives any AI agent a persistent memory, knowledge graph, goals, and self-model. Works with Claude, ChatGPT, Ollama, and any MCP-compatible agent. Open source. Self-hosted.">
+    <meta name="keywords" content="AI memory, persistent memory, MCP, model context protocol, AI agents, RAG alternative, pgvector, Ollama, OpenRouter, open source AI memory, agent memory, LLM memory, knowledge graph, AI tools">
+    <meta name="author" content="Mohamed Al-Ashaal">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://stash.alash3al.com/">
+
+    <!-- Open Graph (Facebook, LinkedIn, WhatsApp) -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://stash.alash3al.com/">
+    <meta property="og:site_name" content="Stash">
+    <meta property="og:title" content="Stash — Your AI has amnesia. We fixed it.">
+    <meta property="og:description" content="Give any AI agent a persistent memory in minutes. Works with Claude, ChatGPT, Ollama, OpenRouter, and any MCP-compatible agent. Open source, self-hosted, model-agnostic.">
+    <meta property="og:image" content="https://stash.alash3al.com/og-image.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="Stash — Persistent Memory for AI Agents">
+    <meta property="og:locale" content="en_US">
+
+    <!-- Twitter / X Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="https://stash.alash3al.com/">
+    <meta name="twitter:title" content="Stash — Your AI has amnesia. We fixed it.">
+    <meta name="twitter:description" content="Give any AI agent a persistent memory in minutes. Open source, self-hosted, works with any MCP-compatible agent.">
+    <meta name="twitter:image" content="https://stash.alash3al.com/og-image.png">
+    <meta name="twitter:image:alt" content="Stash — Persistent Memory for AI Agents">
+    <meta name="twitter:creator" content="@alash3al">
+    <meta name="twitter:site" content="@alash3al">
+
+    <!-- Schema.org structured data -->
+    <script type="application/ld+json">
+        {
+            "@context": "https://schema.org",
+            "@type": "SoftwareApplication",
+            "name": "Stash",
+            "url": "https://stash.alash3al.com",
+            "description": "Persistent memory infrastructure for AI agents. Gives any MCP-compatible agent a knowledge graph, goals, causal reasoning, and self-model. Open source and self-hosted.",
+            "applicationCategory": "DeveloperApplication",
+            "operatingSystem": "Linux, macOS, Windows",
+            "offers": {
+                "@type": "Offer",
+                "price": "0",
+                "priceCurrency": "USD"
+            },
+            "author": {
+                "@type": "Person",
+                "name": "Mohamed Al-Ashaal",
+                "url": "https://alash3al.com"
+            },
+            "codeRepository": "https://github.com/alash3al/stash",
+            "license": "https://www.apache.org/licenses/LICENSE-2.0",
+            "keywords": "AI memory, MCP, persistent memory, knowledge graph, AI agents, open source"
+        }
+    </script>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,700;1,9..144,300;1,9..144,700&family=IBM+Plex+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #080808;
+            --surface: #0f0f0f;
+            --border: #1a1a1a;
+            --amber: #e8a020;
+            --amber-dim: #a06a10;
+            --amber-glow: rgba(232, 160, 32, 0.12);
+            --text: #e8e0d0;
+            --text-dim: #7a7060;
+            --text-muted: #3a3530;
+            --green: #4a9060;
+            --red: #904040;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'DM Sans', sans-serif;
+            font-weight: 300;
+            overflow-x: hidden;
+            cursor: none;
+        }
+
+        /* Custom cursor */
+        .cursor {
+            position: fixed;
+            width: 8px;
+            height: 8px;
+            background: var(--amber);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9999;
+            transition: transform 0.1s ease;
+            mix-blend-mode: difference;
+        }
+        .cursor-ring {
+            position: fixed;
+            width: 32px;
+            height: 32px;
+            border: 1px solid var(--amber-dim);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9998;
+            transition: all 0.15s ease;
+        }
+
+        /* Grain overlay */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+            background-size: 200px 200px;
+            pointer-events: none;
+            z-index: 1000;
+            opacity: 0.4;
+        }
+
+        /* Canvas */
+        #neural-canvas {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            opacity: 0.35;
+            z-index: 0;
+        }
+
+        /* Layout */
+        section { position: relative; z-index: 1; }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 40px;
+        }
+
+        /* NAV */
+        nav {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            z-index: 100;
+            padding: 24px 40px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid transparent;
+            transition: all 0.3s ease;
+        }
+        nav.scrolled {
+            background: rgba(8,8,8,0.92);
+            border-bottom-color: var(--border);
+            backdrop-filter: blur(12px);
+        }
+        .nav-logo {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 18px;
+            color: var(--amber);
+            letter-spacing: 0.05em;
+        }
+        .nav-logo span { color: var(--text-dim); }
+        .nav-links {
+            display: flex;
+            gap: 32px;
+            list-style: none;
+        }
+        .nav-links a {
+            color: var(--text-dim);
+            text-decoration: none;
+            font-size: 13px;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            transition: color 0.2s;
+        }
+        .nav-links a:hover { color: var(--amber); }
+        .nav-cta {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 13px;
+            color: var(--bg);
+            background: var(--amber);
+            padding: 10px 20px;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+        .nav-cta:hover { background: #fff; }
+
+        /* HERO */
+        #hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 160px 40px 120px;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .hero-eyebrow {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 12px;
+            color: var(--amber);
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            margin-bottom: 40px;
+            opacity: 0;
+            animation: fadeUp 0.8s ease 0.2s forwards;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .hero-eyebrow::before {
+            content: '';
+            display: inline-block;
+            width: 40px;
+            height: 1px;
+            background: var(--amber);
+        }
+
+        .hero-headline {
+            font-family: 'Fraunces', serif;
+            font-size: clamp(64px, 9vw, 128px);
+            font-weight: 700;
+            line-height: 0.92;
+            letter-spacing: -0.03em;
+            margin-bottom: 24px;
+            opacity: 0;
+            animation: fadeUp 0.8s ease 0.4s forwards;
+        }
+        .hero-headline em {
+            font-style: italic;
+            font-weight: 300;
+            color: var(--amber);
+        }
+
+        .hero-sub {
+            font-size: 20px;
+            color: var(--text-dim);
+            max-width: 540px;
+            line-height: 1.6;
+            margin-bottom: 60px;
+            opacity: 0;
+            animation: fadeUp 0.8s ease 0.6s forwards;
+            font-weight: 300;
+        }
+
+        .hero-actions {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            opacity: 0;
+            animation: fadeUp 0.8s ease 0.8s forwards;
+        }
+
+        .btn-primary {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 14px;
+            background: var(--amber);
+            color: var(--bg);
+            padding: 16px 32px;
+            text-decoration: none;
+            letter-spacing: 0.05em;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-primary:hover { background: #fff; transform: translateY(-2px); }
+
+        .btn-secondary {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 14px;
+            border: 1px solid var(--border);
+            color: var(--text-dim);
+            padding: 16px 32px;
+            text-decoration: none;
+            letter-spacing: 0.05em;
+            transition: all 0.2s;
+        }
+        .btn-secondary:hover { border-color: var(--amber-dim); color: var(--text); }
+
+        .hero-stat {
+            margin-top: 80px;
+            display: flex;
+            gap: 48px;
+            opacity: 0;
+            animation: fadeUp 0.8s ease 1s forwards;
+        }
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .stat-number {
+            font-family: 'Fraunces', serif;
+            font-size: 36px;
+            font-weight: 700;
+            color: var(--amber);
+            line-height: 1;
+        }
+        .stat-label {
+            font-size: 12px;
+            color: var(--text-dim);
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+
+        /* PROBLEM */
+        #problem {
+            padding: 160px 0;
+            border-top: 1px solid var(--border);
+        }
+        .section-tag {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 11px;
+            color: var(--amber-dim);
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            margin-bottom: 60px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .section-tag::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+            max-width: 200px;
+        }
+
+        .problem-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2px;
+        }
+        .problem-card {
+            background: var(--surface);
+            padding: 48px;
+            border: 1px solid var(--border);
+            position: relative;
+            overflow: hidden;
+            transition: border-color 0.3s;
+        }
+        .problem-card:hover { border-color: var(--amber-dim); }
+        .problem-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 2px;
+            background: var(--red);
+            opacity: 0.6;
+        }
+        .problem-icon {
+            font-size: 32px;
+            margin-bottom: 20px;
+            display: block;
+        }
+        .problem-title {
+            font-family: 'Fraunces', serif;
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            line-height: 1.2;
+        }
+        .problem-desc {
+            color: var(--text-dim);
+            font-size: 15px;
+            line-height: 1.7;
+        }
+
+        /* WHAT IS STASH */
+        #what {
+            padding: 160px 0;
+            border-top: 1px solid var(--border);
+        }
+        .what-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 80px;
+            align-items: center;
+        }
+        .what-headline {
+            font-family: 'Fraunces', serif;
+            font-size: clamp(40px, 5vw, 64px);
+            font-weight: 700;
+            line-height: 1.05;
+            letter-spacing: -0.02em;
+            margin-bottom: 24px;
+        }
+        .what-headline em {
+            font-style: italic;
+            font-weight: 300;
+            color: var(--amber);
+        }
+        .what-body {
+            color: var(--text-dim);
+            font-size: 16px;
+            line-height: 1.8;
+            margin-bottom: 32px;
+        }
+        .what-quote {
+            border-left: 2px solid var(--amber);
+            padding-left: 24px;
+            font-family: 'Fraunces', serif;
+            font-size: 20px;
+            font-style: italic;
+            color: var(--text);
+            line-height: 1.5;
+        }
+
+        /* Cognitive stack visual */
+        .stack-visual {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        .stack-layer {
+            padding: 20px 24px;
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            background: var(--surface);
+            transition: all 0.3s;
+            cursor: default;
+            position: relative;
+        }
+        .stack-layer:hover {
+            border-color: var(--amber-dim);
+            background: var(--amber-glow);
+            transform: translateX(4px);
+        }
+        .stack-layer-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--amber);
+            flex-shrink: 0;
+        }
+        .stack-layer-name {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 13px;
+            color: var(--amber);
+            min-width: 120px;
+        }
+        .stack-layer-desc {
+            font-size: 13px;
+            color: var(--text-dim);
+        }
+        .stack-layer.dim .stack-layer-dot { background: var(--text-muted); }
+        .stack-layer.dim .stack-layer-name { color: var(--text-muted); }
+
+        /* PIPELINE */
+        #pipeline {
+            padding: 160px 0;
+            border-top: 1px solid var(--border);
+        }
+        .pipeline-header {
+            text-align: center;
+            margin-bottom: 80px;
+        }
+        .section-headline {
+            font-family: 'Fraunces', serif;
+            font-size: clamp(36px, 5vw, 56px);
+            font-weight: 700;
+            line-height: 1.1;
+            letter-spacing: -0.02em;
+            margin-bottom: 16px;
+        }
+        .section-headline em { font-style: italic; font-weight: 300; color: var(--amber); }
+        .section-sub {
+            color: var(--text-dim);
+            font-size: 16px;
+            max-width: 500px;
+            margin: 0 auto;
+            line-height: 1.7;
+        }
+
+        .pipeline-flow {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 2px;
+            position: relative;
+        }
+        .pipeline-step {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            padding: 32px 20px;
+            text-align: center;
+            transition: all 0.3s;
+            position: relative;
+            cursor: default;
+        }
+        .pipeline-step:hover {
+            border-color: var(--amber);
+            background: var(--amber-glow);
+            z-index: 2;
+            transform: translateY(-4px);
+        }
+        .pipeline-step:hover .pipeline-step-num { color: var(--amber); }
+        .pipeline-step-num {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 11px;
+            color: var(--text-muted);
+            letter-spacing: 0.1em;
+            margin-bottom: 16px;
+            transition: color 0.3s;
+        }
+        .pipeline-step-icon { font-size: 28px; margin-bottom: 12px; display: block; }
+        .pipeline-step-name {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 12px;
+            color: var(--amber);
+            margin-bottom: 8px;
+            letter-spacing: 0.05em;
+        }
+        .pipeline-step-desc {
+            font-size: 12px;
+            color: var(--text-dim);
+            line-height: 1.5;
+        }
+        .pipeline-arrow {
+            position: absolute;
+            right: -1px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 0;
+            height: 0;
+            border-top: 6px solid transparent;
+            border-bottom: 6px solid transparent;
+            border-left: 6px solid var(--border);
+            z-index: 3;
+        }
+        .pipeline-step:last-child .pipeline-arrow { display: none; }
+
+        /* NEW STAGES */
+        .pipeline-new {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2px;
+            margin-top: 2px;
+        }
+        .pipeline-step.new-stage {
+            background: rgba(232, 160, 32, 0.04);
+            border-color: var(--amber-dim);
+        }
+        .pipeline-step.new-stage .pipeline-step-name { color: var(--amber); }
+        .new-badge {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 9px;
+            background: var(--amber);
+            color: var(--bg);
+            padding: 2px 6px;
+            letter-spacing: 0.1em;
+        }
+
+        /* MCP */
+        #mcp {
+            padding: 160px 0;
+            border-top: 1px solid var(--border);
+        }
+        .mcp-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 80px;
+            align-items: start;
+        }
+        .mcp-headline {
+            font-family: 'Fraunces', serif;
+            font-size: clamp(36px, 4vw, 52px);
+            font-weight: 700;
+            line-height: 1.1;
+            letter-spacing: -0.02em;
+            margin-bottom: 24px;
+        }
+        .mcp-headline em { font-style: italic; font-weight: 300; color: var(--amber); }
+        .mcp-body {
+            color: var(--text-dim);
+            font-size: 16px;
+            line-height: 1.8;
+            margin-bottom: 32px;
+        }
+        .compat-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 24px;
+        }
+        .compat-tag {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 12px;
+            padding: 6px 14px;
+            border: 1px solid var(--border);
+            color: var(--text-dim);
+            letter-spacing: 0.05em;
+            transition: all 0.2s;
+        }
+        .compat-tag:hover { border-color: var(--amber-dim); color: var(--amber); }
+
+        /* Terminal */
+        .terminal {
+            background: #0a0a0a;
+            border: 1px solid var(--border);
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 13px;
+            overflow: hidden;
+        }
+        .terminal-bar {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .terminal-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+        .terminal-dot.r { background: #904040; }
+        .terminal-dot.y { background: #907040; }
+        .terminal-dot.g { background: #4a9060; }
+        .terminal-title {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-left: 8px;
+            letter-spacing: 0.1em;
+        }
+        .terminal-body { padding: 24px; line-height: 2; }
+        .t-prompt { color: var(--amber); }
+        .t-cmd { color: var(--text); }
+        .t-comment { color: var(--text-muted); }
+        .t-output { color: var(--green); }
+        .t-dim { color: var(--text-muted); }
+        .t-blink {
+            display: inline-block;
+            width: 8px;
+            height: 14px;
+            background: var(--amber);
+            animation: blink 1s step-end infinite;
+            vertical-align: middle;
+            margin-left: 2px;
+        }
+
+        /* SELF MODEL */
+        #self {
+            padding: 160px 0;
+            border-top: 1px solid var(--border);
+            background: linear-gradient(180deg, transparent, rgba(232,160,32,0.03), transparent);
+        }
+        .self-center { text-align: center; max-width: 700px; margin: 0 auto 80px; }
+        .self-namespaces {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .ns-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            padding: 32px;
+            transition: all 0.3s;
+        }
+        .ns-card:hover {
+            border-color: var(--amber-dim);
+            transform: translateY(-4px);
+        }
+        .ns-path {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 13px;
+            color: var(--amber);
+            margin-bottom: 12px;
+        }
+        .ns-title {
+            font-size: 16px;
+            font-weight: 500;
+            margin-bottom: 8px;
+            color: var(--text);
+        }
+        .ns-desc {
+            font-size: 13px;
+            color: var(--text-dim);
+            line-height: 1.6;
+        }
+
+        /* LOOP SECTION */
+        #loop {
+            padding: 160px 0;
+            border-top: 1px solid var(--border);
+        }
+        .loop-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 80px;
+            align-items: center;
+        }
+        .loop-steps {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        .loop-step {
+            padding: 20px 24px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            display: flex;
+            gap: 20px;
+            align-items: flex-start;
+            transition: all 0.3s;
+        }
+        .loop-step:hover {
+            border-color: var(--amber-dim);
+            background: var(--amber-glow);
+        }
+        .loop-step-num {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 12px;
+            color: var(--amber);
+            min-width: 24px;
+        }
+        .loop-step-content {}
+        .loop-step-title {
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+        .loop-step-desc {
+            font-size: 13px;
+            color: var(--text-dim);
+            line-height: 1.5;
+        }
+
+        /* CTA */
+        #cta {
+            padding: 160px 0;
+            border-top: 1px solid var(--border);
+            text-align: center;
+        }
+        .cta-headline {
+            font-family: 'Fraunces', serif;
+            font-size: clamp(48px, 7vw, 96px);
+            font-weight: 700;
+            line-height: 0.95;
+            letter-spacing: -0.03em;
+            margin-bottom: 32px;
+        }
+        .cta-headline em {
+            font-style: italic;
+            font-weight: 300;
+            color: var(--amber);
+            display: block;
+        }
+        .cta-sub {
+            color: var(--text-dim);
+            font-size: 18px;
+            max-width: 480px;
+            margin: 0 auto 48px;
+            line-height: 1.7;
+        }
+        .cta-actions {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        /* FOOTER */
+        footer {
+            border-top: 1px solid var(--border);
+            padding: 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 13px;
+            color: var(--text-muted);
+            font-family: 'IBM Plex Mono', monospace;
+        }
+        footer a { color: var(--text-dim); text-decoration: none; }
+        footer a:hover { color: var(--amber); }
+
+        /* Scroll reveal */
+        .reveal {
+            opacity: 0;
+            transform: translateY(24px);
+            transition: opacity 0.7s ease, transform 0.7s ease;
+        }
+        .reveal.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Animations */
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+        @keyframes pulse-amber {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(232,160,32,0); }
+            50% { box-shadow: 0 0 0 8px rgba(232,160,32,0.1); }
+        }
+
+        /* STORY */
+        #story {
+            padding: 120px 0 0;
+            border-top: 1px solid var(--border);
+        }
+        #beforeafter { padding: 60px 0 120px; }
+
+        .story-layout {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 24px;
+            align-items: start;
+            margin-top: 48px;
+        }
+        .story-side { display: flex; flex-direction: column; gap: 12px; }
+        .story-label {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 13px;
+            letter-spacing: 0.05em;
+            margin-bottom: 8px;
+            padding: 10px 16px;
+        }
+        .without .story-label { color: #904040; border: 1px solid #904040; }
+        .with .story-label { color: var(--green); border: 1px solid var(--green); }
+
+        .story-messages { display: flex; flex-direction: column; gap: 8px; }
+        .msg {
+            padding: 12px 16px;
+            font-size: 14px;
+            line-height: 1.5;
+            border-radius: 2px;
+            max-width: 90%;
+        }
+        .msg-user {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--text);
+            align-self: flex-end;
+            text-align: right;
+        }
+        .msg-ai {
+            background: rgba(232,160,32,0.05);
+            border: 1px solid var(--amber-dim);
+            color: var(--text);
+            align-self: flex-start;
+        }
+        .msg-system {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 12px;
+            padding: 10px 14px;
+            align-self: center;
+            width: 100%;
+            text-align: center;
+        }
+        .without .msg-system { color: #904040; border: 1px dashed #904040; background: rgba(144,64,64,0.05); }
+        .with .msg-system { color: var(--green); border: 1px dashed var(--green); background: rgba(74,144,96,0.05); }
+
+        .story-divider {
+            font-family: 'Fraunces', serif;
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            padding-top: 48px;
+        }
+
+        /* BEFORE AFTER TABLE */
+        .ba-table {
+            border: 1px solid var(--border);
+            overflow: hidden;
+        }
+        .ba-header, .ba-row {
+            display: grid;
+            grid-template-columns: 200px 1fr 1fr;
+        }
+        .ba-header {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+        }
+        .ba-row { border-bottom: 1px solid var(--border); }
+        .ba-row:last-child { border-bottom: none; }
+        .ba-row:hover { background: rgba(232,160,32,0.03); }
+        .ba-col-label, .ba-col {
+            padding: 16px 24px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        .ba-col-label {
+            color: var(--text-dim);
+            border-right: 1px solid var(--border);
+            font-size: 13px;
+        }
+        .ba-header .ba-col-label { font-family: 'IBM Plex Mono', monospace; font-size: 11px; }
+        .ba-col { border-right: 1px solid var(--border); }
+        .ba-col:last-child { border-right: none; }
+        .ba-col.bad { color: #7a5050; }
+        .ba-col.good { color: var(--green); }
+        .ba-header .ba-col.bad {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 12px;
+            letter-spacing: 0.05em;
+            color: #904040;
+        }
+        .ba-header .ba-col.good {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 12px;
+            letter-spacing: 0.05em;
+            color: var(--green);
+        }
+
+        /* UNIQUE */
+        #unique { padding: 120px 0; border-top: 1px solid var(--border); }
+
+        .unique-hero {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 80px;
+            align-items: center;
+            margin-bottom: 80px;
+        }
+        .unique-headline {
+            font-family: 'Fraunces', serif;
+            font-size: clamp(40px, 5vw, 68px);
+            font-weight: 700;
+            line-height: 1.0;
+            letter-spacing: -0.02em;
+        }
+        .unique-headline em {
+            font-style: italic;
+            font-weight: 300;
+            color: var(--amber);
+        }
+        .unique-sub {
+            font-size: 17px;
+            color: var(--text-dim);
+            line-height: 1.8;
+        }
+
+        /* Compare table */
+        .compare-table { border: 1px solid var(--border); overflow: hidden; }
+        .compare-header, .compare-row {
+            display: grid;
+            grid-template-columns: 260px 1fr 1fr 1fr;
+        }
+        .compare-header {
+            background: var(--surface);
+            border-bottom: 2px solid var(--border);
+        }
+        .compare-row {
+            border-bottom: 1px solid var(--border);
+            transition: background 0.2s;
+        }
+        .compare-row:last-child { border-bottom: none; }
+        .compare-row:hover { background: rgba(255,255,255,0.02); }
+        .compare-feature, .compare-col {
+            padding: 14px 20px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            border-right: 1px solid var(--border);
+        }
+        .compare-col:last-child { border-right: none; }
+        .compare-feature { color: var(--text-dim); font-size: 13px; }
+        .compare-col.competitor { color: var(--text-muted); justify-content: center; }
+        .compare-col.stash-col {
+            background: rgba(232,160,32,0.04);
+            justify-content: center;
+            font-weight: 500;
+            color: var(--text);
+        }
+        .compare-header .compare-feature {}
+        .compare-header .compare-col {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 11px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            justify-content: center;
+            color: var(--text-muted);
+        }
+        .compare-header .stash-col {
+            color: var(--amber);
+            background: rgba(232,160,32,0.06);
+            border-top: 2px solid var(--amber);
+        }
+        .c-yes { color: var(--green); font-size: 16px; }
+        .c-no { color: var(--text-muted); font-size: 16px; }
+        .highlight-row { background: rgba(232,160,32,0.03); }
+        .highlight-row .compare-feature { color: var(--text); font-weight: 500; }
+        .highlight-row .compare-col.competitor { color: var(--text-muted); font-style: italic; }
+        .highlight-row .stash-col { color: var(--amber); font-family: 'Fraunces', serif; font-size: 16px; font-style: italic; }
+
+        .backends-note {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            background: rgba(232,160,32,0.06);
+            border: 1px solid var(--amber-dim);
+            padding: 20px 24px;
+            margin-bottom: 24px;
+            font-size: 14px;
+            color: var(--text);
+            line-height: 1.6;
+        }
+        .backends-note strong { color: var(--amber); }
+        .note-icon { font-size: 20px; flex-shrink: 0; margin-top: 2px; }
+
+        .dim-warning {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            background: rgba(144,64,64,0.06);
+            border: 1px solid #5a3030;
+            padding: 20px 24px;
+            margin-top: 24px;
+            font-size: 14px;
+            color: var(--text-dim);
+            line-height: 1.6;
+        }
+        .dim-warning strong { color: #c08080; }
+        .dim-warning code {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 13px;
+            color: var(--amber);
+            background: rgba(232,160,32,0.08);
+            padding: 1px 6px;
+        }
+        .dim-warning-icon { font-size: 20px; flex-shrink: 0; margin-top: 2px; }
+
+        /* QUICKSTART */
+        #quickstart {
+            padding: 120px 0;
+            border-top: 1px solid var(--border);
+        }
+        .qs-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 80px;
+            align-items: start;
+        }
+        .qs-headline {
+            font-family: 'Fraunces', serif;
+            font-size: clamp(36px, 4vw, 56px);
+            font-weight: 700;
+            line-height: 1.05;
+            letter-spacing: -0.02em;
+            margin-bottom: 20px;
+        }
+        .qs-headline em { font-style: italic; font-weight: 300; color: var(--amber); }
+        .qs-body {
+            color: var(--text-dim);
+            font-size: 16px;
+            line-height: 1.8;
+            margin-bottom: 40px;
+        }
+        .qs-steps { display: flex; flex-direction: column; gap: 16px; }
+        .qs-step {
+            display: flex;
+            gap: 16px;
+            align-items: flex-start;
+        }
+        .qs-step-num {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 12px;
+            color: var(--bg);
+            background: var(--amber);
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-weight: 500;
+            margin-top: 1px;
+        }
+        .qs-step-text {
+            font-size: 15px;
+            color: var(--text-dim);
+            line-height: 1.6;
+        }
+        .qs-step-text code {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 13px;
+            color: var(--amber);
+            background: rgba(232,160,32,0.08);
+            padding: 1px 6px;
+        }
+        .qs-note {
+            margin-top: 12px;
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+            font-size: 12px;
+            color: var(--text-muted);
+            padding: 12px 16px;
+            border: 1px dashed #5a3030;
+            background: rgba(144,64,64,0.04);
+            line-height: 1.6;
+        }
+        .qs-note code {
+            font-family: 'IBM Plex Mono', monospace;
+            color: var(--amber);
+        }
+
+        /* RAG */
+        #rag { padding: 120px 0; border-top: 1px solid var(--border); }
+
+        .rag-hero {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 80px;
+            align-items: center;
+            margin-bottom: 64px;
+        }
+        .rag-headline {
+            font-family: 'Fraunces', serif;
+            font-size: clamp(36px, 4.5vw, 62px);
+            font-weight: 700;
+            line-height: 1.0;
+            letter-spacing: -0.02em;
+        }
+        .rag-headline em { font-style: italic; font-weight: 300; color: var(--amber); }
+        .rag-sub {
+            font-size: 17px;
+            color: var(--text-dim);
+            line-height: 1.8;
+        }
+
+        .rag-explainer {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 32px;
+            align-items: start;
+            margin-bottom: 48px;
+        }
+        .rag-side {
+            border: 1px solid var(--border);
+            background: var(--surface);
+            padding: 36px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .rag-label {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 13px;
+            letter-spacing: 0.08em;
+            padding: 8px 14px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            align-self: flex-start;
+        }
+        .rag-bad { border: 1px solid #5a3030; color: #904040; }
+        .rag-good { border: 1px solid var(--amber-dim); color: var(--amber); }
+        .rag-metaphor {
+            font-family: 'Fraunces', serif;
+            font-size: 22px;
+            font-style: italic;
+            color: var(--text);
+            font-weight: 300;
+        }
+        .rag-desc {
+            font-size: 14px;
+            color: var(--text-dim);
+            line-height: 1.8;
+        }
+        .rag-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        .rag-list li {
+            font-size: 13px;
+            line-height: 1.5;
+            padding-left: 20px;
+            position: relative;
+        }
+        .bad-list li { color: #7a5050; }
+        .bad-list li::before { content: '✗'; position: absolute; left: 0; color: #904040; }
+        .good-list li { color: var(--text-dim); }
+        .good-list li::before { content: '✓'; position: absolute; left: 0; color: var(--green); }
+
+        .rag-vs {
+            font-family: 'Fraunces', serif;
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            padding-top: 80px;
+        }
+
+        /* Analogy cards */
+        .rag-bottom { display: flex; flex-direction: column; gap: 24px; }
+        .rag-analogy {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 16px;
+            align-items: center;
+        }
+        .analogy-card {
+            border: 1px solid var(--border);
+            background: var(--surface);
+            padding: 28px 32px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .analogy-card.stash-analogy {
+            border-color: var(--amber-dim);
+            background: rgba(232,160,32,0.04);
+        }
+        .analogy-icon { font-size: 28px; }
+        .analogy-label {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 11px;
+            color: var(--text-muted);
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+        .analogy-text {
+            font-size: 15px;
+            color: var(--text-dim);
+            line-height: 1.6;
+        }
+        .stash-analogy .analogy-text { color: var(--text); }
+        .analogy-arrow {
+            font-size: 24px;
+            color: var(--amber-dim);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .rag-note {
+            background: rgba(232,160,32,0.04);
+            border: 1px solid var(--border);
+            padding: 20px 28px;
+            font-size: 14px;
+            color: var(--text-dim);
+            line-height: 1.7;
+        }
+        .rag-note strong { color: var(--text); }
+
+        /* DEMO ANIMATION */
+        #howitworks { padding: 120px 0; border-top: 1px solid var(--border); }
+
+        .demo-terminal {
+            max-width: 860px;
+            margin: 0 auto;
+            border: 1px solid var(--border);
+            background: #080808;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 13px;
+        }
+        .demo-bar {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .demo-controls { margin-left: auto; }
+        .demo-btn {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 11px;
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-dim);
+            padding: 6px 14px;
+            cursor: pointer;
+            letter-spacing: 0.05em;
+            transition: all 0.2s;
+        }
+        .demo-btn:hover { border-color: var(--amber-dim); color: var(--amber); }
+
+        .demo-body {
+            padding: 28px 32px;
+            min-height: 420px;
+            line-height: 1.9;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .demo-line { display: flex; align-items: flex-start; gap: 10px; opacity: 0; transition: opacity 0.2s; }
+        .demo-line.visible { opacity: 1; }
+
+        .demo-line.user .dl-tag { color: #60a0e0; min-width: 70px; flex-shrink: 0; }
+        .demo-line.agent .dl-tag { color: var(--amber); min-width: 70px; flex-shrink: 0; }
+        .demo-line.stash .dl-tag { color: var(--green); min-width: 70px; flex-shrink: 0; }
+        .demo-line.system .dl-tag { color: var(--text-muted); min-width: 70px; flex-shrink: 0; }
+        .demo-line.divider .dl-tag { color: var(--text-muted); min-width: 70px; flex-shrink: 0; }
+
+        .demo-line.user .dl-text { color: #c0d8f0; }
+        .demo-line.agent .dl-text { color: var(--text); }
+        .demo-line.stash .dl-text { color: #80c090; }
+        .demo-line.system .dl-text { color: var(--text-muted); font-style: italic; }
+        .demo-line.divider .dl-text { color: var(--text-muted); letter-spacing: 0.1em; }
+
+        .demo-cursor {
+            display: inline-block;
+            width: 7px;
+            height: 13px;
+            background: var(--amber);
+            animation: blink 1s step-end infinite;
+            vertical-align: middle;
+            margin-left: 3px;
+        }
+
+        /* NAMESPACES */
+        #namespaces { padding: 120px 0; border-top: 1px solid var(--border); }
+
+        .ns-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 80px;
+            align-items: start;
+        }
+        .ns-headline {
+            font-family: 'Fraunces', serif;
+            font-size: clamp(36px, 4vw, 56px);
+            font-weight: 700;
+            line-height: 1.05;
+            letter-spacing: -0.02em;
+            margin-bottom: 20px;
+        }
+        .ns-headline em { font-style: italic; font-weight: 300; color: var(--amber); }
+        .ns-body {
+            color: var(--text-dim);
+            font-size: 15px;
+            line-height: 1.8;
+            margin-bottom: 16px;
+        }
+        .ns-body code {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 13px;
+            color: var(--amber);
+            background: rgba(232,160,32,0.08);
+            padding: 1px 6px;
+        }
+        .ns-rule {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 24px;
+            padding: 16px 20px;
+            border: 1px solid var(--amber-dim);
+            background: rgba(232,160,32,0.04);
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 13px;
+            color: var(--amber);
+        }
+
+        /* Tree */
+        .ns-tree-wrap { display: flex; flex-direction: column; gap: 2px; }
+        .ns-tree {
+            border: 1px solid var(--border);
+            background: var(--surface);
+            overflow: hidden;
+        }
+        .ns-tree-label {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 11px;
+            color: var(--text-muted);
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            padding: 12px 20px;
+            border-bottom: 1px solid var(--border);
+            background: rgba(0,0,0,0.3);
+        }
+        .ns-tree-body { padding: 16px 0; }
+        .ns-node {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 7px 20px;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 13px;
+            transition: background 0.2s;
+            cursor: default;
+        }
+        .ns-node:hover { background: rgba(232,160,32,0.05); }
+        .ns-node.l1 { padding-left: 40px; }
+        .ns-node.l2 { padding-left: 64px; }
+        .ns-node-icon { flex-shrink: 0; font-size: 14px; }
+        .ns-node-path { color: var(--amber); min-width: 220px; }
+        .ns-node.root .ns-node-path { color: var(--text); }
+        .ns-node-desc { color: var(--text-muted); font-size: 11px; }
+
+        /* Feature cards */
+        .ns-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; }
+        .ns-feature-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            padding: 20px;
+            transition: all 0.3s;
+        }
+        .ns-feature-card:hover { border-color: var(--amber-dim); }
+        .ns-feature-icon { font-size: 22px; margin-bottom: 10px; }
+        .ns-feature-title { font-size: 13px; font-weight: 500; margin-bottom: 6px; }
+        .ns-feature-desc {
+            font-size: 12px;
+            color: var(--text-dim);
+            line-height: 1.6;
+        }
+        .ns-feature-desc code {
+            font-family: 'IBM Plex Mono', monospace;
+            color: var(--amber);
+            font-size: 11px;
+        }
+
+        /* Mobile */
+
+
+
+
+
+
+
+        @media (max-width: 768px) {
+            nav { padding: 20px 24px; }
+            .nav-links { display: none; }
+            #hero { padding: 120px 24px 80px; }
+            .container { padding: 0 24px; }
+            .ns-layout { grid-template-columns: 1fr; gap: 40px; }
+            .ns-cards { grid-template-columns: 1fr; }
+
+            .rag-vs, .analogy-arrow { justify-content: center; padding-top: 0; }
+
+
+            .compare-header, .compare-row { grid-template-columns: 1fr 1fr 1fr; }
+            .compare-feature { display: none; }
+
+            .story-divider { justify-content: center; padding-top: 0; }
+            .ba-header, .ba-row { grid-template-columns: 1fr 1fr; }
+            .ba-col-label { display: none; }
+            .ba-col { border-right: none; border-bottom: none; }
+
+            .what-layout,
+            .mcp-layout,
+            .loop-layout { grid-template-columns: 1fr; gap: 40px; }
+            .pipeline-flow { grid-template-columns: repeat(3, 1fr); }
+            .pipeline-new { grid-template-columns: 1fr; }
+            .self-namespaces { grid-template-columns: 1fr; }
+            .hero-stat { flex-wrap: wrap; gap: 32px; }
+            footer { flex-direction: column; gap: 16px; text-align: center; }
+            body { cursor: auto; }
+            .cursor, .cursor-ring { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursor-ring"></div>
+<canvas id="neural-canvas"></canvas>
+
+<!-- NAV -->
+<nav id="nav">
+    <div class="nav-logo">stash<span>.memory</span></div>
+    <ul class="nav-links">
+        <li><a href="#what">What</a></li>
+        <li><a href="#namespaces">Namespaces</a></li>
+        <li><a href="#howitworks">See It</a></li>
+        <li><a href="#rag">vs RAG</a></li>
+        <li><a href="#quickstart">Quick Start</a></li>
+        <li><a href="#pipeline">Pipeline</a></li>
+        <li><a href="#mcp">MCP</a></li>
+        <li><a href="#backends">Backends</a></li>
+    </ul>
+    <a href="https://github.com/alash3al/stash" class="nav-cta">→ GitHub</a>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+    <div class="hero-eyebrow">Open Source · MCP Native · PostgreSQL + pgvector</div>
+    <h1 class="hero-headline">
+        Your AI<br>
+        has <em>amnesia.</em>
+    </h1>
+    <p class="hero-sub">Stash makes your AI remember you. Every session. Forever. No more explaining yourself from scratch.</p>
+    <div class="hero-actions">
+        <a href="https://github.com/alash3al/stash" class="btn-primary">→ View on GitHub</a>
+        <a href="#what" class="btn-secondary">How it works</a>
+    </div>
+    <div class="hero-stat">
+        <div class="stat-item">
+            <div class="stat-number">28</div>
+            <div class="stat-label">MCP tools</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-number">6</div>
+            <div class="stat-label">Pipeline stages</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-number">∞</div>
+            <div class="stat-label">Agents supported</div>
+        </div>
+    </div>
+</section>
+
+<!-- STORY -->
+
+<section id="story">
+    <div class="container">
+        <div class="section-tag reveal">Sound familiar?</div>
+        <div class="story-layout reveal">
+            <div class="story-side without">
+                <div class="story-label">😫 Without Stash</div>
+                <div class="story-messages">
+                    <div class="msg msg-user">Hey, I'm building a SaaS for restaurants. Can you help?</div>
+                    <div class="msg msg-ai">Of course! Tell me about your project.</div>
+                    <div class="msg msg-user">We talked about this last week... I already explained everything.</div>
+                    <div class="msg msg-ai">I'm sorry, I don't have access to previous conversations.</div>
+                    <div class="msg msg-user">...again?</div>
+                    <div class="msg msg-system">🔁 You just wasted 10 minutes re-explaining yourself. Again.</div>
+                </div>
+            </div>
+            <div class="story-divider">VS</div>
+            <div class="story-side with">
+                <div class="story-label">😌 With Stash</div>
+                <div class="story-messages">
+                    <div class="msg msg-user">Hey, continuing work on my project.</div>
+                    <div class="msg msg-ai">Welcome back! Last time we finalized the pricing model for your restaurant SaaS. You were about to work on the onboarding flow. Want to pick up there?</div>
+                    <div class="msg msg-user">Yes! Exactly that.</div>
+                    <div class="msg msg-ai">Great. You also mentioned you wanted to avoid Stripe's complexity — I have that noted. Here's where we left off...</div>
+                    <div class="msg msg-system">✓ Picked up instantly. Zero repetition. Full context.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- BEFORE AFTER TABLE -->
+<section id="beforeafter">
+    <div class="container">
+        <div class="ba-table reveal">
+            <div class="ba-header">
+                <div class="ba-col-label"></div>
+                <div class="ba-col bad">Without Stash</div>
+                <div class="ba-col good">With Stash</div>
+            </div>
+            <div class="ba-row">
+                <div class="ba-col-label">New session</div>
+                <div class="ba-col bad">❌ "Who are you again?"</div>
+                <div class="ba-col good">✓ Picks up where you left off</div>
+            </div>
+            <div class="ba-row">
+                <div class="ba-col-label">Your preferences</div>
+                <div class="ba-col bad">❌ Re-explain every time</div>
+                <div class="ba-col good">✓ Already knows them</div>
+            </div>
+            <div class="ba-row">
+                <div class="ba-col-label">Past mistakes</div>
+                <div class="ba-col bad">❌ Repeats the same errors</div>
+                <div class="ba-col good">✓ Remembers what didn't work</div>
+            </div>
+            <div class="ba-row">
+                <div class="ba-col-label">Long projects</div>
+                <div class="ba-col bad">❌ Loses track of goals</div>
+                <div class="ba-col good">✓ Tracks goals across weeks</div>
+            </div>
+            <div class="ba-row">
+                <div class="ba-col-label">Token cost</div>
+                <div class="ba-col bad">❌ Grows every session</div>
+                <div class="ba-col good">✓ Only recalls what matters</div>
+            </div>
+            <div class="ba-row">
+                <div class="ba-col-label">Switching models</div>
+                <div class="ba-col bad">❌ Start from zero again</div>
+                <div class="ba-col good">✓ Memory is model-agnostic</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- WHAT -->
+<section id="what">
+    <div class="container">
+        <div class="what-layout">
+            <div>
+                <div class="section-tag">What is Stash</div>
+                <h2 class="what-headline">Not just memory.<br><em>A second brain.</em></h2>
+                <p class="what-body">Stash is a persistent cognitive layer that sits between your AI agent and the world. It doesn't replace your model — it makes your model continuous. Episodes become facts. Facts become patterns. Patterns become wisdom.</p>
+                <blockquote class="what-quote reveal">"Your AI is the brain. Stash is the life experience."</blockquote>
+            </div>
+            <div class="stack-visual reveal">
+                <div class="stack-layer dim">
+                    <div class="stack-layer-dot"></div>
+                    <div class="stack-layer-name">your agent</div>
+                    <div class="stack-layer-desc">Claude, GPT, local model, anything</div>
+                </div>
+                <div class="stack-layer">
+                    <div class="stack-layer-dot"></div>
+                    <div class="stack-layer-name">episodes</div>
+                    <div class="stack-layer-desc">Raw observations, append-only</div>
+                </div>
+                <div class="stack-layer">
+                    <div class="stack-layer-dot"></div>
+                    <div class="stack-layer-name">facts</div>
+                    <div class="stack-layer-desc">Synthesized beliefs with confidence</div>
+                </div>
+                <div class="stack-layer">
+                    <div class="stack-layer-dot"></div>
+                    <div class="stack-layer-name">relationships</div>
+                    <div class="stack-layer-desc">Entity knowledge graph</div>
+                </div>
+                <div class="stack-layer">
+                    <div class="stack-layer-dot"></div>
+                    <div class="stack-layer-name">patterns</div>
+                    <div class="stack-layer-desc">Higher-order abstractions</div>
+                </div>
+                <div class="stack-layer">
+                    <div class="stack-layer-dot"></div>
+                    <div class="stack-layer-name">goals · failures · hypotheses</div>
+                    <div class="stack-layer-desc">Intent, learning, uncertainty</div>
+                </div>
+                <div class="stack-layer dim">
+                    <div class="stack-layer-dot"></div>
+                    <div class="stack-layer-name">postgres + pgvector</div>
+                    <div class="stack-layer-desc">Battle-tested infrastructure</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- NAMESPACES -->
+<section id="namespaces">
+    <div class="container">
+        <div class="ns-layout reveal">
+            <div class="ns-intro">
+                <div class="section-tag">Namespaces</div>
+                <h2 class="ns-headline">Memory organized<br>like <em>folders.</em></h2>
+                <p class="ns-body">Not all memory is equal. What your agent learns about <em>you</em> is different from what it learns about a <em>project</em>, which is different from what it knows about <em>itself</em>. Namespaces let the agent organize what it learns into clean, separate buckets — just like folders on your computer.</p>
+                <p class="ns-body">Each namespace is a path. Paths are hierarchical. Reading from <code>/projects</code> automatically includes everything under <code>/projects/stash</code>, <code>/projects/cartona</code>, and so on. You never have to think about it — the agent does.</p>
+                <div class="ns-rule">
+                    <span class="ns-rule-icon">📁</span>
+                    <span>Write to one namespace. Read from any subtree.</span>
+                </div>
+            </div>
+            <div class="ns-tree-wrap">
+                <div class="ns-tree">
+                    <div class="ns-tree-label">example namespace structure</div>
+                    <div class="ns-tree-body">
+                        <div class="ns-node root">
+                            <span class="ns-node-icon">📁</span>
+                            <span class="ns-node-path">/</span>
+                            <span class="ns-node-desc">everything</span>
+                        </div>
+                        <div class="ns-node l1">
+                            <span class="ns-node-icon">📁</span>
+                            <span class="ns-node-path">/users/alice</span>
+                            <span class="ns-node-desc">who alice is, her preferences</span>
+                        </div>
+                        <div class="ns-node l1">
+                            <span class="ns-node-icon">📁</span>
+                            <span class="ns-node-path">/projects</span>
+                            <span class="ns-node-desc">all projects</span>
+                        </div>
+                        <div class="ns-node l2">
+                            <span class="ns-node-icon">📁</span>
+                            <span class="ns-node-path">/projects/restaurant-saas</span>
+                            <span class="ns-node-desc">pricing, features, decisions</span>
+                        </div>
+                        <div class="ns-node l2">
+                            <span class="ns-node-icon">📁</span>
+                            <span class="ns-node-path">/projects/mobile-app</span>
+                            <span class="ns-node-desc">design, tech stack, goals</span>
+                        </div>
+                        <div class="ns-node l1">
+                            <span class="ns-node-icon">📁</span>
+                            <span class="ns-node-path">/self</span>
+                            <span class="ns-node-desc">agent self-knowledge</span>
+                        </div>
+                        <div class="ns-node l2">
+                            <span class="ns-node-icon">📄</span>
+                            <span class="ns-node-path">/self/capabilities</span>
+                            <span class="ns-node-desc">what I do well</span>
+                        </div>
+                        <div class="ns-node l2">
+                            <span class="ns-node-icon">📄</span>
+                            <span class="ns-node-path">/self/limits</span>
+                            <span class="ns-node-desc">what I struggle with</span>
+                        </div>
+                        <div class="ns-node l2">
+                            <span class="ns-node-icon">📄</span>
+                            <span class="ns-node-path">/self/preferences</span>
+                            <span class="ns-node-desc">how I work best</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="ns-cards">
+                    <div class="ns-feature-card">
+                        <div class="ns-feature-icon">🔍</div>
+                        <div class="ns-feature-title">Recursive reads</div>
+                        <div class="ns-feature-desc">Recall from <code>/projects</code> and get everything across all sub-projects automatically.</div>
+                    </div>
+                    <div class="ns-feature-card">
+                        <div class="ns-feature-icon">✏️</div>
+                        <div class="ns-feature-title">Precise writes</div>
+                        <div class="ns-feature-desc">Remember always targets one exact namespace — no accidental cross-contamination.</div>
+                    </div>
+                    <div class="ns-feature-card">
+                        <div class="ns-feature-icon">🔒</div>
+                        <div class="ns-feature-title">Clean separation</div>
+                        <div class="ns-feature-desc">User memory never mixes with project memory. Agent self-knowledge stays in <code>/self</code>.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ANIMATION -->
+
+<section id="howitworks">
+    <div class="container">
+        <div class="pipeline-header reveal">
+            <div class="section-tag" style="justify-content:center">See It In Action</div>
+            <h2 class="section-headline">Watch Stash <em>remember.</em></h2>
+            <p class="section-sub">A real conversation loop — two sessions, one agent, zero repetition. Watch what happens between them.</p>
+        </div>
+
+        <div class="demo-terminal reveal">
+            <div class="demo-bar">
+                <div class="terminal-dot r"></div>
+                <div class="terminal-dot y"></div>
+                <div class="terminal-dot g"></div>
+                <span class="terminal-title">agent session</span>
+                <div class="demo-controls">
+                    <button class="demo-btn" id="demo-restart">↺ Replay</button>
+                </div>
+            </div>
+            <div class="demo-body" id="demo-body"></div>
+        </div>
+    </div>
+</section>
+
+<!-- RAG -->
+
+<section id="rag">
+    <div class="container">
+        <div class="section-tag reveal">Stash vs RAG</div>
+        <div class="rag-hero reveal">
+            <h2 class="rag-headline">RAG gives your AI<br>a <em>search engine.</em><br>Stash gives it a <em>life.</em></h2>
+            <p class="rag-sub">You've probably heard of RAG — Retrieval Augmented Generation. It's clever. But it's not memory. Here's the difference, in plain English.</p>
+        </div>
+
+        <div class="rag-explainer reveal">
+            <div class="rag-side">
+                <div class="rag-label rag-bad">📚 RAG</div>
+                <div class="rag-metaphor">"A very fast librarian"</div>
+                <p class="rag-desc">You give it a pile of documents. When you ask a question, it searches those documents and hands you the relevant pages. That's it. It doesn't remember your conversation. It doesn't learn. It doesn't know you. Every question starts from scratch — it's just a smarter search engine over files you already wrote.</p>
+                <ul class="rag-list bad-list">
+                    <li>Only knows what's in your documents</li>
+                    <li>Cannot learn from conversations</li>
+                    <li>Cannot track goals or intentions</li>
+                    <li>Cannot reason about cause and effect</li>
+                    <li>Cannot notice contradictions over time</li>
+                    <li>Stateless — no continuity whatsoever</li>
+                    <li>You must write the knowledge first</li>
+                </ul>
+            </div>
+
+            <div class="rag-vs">VS</div>
+
+            <div class="rag-side">
+                <div class="rag-label rag-good">🧠 Stash</div>
+                <div class="rag-metaphor">"A mind that grows"</div>
+                <p class="rag-desc">Stash learns from everything your agent experiences — conversations, decisions, successes, failures. It synthesizes raw observations into facts, connects facts into a knowledge graph, detects contradictions, tracks goals, and builds an understanding of you that deepens over time. You don't write anything. It figures it out.</p>
+                <ul class="rag-list good-list">
+                    <li>Learns from every conversation automatically</li>
+                    <li>Builds a knowledge graph over time</li>
+                    <li>Tracks your goals across weeks and months</li>
+                    <li>Reasons about cause and effect</li>
+                    <li>Self-corrects when beliefs contradict</li>
+                    <li>Continuous — picks up exactly where you left off</li>
+                    <li>Creates knowledge — you don't have to</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="rag-bottom reveal">
+            <div class="rag-analogy">
+                <div class="analogy-card">
+                    <div class="analogy-icon">📚</div>
+                    <div class="analogy-label">RAG is like...</div>
+                    <div class="analogy-text">A brilliant intern who reads your files perfectly — but forgets everything the moment they leave the room.</div>
+                </div>
+                <div class="analogy-arrow">→</div>
+                <div class="analogy-card stash-analogy">
+                    <div class="analogy-icon">🧠</div>
+                    <div class="analogy-label">Stash is like...</div>
+                    <div class="analogy-text">A colleague who was there from day one, remembers every decision you ever made, and gets more valuable every single week.</div>
+                </div>
+            </div>
+            <div class="rag-note">
+                <strong>Can you use both?</strong> Yes — RAG is great for searching documents. Stash is for remembering experience. They solve different problems. Stash just goes much, much further.
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- UNIQUE -->
+
+<section id="unique">
+    <div class="container">
+        <div class="section-tag reveal">Why Stash is Different</div>
+        <div class="unique-hero reveal">
+            <h2 class="unique-headline">Everyone gave AI<br>a <em>notepad.</em><br>We gave it a <em>mind.</em></h2>
+            <p class="unique-sub">Claude.ai has memory. ChatGPT has memory. They only work for themselves — locked to one platform, one model, one company. Stash works for everyone, everywhere, forever. And it goes far deeper than any of them.</p>
+        </div>
+
+        <div class="compare-table reveal">
+            <div class="compare-header">
+                <div class="compare-feature"></div>
+                <div class="compare-col competitor">ChatGPT Memory</div>
+                <div class="compare-col competitor">Claude.ai Memory</div>
+                <div class="compare-col stash-col">Stash</div>
+            </div>
+            <div class="compare-row">
+                <div class="compare-feature">Remembers you</div>
+                <div class="compare-col competitor"><span class="c-yes">✓</span></div>
+                <div class="compare-col competitor"><span class="c-yes">✓</span></div>
+                <div class="compare-col stash-col"><span class="c-yes">✓</span></div>
+            </div>
+            <div class="compare-row">
+                <div class="compare-feature">Works with any AI model</div>
+                <div class="compare-col competitor"><span class="c-no">✗</span></div>
+                <div class="compare-col competitor"><span class="c-no">✗</span></div>
+                <div class="compare-col stash-col"><span class="c-yes">✓</span></div>
+            </div>
+            <div class="compare-row">
+                <div class="compare-feature">Works with local / private models</div>
+                <div class="compare-col competitor"><span class="c-no">✗</span></div>
+                <div class="compare-col competitor"><span class="c-no">✗</span></div>
+                <div class="compare-col stash-col"><span class="c-yes">✓</span></div>
+            </div>
+            <div class="compare-row">
+                <div class="compare-feature">You own your data</div>
+                <div class="compare-col competitor"><span class="c-no">✗</span></div>
+                <div class="compare-col competitor"><span class="c-no">✗</span></div>
+                <div class="compare-col stash-col"><span class="c-yes">✓</span></div>
+            </div>
+            <div class="compare-row">
+                <div class="compare-feature">Open source</div>
+                <div class="compare-col competitor"><span class="c-no">✗</span></div>
+                <div class="compare-col competitor"><span class="c-no">✗</span></div>
+                <div class="compare-col stash-col"><span class="c-yes">✓</span></div>
+            </div>
+            <div class="compare-row">
+                <div class="compare-feature">Background consolidation</div>
+                <div class="compare-col competitor"><span class="c-no">✗</span></div>
+                <div class="compare-col competitor"><span class="c-no">✗</span></div>
+                <div class="compare-col stash-col"><span class="c-yes">✓</span></div>
+            </div>
+            <div class="compare-row">
+                <div class="compare-feature">Goals &amp; intent tracking</div>
+                <div class="compare-col competitor"><span class="c-no">✗</span></div>
+                <div class="compare-col competitor"><span class="c-no">✗</span></div>
+                <div class="compare-col stash-col"><span class="c-yes">✓</span></div>
+            </div>
+            <div class="compare-row">
+                <div class="compare-feature">Learns from failures</div>
+                <div class="compare-col competitor"><span class="c-no">✗</span></div>
+                <div class="compare-col competitor"><span class="c-no">✗</span></div>
+                <div class="compare-col stash-col"><span class="c-yes">✓</span></div>
+            </div>
+            <div class="compare-row">
+                <div class="compare-feature">Causal reasoning</div>
+                <div class="compare-col competitor"><span class="c-no">✗</span></div>
+                <div class="compare-col competitor"><span class="c-no">✗</span></div>
+                <div class="compare-col stash-col"><span class="c-yes">✓</span></div>
+            </div>
+            <div class="compare-row">
+                <div class="compare-feature">Agent self-model</div>
+                <div class="compare-col competitor"><span class="c-no">✗</span></div>
+                <div class="compare-col competitor"><span class="c-no">✗</span></div>
+                <div class="compare-col stash-col"><span class="c-yes">✓</span></div>
+            </div>
+            <div class="compare-row highlight-row">
+                <div class="compare-feature">What it gives your AI</div>
+                <div class="compare-col competitor">A notepad</div>
+                <div class="compare-col competitor">A notepad</div>
+                <div class="compare-col stash-col">A mind</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- PROBLEM -->
+
+
+<section id="problem">
+    <div class="container">
+        <div class="section-tag">The Problem</div>
+        <div class="problem-grid">
+            <div class="problem-card reveal">
+                <span class="problem-icon">🧠</span>
+                <h3 class="problem-title">Brilliant brain, no experience</h3>
+                <p class="problem-desc">AI models reason brilliantly but remember nothing. Every session you re-explain who you are, what you need, and what you've already tried. You're training the same student every single day.</p>
+            </div>
+            <div class="problem-card reveal">
+                <span class="problem-icon">💸</span>
+                <h3 class="problem-title">Context windows are expensive</h3>
+                <p class="problem-desc">The workaround is stuffing full conversation history into every prompt. It's slow, expensive, and you still hit the limit. You're paying for tokens that repeat the same facts over and over.</p>
+            </div>
+            <div class="problem-card reveal">
+                <span class="problem-icon">🔄</span>
+                <h3 class="problem-title">Agents repeat their mistakes</h3>
+                <p class="problem-desc">Your agent tried something, it failed, and next session it tries the exact same thing again. There's no mechanism to carry lessons forward. Every failure is forgotten.</p>
+            </div>
+            <div class="problem-card reveal">
+                <span class="problem-icon">🔒</span>
+                <h3 class="problem-title">Memory is a platform privilege</h3>
+                <p class="problem-desc">Only a handful of AI platforms offer memory — and only for their own models. Your custom agent, your local LLM, your Cursor setup? They all start blind. Memory shouldn't be a premium feature.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- QUICKSTART -->
+<section id="quickstart">
+    <div class="container">
+        <div class="qs-layout reveal">
+            <div class="qs-left">
+                <div class="section-tag">Express Setup</div>
+                <h2 class="qs-headline">Up and running<br>in <em>3 commands.</em></h2>
+                <p class="qs-body">No infrastructure to set up. No dependencies to install manually. Docker Compose handles everything — Postgres, pgvector, Stash, all wired together and ready.</p>
+                <div class="qs-steps">
+                    <div class="qs-step">
+                        <div class="qs-step-num">1</div>
+                        <div class="qs-step-text">Clone the repo</div>
+                    </div>
+                    <div class="qs-step">
+                        <div class="qs-step-num">2</div>
+                        <div class="qs-step-text">Copy <code>.env.example</code> → <code>.env</code> and set your API key + model preferences</div>
+                    </div>
+                    <div class="qs-step">
+                        <div class="qs-step-num">3</div>
+                        <div class="qs-step-text">Run <code>docker compose up</code> — that's it. Stash is live.</div>
+                    </div>
+                </div>
+            </div>
+            <div class="qs-right">
+                <div class="terminal">
+                    <div class="terminal-bar">
+                        <div class="terminal-dot r"></div>
+                        <div class="terminal-dot y"></div>
+                        <div class="terminal-dot g"></div>
+                        <span class="terminal-title">terminal</span>
+                    </div>
+                    <div class="terminal-body">
+                        <div><span class="t-comment"># 1. clone</span></div>
+                        <div><span class="t-prompt">$</span> <span class="t-cmd">git clone https://github.com/alash3al/stash</span></div>
+                        <div><span class="t-prompt">$</span> <span class="t-cmd">cd stash</span></div>
+                        <div>&nbsp;</div>
+                        <div><span class="t-comment"># 2. configure</span></div>
+                        <div><span class="t-prompt">$</span> <span class="t-cmd">cp .env.example .env</span></div>
+                        <div><span class="t-dim">&nbsp;&nbsp; # edit .env with your API key,</span></div>
+                        <div><span class="t-dim">&nbsp;&nbsp; # models and STASH_VECTOR_DIM</span></div>
+                        <div>&nbsp;</div>
+                        <div><span class="t-comment"># 3. launch everything</span></div>
+                        <div><span class="t-prompt">$</span> <span class="t-cmd">docker compose up</span></div>
+                        <div>&nbsp;</div>
+                        <div><span class="t-output">✓ postgres + pgvector ready</span></div>
+                        <div><span class="t-output">✓ stash migrations applied</span></div>
+                        <div><span class="t-output">✓ mcp server listening</span></div>
+                        <div><span class="t-output">✓ consolidation running in background</span></div>
+                        <div>&nbsp;</div>
+                        <div><span class="t-prompt">$</span> <span class="t-blink"></span></div>
+                    </div>
+                </div>
+                <div class="qs-note">
+                    <span>⚠️</span>
+                    <span>Set <code>STASH_VECTOR_DIM</code> in your <code>.env</code> before first run. It cannot be changed after initialization.</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- PIPELINE -->
+<section id="pipeline">
+    <div class="container">
+        <div class="pipeline-header reveal">
+            <div class="section-tag" style="justify-content:center">Consolidation Pipeline</div>
+            <h2 class="section-headline">Raw memory becomes <em>wisdom</em></h2>
+            <p class="section-sub">A background process continuously synthesizes your agent's experiences into structured knowledge. It runs on a schedule — your agent just lives.</p>
+        </div>
+        <div class="pipeline-flow reveal">
+            <div class="pipeline-step">
+                <div class="pipeline-step-num">01</div>
+                <span class="pipeline-step-icon">📝</span>
+                <div class="pipeline-step-name">Episodes</div>
+                <div class="pipeline-step-desc">Raw observations stored as they happen</div>
+                <div class="pipeline-arrow"></div>
+            </div>
+            <div class="pipeline-step">
+                <div class="pipeline-step-num">02</div>
+                <span class="pipeline-step-icon">💡</span>
+                <div class="pipeline-step-name">Facts</div>
+                <div class="pipeline-step-desc">Clustered episodes synthesized by LLM</div>
+                <div class="pipeline-arrow"></div>
+            </div>
+            <div class="pipeline-step">
+                <div class="pipeline-step-num">03</div>
+                <span class="pipeline-step-icon">🕸️</span>
+                <div class="pipeline-step-name">Relationships</div>
+                <div class="pipeline-step-desc">Entity edges extracted from facts</div>
+                <div class="pipeline-arrow"></div>
+            </div>
+            <div class="pipeline-step">
+                <div class="pipeline-step-num">04</div>
+                <span class="pipeline-step-icon">🔗</span>
+                <div class="pipeline-step-name">Causal Links</div>
+                <div class="pipeline-step-desc">Cause-effect pairs between facts</div>
+                <div class="pipeline-arrow"></div>
+            </div>
+            <div class="pipeline-step">
+                <div class="pipeline-step-num">05</div>
+                <span class="pipeline-step-icon">🌀</span>
+                <div class="pipeline-step-name">Patterns</div>
+                <div class="pipeline-step-desc">Abstract higher-order insights</div>
+                <div class="pipeline-arrow"></div>
+            </div>
+            <div class="pipeline-step">
+                <div class="pipeline-step-num">06</div>
+                <span class="pipeline-step-icon">⚖️</span>
+                <div class="pipeline-step-name">Contradictions</div>
+                <div class="pipeline-step-desc">Self-correction and confidence decay</div>
+            </div>
+        </div>
+        <div class="pipeline-new reveal">
+            <div class="pipeline-step new-stage">
+                <div class="new-badge">NEW</div>
+                <div class="pipeline-step-num">07</div>
+                <span class="pipeline-step-icon">🎯</span>
+                <div class="pipeline-step-name">Goal Inference</div>
+                <div class="pipeline-step-desc">Facts automatically tracked against active goals. Progress detected, contradictions surfaced.</div>
+            </div>
+            <div class="pipeline-step new-stage">
+                <div class="new-badge">NEW</div>
+                <div class="pipeline-step-num">08</div>
+                <span class="pipeline-step-icon">💥</span>
+                <div class="pipeline-step-name">Failure Patterns</div>
+                <div class="pipeline-step-desc">Detect repeated mistakes. Extract failure patterns as new facts. The agent stops repeating itself.</div>
+            </div>
+            <div class="pipeline-step new-stage">
+                <div class="new-badge">NEW</div>
+                <div class="pipeline-step-num">09</div>
+                <span class="pipeline-step-icon">🔬</span>
+                <div class="pipeline-step-name">Hypothesis Scan</div>
+                <div class="pipeline-step-desc">New evidence passively confirms or rejects open hypotheses. No manual intervention needed.</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- MCP -->
+<section id="mcp">
+    <div class="container">
+        <div class="mcp-layout">
+            <div>
+                <div class="section-tag">MCP Integration</div>
+                <h2 class="mcp-headline">Two commands.<br><em>Any agent.</em></h2>
+                <p class="mcp-body">Stash speaks MCP natively. Drop it into Claude Desktop, Cursor, or any MCP-compatible agent in under 5 minutes. No SDK. No vendor lock-in. Your agent remembers you everywhere.</p>
+                <p class="mcp-body" style="margin-top: -16px;">28 tools covering the full cognitive stack — from raw <code style="font-family:'IBM Plex Mono',monospace;color:var(--amber);font-size:14px;">remember</code> and <code style="font-family:'IBM Plex Mono',monospace;color:var(--amber);font-size:14px;">recall</code> all the way to causal chains, contradiction resolution, and hypothesis management.</p>
+                <div class="compat-list">
+                    <span class="compat-tag">Claude Desktop</span>
+                    <span class="compat-tag">Cursor</span>
+                    <span class="compat-tag">OpenCode</span>
+                    <span class="compat-tag">Custom Agents</span>
+                    <span class="compat-tag">Local LLMs</span>
+                    <span class="compat-tag">Any MCP Client</span>
+                </div>
+            </div>
+            <div class="terminal reveal">
+                <div class="terminal-bar">
+                    <div class="terminal-dot r"></div>
+                    <div class="terminal-dot y"></div>
+                    <div class="terminal-dot g"></div>
+                    <span class="terminal-title">stash · mcp stdio</span>
+                </div>
+                <div class="terminal-body">
+                    <div><span class="t-comment"># Start MCP server (stdio) + consolidation</span></div>
+                    <div><span class="t-prompt">$</span> <span class="t-cmd">./stash mcp execute --with-consolidation</span></div>
+                    <div>&nbsp;</div>
+                    <div><span class="t-comment"># Or SSE for remote agents</span></div>
+                    <div><span class="t-prompt">$</span> <span class="t-cmd">./stash mcp serve --port 8080 --with-consolidation</span></div>
+                    <div>&nbsp;</div>
+                    <div><span class="t-comment"># 28 MCP tools. Full cognitive API:</span></div>
+                    <div><span class="t-output">✓</span> <span class="t-dim">remember · recall · forget · init</span></div>
+                    <div><span class="t-output">✓</span> <span class="t-dim">goals · failures · hypotheses</span></div>
+                    <div><span class="t-output">✓</span> <span class="t-dim">consolidate · query_facts · relationships</span></div>
+                    <div><span class="t-output">✓</span> <span class="t-dim">causal links · contradictions</span></div>
+                    <div><span class="t-output">✓</span> <span class="t-dim">namespaces · context · self-model</span></div>
+                    <div>&nbsp;</div>
+                    <div><span class="t-prompt">$</span> <span class="t-blink"></span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- SELF -->
+<section id="self">
+    <div class="container">
+        <div class="self-center reveal">
+            <div class="section-tag" style="justify-content:center">Agent Self-Model</div>
+            <h2 class="section-headline">Your agent can<br><em>know itself.</em></h2>
+            <p class="section-sub">Call <code style="font-family:'IBM Plex Mono',monospace;color:var(--amber)">init</code> and Stash creates a <code style="font-family:'IBM Plex Mono',monospace;color:var(--amber)">/self</code> namespace scaffold. The agent uses its own memory layer to build and maintain a model of its own capabilities, limits, and preferences.</p>
+        </div>
+        <div class="self-namespaces reveal">
+            <div class="ns-card">
+                <div class="ns-path">/self/capabilities</div>
+                <div class="ns-title">What I can do well</div>
+                <div class="ns-desc">The agent remembers where it excels and recalls these when planning how to approach a task.</div>
+            </div>
+            <div class="ns-card">
+                <div class="ns-path">/self/limits</div>
+                <div class="ns-title">What I struggle with</div>
+                <div class="ns-desc">Recorded failures and known weaknesses. The anti-repeat mechanism. Never make the same mistake twice.</div>
+            </div>
+            <div class="ns-card">
+                <div class="ns-path">/self/preferences</div>
+                <div class="ns-title">How I work best</div>
+                <div class="ns-desc">Learned preferences for how to operate. The agent develops a working style over time, not just facts.</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- LOOP -->
+<section id="loop">
+    <div class="container">
+        <div class="loop-layout">
+            <div>
+                <div class="section-tag">Autonomous Loop</div>
+                <h2 class="what-headline">An agent that<br><em>never stops learning.</em></h2>
+                <p class="what-body">Give your agent a 5-minute research loop. It orients from past memory, researches a topic it chooses itself, invents new connections, consolidates what it learned, and closes gracefully — ready to pick up next time.</p>
+                <p class="what-body">Run it as a cron job. Every 5 minutes, your agent gets smarter.</p>
+                <a href="https://github.com/alash3al/stash" class="btn-primary" style="display:inline-flex;margin-top:16px">→ See the loop prompt</a>
+            </div>
+            <div class="loop-steps reveal">
+                <div class="loop-step">
+                    <div class="loop-step-num">01</div>
+                    <div class="loop-step-content">
+                        <div class="loop-step-title">Orient</div>
+                        <div class="loop-step-desc">Recall context, active goals, open hypotheses, past failures</div>
+                    </div>
+                </div>
+                <div class="loop-step">
+                    <div class="loop-step-num">02</div>
+                    <div class="loop-step-content">
+                        <div class="loop-step-title">Research</div>
+                        <div class="loop-step-desc">Search the web on a topic the agent chooses itself</div>
+                    </div>
+                </div>
+                <div class="loop-step">
+                    <div class="loop-step-num">03</div>
+                    <div class="loop-step-content">
+                        <div class="loop-step-title">Think</div>
+                        <div class="loop-step-desc">Surface tensions, gaps, contradictions in what it now knows</div>
+                    </div>
+                </div>
+                <div class="loop-step">
+                    <div class="loop-step-num">04</div>
+                    <div class="loop-step-content">
+                        <div class="loop-step-title">Invent</div>
+                        <div class="loop-step-desc">Generate something new — a hypothesis, pattern, or discovery</div>
+                    </div>
+                </div>
+                <div class="loop-step">
+                    <div class="loop-step-num">05</div>
+                    <div class="loop-step-content">
+                        <div class="loop-step-title">Consolidate</div>
+                        <div class="loop-step-desc">Run the pipeline. Synthesize raw episodes into structured knowledge</div>
+                    </div>
+                </div>
+                <div class="loop-step">
+                    <div class="loop-step-num">06</div>
+                    <div class="loop-step-content">
+                        <div class="loop-step-title">Reflect + Sleep</div>
+                        <div class="loop-step-desc">Write a session summary. Set context for next run. Stop.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- BACKENDS -->
+<section id="backends">
+    <div class="container">
+        <div class="pipeline-header reveal">
+            <div class="section-tag" style="justify-content:center">Model Agnostic</div>
+            <h2 class="section-headline">Your model. <em>Your infrastructure.</em></h2>
+            <p class="section-sub">Stash uses one provider for both embedding and reasoning — any OpenAI-compatible backend works. Cloud, local, or self-hosted. No vendor lock-in, ever.</p>
+        </div>
+
+        <div class="backends-note reveal">
+            <span class="note-icon">⚡</span>
+            <div>
+                <strong>Stash itself runs on OpenRouter.</strong> The author runs Stash locally pointed at OpenRouter — access to hundreds of models, one API key, zero infrastructure.
+            </div>
+        </div>
+
+        <div class="problem-grid reveal" style="grid-template-columns: repeat(3, 1fr);">
+            <div class="problem-card">
+                <span class="problem-icon">☁️</span>
+                <h3 class="problem-title">Cloud APIs</h3>
+                <p class="problem-desc">OpenRouter gives you access to hundreds of models — GPT, Claude, Gemini, Mistral — all behind one OpenAI-compatible endpoint. Point Stash at it and pick any model for embedding and reasoning.</p>
+            </div>
+            <div class="problem-card">
+                <span class="problem-icon">🏠</span>
+                <h3 class="problem-title">Local Models</h3>
+                <p class="problem-desc">Running Ollama locally? Stash works out of the box. Use Qwen, Llama, Mistral, or any model you've pulled — your memory stays fully private, fully offline.</p>
+            </div>
+            <div class="problem-card">
+                <span class="problem-icon">🔧</span>
+                <h3 class="problem-title">Self-Hosted</h3>
+                <p class="problem-desc">vLLM, LM Studio, llama.cpp server, Together AI, Groq — if it speaks the OpenAI API format, Stash speaks it back. Same provider serves both models.</p>
+            </div>
+        </div>
+
+        <div class="dim-warning reveal">
+            <span class="dim-warning-icon">⚠️</span>
+            <div>
+                <strong>Set <code>STASH_VECTOR_DIM</code> before your first run and never change it.</strong> pgvector locks the embedding dimension at initialization — changing it later requires a full database reset. The default embedding model is <code>openai/text-embedding-3-small</code> with <code>STASH_VECTOR_DIM=1536</code>.
+            </div>
+        </div>
+
+        <div class="terminal reveal" style="margin-top: 24px; max-width: 780px; margin-left: auto; margin-right: auto;">
+            <div class="terminal-bar">
+                <div class="terminal-dot r"></div>
+                <div class="terminal-dot y"></div>
+                <div class="terminal-dot g"></div>
+                <span class="terminal-title">.env — same provider for embedding + reasoning</span>
+            </div>
+            <div class="terminal-body">
+                <div><span class="t-comment"># ⚡ OpenRouter (recommended — what the author uses locally)</span></div>
+                <div><span class="t-prompt">STASH_OPENAI_BASE_URL</span>=<span class="t-output">https://openrouter.ai/api/v1</span></div>
+                <div><span class="t-prompt">STASH_OPENAI_API_KEY</span>=<span class="t-output">sk-or-...</span></div>
+                <div><span class="t-prompt">STASH_EMBEDDING_MODEL</span>=<span class="t-output">openai/text-embedding-3-small</span></div>
+                <div><span class="t-prompt">STASH_REASONER_MODEL</span>=<span class="t-output">anthropic/claude-3-haiku</span></div>
+                <div><span class="t-prompt">STASH_VECTOR_DIM</span>=<span class="t-output">1536</span> &nbsp;<span class="t-comment"># ⚠ set once, never change</span></div>
+                <div>&nbsp;</div>
+                <div><span class="t-comment"># 🏠 Ollama (fully local, fully private)</span></div>
+                <div><span class="t-prompt">STASH_OPENAI_BASE_URL</span>=<span class="t-output">http://localhost:11434/v1</span></div>
+                <div><span class="t-prompt">STASH_EMBEDDING_MODEL</span>=<span class="t-output">nomic-embed-text</span></div>
+                <div><span class="t-prompt">STASH_REASONER_MODEL</span>=<span class="t-output">qwen2.5:3b</span></div>
+                <div><span class="t-prompt">STASH_VECTOR_DIM</span>=<span class="t-output">768</span> &nbsp;<span class="t-comment"># ⚠ match your embedding model</span></div>
+                <div>&nbsp;</div>
+                <div><span class="t-comment"># ⚡ Groq (fast inference)</span></div>
+                <div><span class="t-prompt">STASH_OPENAI_BASE_URL</span>=<span class="t-output">https://api.groq.com/openai/v1</span></div>
+                <div><span class="t-prompt">STASH_EMBEDDING_MODEL</span>=<span class="t-output">openai/text-embedding-3-small</span></div>
+                <div><span class="t-prompt">STASH_REASONER_MODEL</span>=<span class="t-output">llama-3.1-8b-instant</span></div>
+                <div><span class="t-prompt">STASH_VECTOR_DIM</span>=<span class="t-output">1536</span> &nbsp;<span class="t-comment"># ⚠ set once, never change</span></div>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+
+<section id="cta">
+    <div class="container">
+        <div class="cta-headline reveal">
+            Give your agent<br>
+            <em>a memory.</em>
+        </div>
+        <p class="cta-sub reveal">Open source. Apache 2.0 licensed. Backed by PostgreSQL. Works with any MCP-compatible agent.</p>
+        <div class="cta-actions reveal">
+            <a href="https://github.com/alash3al/stash" class="btn-primary">→ GitHub Repository</a>
+            <a href="https://alash3al.com" class="btn-secondary">Built by @alash3al</a>
+        </div>
+    </div>
+</section>
+
+<footer>
+    <span>stash — Apache 2.0 License</span>
+    <span>
+    <a href="https://github.com/alash3al/stash">GitHub</a> ·
+    <a href="https://alash3al.com">alash3al.com</a>
+  </span>
+</footer>
+
+<script>
+    // Custom cursor
+    const cursor = document.getElementById('cursor');
+    const ring = document.getElementById('cursor-ring');
+    let mouseX = 0, mouseY = 0, ringX = 0, ringY = 0;
+    document.addEventListener('mousemove', e => {
+        mouseX = e.clientX; mouseY = e.clientY;
+        cursor.style.left = mouseX - 4 + 'px';
+        cursor.style.top = mouseY - 4 + 'px';
+    });
+    function animateRing() {
+        ringX += (mouseX - ringX - 16) * 0.12;
+        ringY += (mouseY - ringY - 16) * 0.12;
+        ring.style.left = ringX + 'px';
+        ring.style.top = ringY + 'px';
+        requestAnimationFrame(animateRing);
+    }
+    animateRing();
+
+    // Nav scroll
+    const nav = document.getElementById('nav');
+    window.addEventListener('scroll', () => {
+        nav.classList.toggle('scrolled', window.scrollY > 60);
+    });
+
+    // Scroll reveal
+    const reveals = document.querySelectorAll('.reveal');
+    const observer = new IntersectionObserver(entries => {
+        entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); } });
+    }, { threshold: 0.1 });
+    reveals.forEach(el => observer.observe(el));
+
+    // Neural canvas
+    const canvas = document.getElementById('neural-canvas');
+    const ctx = canvas.getContext('2d');
+    let nodes = [], W, H;
+
+    function resize() {
+        W = canvas.width = window.innerWidth;
+        H = canvas.height = window.innerHeight;
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    for (let i = 0; i < 40; i++) {
+        nodes.push({
+            x: Math.random() * window.innerWidth,
+            y: Math.random() * window.innerHeight,
+            vx: (Math.random() - 0.5) * 0.3,
+            vy: (Math.random() - 0.5) * 0.3,
+            r: Math.random() * 2 + 1
+        });
+    }
+
+    function drawNeural() {
+        ctx.clearRect(0, 0, W, H);
+        nodes.forEach(n => {
+            n.x += n.vx; n.y += n.vy;
+            if (n.x < 0 || n.x > W) n.vx *= -1;
+            if (n.y < 0 || n.y > H) n.vy *= -1;
+        });
+        for (let i = 0; i < nodes.length; i++) {
+            for (let j = i + 1; j < nodes.length; j++) {
+                const dx = nodes[i].x - nodes[j].x;
+                const dy = nodes[i].y - nodes[j].y;
+                const dist = Math.sqrt(dx*dx + dy*dy);
+                if (dist < 160) {
+                    ctx.beginPath();
+                    ctx.strokeStyle = `rgba(232,160,32,${(1 - dist/160) * 0.15})`;
+                    ctx.lineWidth = 0.5;
+                    ctx.moveTo(nodes[i].x, nodes[i].y);
+                    ctx.lineTo(nodes[j].x, nodes[j].y);
+                    ctx.stroke();
+                }
+            }
+            ctx.beginPath();
+            ctx.arc(nodes[i].x, nodes[i].y, nodes[i].r, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(232,160,32,0.4)';
+            ctx.fill();
+        }
+        requestAnimationFrame(drawNeural);
+    }
+    drawNeural();
+
+    // Demo animation — typewriter effect
+    const demoLines = [
+        { type: 'system', tag: '——', text: 'SESSION 1  ·  Monday morning' },
+        { type: 'user',   tag: 'you',   text: "I'm building a B2B SaaS for restaurants. Help me plan the pricing model." },
+        { type: 'stash',  tag: 'stash', text: '⟳ recall("context") → nothing found, fresh start' },
+        { type: 'agent',  tag: 'agent', text: "Sure! For restaurant B2B SaaS, I'd suggest three tiers: Starter, Growth, and Enterprise." },
+        { type: 'user',   tag: 'you',   text: "Let's avoid Stripe for now, too complex. We'll use a local payment provider." },
+        { type: 'stash',  tag: 'stash', text: '✓ remember("avoid Stripe, use local payment provider")' },
+        { type: 'stash',  tag: 'stash', text: '✓ remember("building B2B SaaS for restaurants, planning pricing")' },
+        { type: 'agent',  tag: 'agent', text: "Got it. Keeping suggestions away from Stripe. Shall we define the tier limits?" },
+        { type: 'user',   tag: 'you',   text: "Yes — Starter: 3 locations, Growth: 20, Enterprise: unlimited." },
+        { type: 'stash',  tag: 'stash', text: '✓ remember("Starter: 3 locations, Growth: 20, Enterprise: unlimited")' },
+        { type: 'stash',  tag: 'stash', text: '⟳ consolidate() → synthesizing episodes into facts...' },
+        { type: 'gap',    tag: '',      text: '' },
+        { type: 'divider',tag: '——',    text: 'SESSION ENDS  ·  Three days later' },
+        { type: 'gap',    tag: '',      text: '' },
+        { type: 'system', tag: '——',    text: 'SESSION 2  ·  Thursday afternoon' },
+        { type: 'user',   tag: 'you',   text: "Hey, let's continue working on my project." },
+        { type: 'stash',  tag: 'stash', text: '⟳ recall("current project context") → 3 facts found' },
+        { type: 'stash',  tag: 'stash', text: '  → "B2B SaaS for restaurants, pricing model"' },
+        { type: 'stash',  tag: 'stash', text: '  → "Avoid Stripe, use local payment provider"' },
+        { type: 'stash',  tag: 'stash', text: '  → "Starter: 3 locations, Growth: 20, Enterprise: unlimited"' },
+        { type: 'agent',  tag: 'agent', text: "Welcome back! Last time we defined your pricing tiers for the restaurant SaaS." },
+        { type: 'agent',  tag: 'agent', text: "Starter (3 locations), Growth (20), Enterprise (unlimited) — no Stripe, local payment provider." },
+        { type: 'agent',  tag: 'agent', text: "Ready to work on the onboarding flow next?" },
+        { type: 'user',   tag: 'you',   text: "Exactly. Let's go." },
+        { type: 'system', tag: '——',    text: 'Zero repetition. Full context. Stash remembered everything.' },
+    ];
+
+    // typing speed per type (ms per char)
+    const charSpeed = {
+        user: 38, agent: 22, stash: 12, system: 10, divider: 10
+    };
+    // pause after each line finishes
+    const linePause = {
+        user: 420, agent: 320, stash: 80, system: 300, divider: 500, gap: 200
+    };
+
+    let allTimers = [];
+
+    function clearAllTimers() {
+        allTimers.forEach(t => clearTimeout(t));
+        allTimers = [];
+    }
+
+    function later(fn, ms) {
+        const t = setTimeout(fn, ms);
+        allTimers.push(t);
+        return t;
+    }
+
+    function typeText(el, text, speed, done) {
+        let i = 0;
+        // add blinking cursor
+        const cursor = document.createElement('span');
+        cursor.className = 'demo-cursor';
+        el.appendChild(cursor);
+
+        function nextChar() {
+            if (i < text.length) {
+                cursor.before(document.createTextNode(text[i]));
+                i++;
+                later(nextChar, speed + (Math.random() * speed * 0.5));
+            } else {
+                cursor.remove();
+                if (done) done();
+            }
+        }
+        later(nextChar, speed);
+    }
+
+    function runDemo() {
+        clearAllTimers();
+        const body = document.getElementById('demo-body');
+        body.innerHTML = '';
+        let cursor = null;
+
+        function processLine(index, startDelay) {
+            if (index >= demoLines.length) return;
+            const line = demoLines[index];
+
+            later(() => {
+                // gap line
+                if (line.type === 'gap') {
+                    const spacer = document.createElement('div');
+                    spacer.style.height = '10px';
+                    body.appendChild(spacer);
+                    processLine(index + 1, 0);
+                    return;
+                }
+
+                const div = document.createElement('div');
+                div.className = `demo-line ${line.type} visible`;
+
+                const tagSpan = document.createElement('span');
+                tagSpan.className = 'dl-tag';
+                tagSpan.textContent = line.tag;
+
+                const textSpan = document.createElement('span');
+                textSpan.className = 'dl-text';
+
+                div.appendChild(tagSpan);
+                div.appendChild(textSpan);
+                body.appendChild(div);
+                body.scrollTop = body.scrollHeight;
+
+                const speed = charSpeed[line.type] || 20;
+                const pause = linePause[line.type] || 200;
+
+                typeText(textSpan, line.text, speed, () => {
+                    body.scrollTop = body.scrollHeight;
+                    // add blinking cursor on last line
+                    if (index === demoLines.length - 1) {
+                        const finalCursor = document.createElement('span');
+                        finalCursor.className = 'demo-cursor';
+                        textSpan.appendChild(finalCursor);
+                    }
+                    processLine(index + 1, pause);
+                });
+
+            }, startDelay);
+        }
+
+        processLine(0, 300);
+    }
+
+    // autoplay when scrolled into view
+    const demoSection = document.getElementById('howitworks');
+    const demoObserver = new IntersectionObserver(entries => {
+        entries.forEach(e => {
+            if (e.isIntersecting) { runDemo(); demoObserver.disconnect(); }
+        });
+    }, { threshold: 0.2 });
+    demoObserver.observe(demoSection);
+
+    document.getElementById('demo-restart').addEventListener('click', () => {
+        clearAllTimers();
+        runDemo();
+    });
+
+</script>
+</body>
+</html>

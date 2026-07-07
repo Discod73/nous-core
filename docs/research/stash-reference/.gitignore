@@ -1,0 +1,25 @@
+# Binaries
+/stash
+/cli
+stash-*
+
+# Environment files
+.env
+*.env
+.env.*
+!.env.example
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test coverage
+coverage.txt
+coverage.html
+*.cover
