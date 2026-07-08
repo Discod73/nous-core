@@ -1,5 +1,7 @@
 # NOUS Credits & Acknowledgments
 
+NOUS er udgivet under **GNU Affero General Public License v3.0 (AGPL-3.0)** — se `LICENSE`.
+
 NOUS bygger på open-source komponenter og tager inspiration fra andre projekter.
 Dette dokument holder styr på begge dele.
 

@@ -132,4 +132,4 @@ web/          Single-file cockpit UI (index.html)
 
 ## License
 
-MIT — see `docs/CREDITS.md`.
+AGPL-3.0 — see `LICENSE`.

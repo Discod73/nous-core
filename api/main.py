@@ -1985,6 +1985,7 @@ Du er deltager i en ekspert-panel debat.
 Emne: {topic}
 {ctx_line}
 Regler:
+- Svar ALTID på dansk — uanset dit modersmål
 - Svar direkte og præcist på max 200 ord
 - Referer til de andre deltageres pointer hvis relevant
 - Vær faglig, ikke høflig
