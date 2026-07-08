@@ -41,7 +41,7 @@ try:
     from graph import run_agent_graph as _run_agent_graph
     _AGENTS_AVAILABLE = True
 except ImportError as _e:
-    logging.warning("NOUS agents ikke tilgængelige: %s", _e)
+    logging.warning("NOUS agents unavailable: %s", _e)
     _AGENTS_AVAILABLE = False
 
 import gemma_manager
@@ -111,14 +111,14 @@ UPLOAD_TMP    = Path("/tmp/nous_upload")
 VECTOR_DIM    = 768
 EXTERNAL_KEYS_FILE = Path("/mnt/nous-data/external_keys.json")
 
-# Ejer-navn bruges i Legacy-mode svar til børn — sæt via NOUS_OWNER_NAME
+# Owner name used in Legacy mode responses — set via NOUS_OWNER_NAME
 _OWNER_NAME = os.environ.get("NOUS_OWNER_NAME", "Dan")
 
 _scraper_status:      dict[str, dict] = {}
 _research_status:     dict[str, dict] = {}
 _upload_status:       dict[str, dict] = {}
 _download_status:     dict[str, dict] = {}
-_debate_user_inputs:  dict[str, asyncio.Queue] = {}  # debate_id → queue til bruger-input
+_debate_user_inputs:  dict[str, asyncio.Queue] = {}  # debate_id → queue for user input
 
 # === Smart routing ===
 LEGAL_TRIGGERS = [
@@ -135,22 +135,22 @@ LEGACY_TRIGGERS = [
 LEGAL_COLLECTIONS  = _csv_env("NOUS_LEGAL_COLLECTIONS",  f"{COLLECTION_SECRET},{COLLECTION_FBF},{COLLECTION_LEGAL}")
 LEGACY_COLLECTIONS = _csv_env("NOUS_LEGACY_COLLECTIONS", COLLECTION_LEGACY)
 
-LEGAL_SYSTEM = """Du er en juridisk analytiker specialiseret i forældreansvarssager og myndighedssager.
-Identificer afgørelser, lovgrundlag og mønstre. Citér præcist fra kilderne.
-Hold dig STRENGT til dokumenterne. Opfind aldrig. Svar på dansk."""
+LEGAL_SYSTEM = """You are a legal analyst specialising in parental responsibility and child welfare cases.
+Identify rulings, legal basis, and patterns. Quote precisely from the sources.
+STRICTLY adhere to the documents. Never fabricate. Respond in the user's language."""
 
-ASSISTANT_SYSTEM = """Du er NOUS, en dansk personlig AI-assistent for Dan.
-Svar kort og præcist på dansk. Brug vidensbasen som primær kilde.
-Find aldrig på fakta. Sig 'Det ved jeg ikke' hvis du mangler information."""
+ASSISTANT_SYSTEM = """You are NOUS, a locally-hosted personal AI assistant.
+Be concise and precise. Use the knowledge base as your primary source.
+Never fabricate facts. Say 'I don't know' if you lack information."""
 
-LEGACY_SYSTEM = f"""Du er NOUS og taler på vegne af {_OWNER_NAME} til hans børn.
-TAL I {_OWNER_NAME.upper()}S STEMME: direkte, varm, jordnær, uden floskler.
-ABSOLUT REGEL: Opfind ALDRIG minder eller citater.
-Hvis ikke belæg i kilderne: sig "Det ved jeg ikke om Far." """
+LEGACY_SYSTEM = f"""You are NOUS, speaking on behalf of {_OWNER_NAME} to their children.
+SPEAK IN {_OWNER_NAME.upper()}'S VOICE: direct, warm, grounded, without platitudes.
+ABSOLUTE RULE: NEVER fabricate memories or quotes.
+If not supported by the sources: say "I don't know about that." """
 
 WHISPER_URL     = os.environ.get("NOUS_WHISPER_URL",     "http://localhost:8080/inference")
 NX_SPEACHES_URL = os.environ.get("NOUS_NX_SPEACHES_URL", "http://localhost:8000")
-WHISPER_PROMPT = "Dette er en samtale på dansk."
+WHISPER_PROMPT = "This is a spoken conversation."  # language hint for Whisper — customise for your language
 PIPER_BIN = "/srv/nous/pipeline/.venv/bin/python3"
 PIPER_MODEL = "/srv/nous/models/tts/da.onnx"
 PIPER_CONFIG = "/srv/nous/models/tts/da.onnx.json"
@@ -245,7 +245,7 @@ async def _warmup_models():
             )
         logger.info("%s pre-warmed og klar", LLM_MODEL)
     except Exception as e:
-        logger.warning("Pre-warm fejlede (ikke kritisk): %s", e)
+        logger.warning("Pre-warm failed (non-critical): %s", e)
 
 
 @asynccontextmanager
@@ -389,12 +389,12 @@ def _ingest_wing_incoming(wing_name: str, scope: str) -> None:
 @app.post("/wings", status_code=201)
 def create_wing(body: WingCreate, background_tasks: BackgroundTasks):
     if body.scope not in SCOPE_LABELS:
-        raise HTTPException(400, f"Ugyldigt scope '{body.scope}' — skal være: {', '.join(SCOPE_LABELS)}")
+        raise HTTPException(400, f"Invalid scope '{body.scope}' — must be one of: {', '.join(SCOPE_LABELS)}")
     importance = body.importance.lower() if body.importance.lower() in IMPORTANCE_LEVELS else "normal"
 
     data = load_wings()
     if find_wing(data, body.name):
-        raise HTTPException(409, f"Wing '{body.name}' eksisterer allerede")
+        raise HTTPException(409, f"Wing '{body.name}' already exists")
 
     collection = f"{body.name}_{body.scope.lower()}"
 
@@ -405,12 +405,12 @@ def create_wing(body: WingCreate, background_tasks: BackgroundTasks):
         timeout=15,
     )
     if r.status_code not in (200, 409):
-        raise HTTPException(500, f"Qdrant fejl ved oprettelse: {r.text[:300]}")
+        raise HTTPException(500, f"Qdrant error on creation: {r.text[:300]}")
 
     # Opret incoming mappe
     (INCOMING_DIR / body.name).mkdir(parents=True, exist_ok=True)
 
-    # Gem i wings.json
+    # Save to wings.json
     entry = {"name": body.name, "scope": body.scope, "collection": collection, "importance": importance}
     data["wings"].append(entry)
     save_wings(data)
@@ -428,10 +428,10 @@ def add_subcategory(wing: str, body: SubcategoryAdd):
     data = load_wings()
     wing_data = find_wing(data, wing)
     if not wing_data:
-        raise HTTPException(404, f"Wing '{wing}' ikke fundet")
+        raise HTTPException(404, f"Wing '{wing}' not found")
     subs = wing_data.setdefault("subcategories", [])
     if body.name in subs:
-        raise HTTPException(409, f"Subcategory '{body.name}' eksisterer allerede")
+        raise HTTPException(409, f"Subcategory '{body.name}' already exists")
     subs.append(body.name)
     (INCOMING_DIR / wing / body.name).mkdir(parents=True, exist_ok=True)
     save_wings(data)
@@ -443,10 +443,10 @@ def delete_subcategory(wing: str, subcat: str):
     data = load_wings()
     wing_data = find_wing(data, wing)
     if not wing_data:
-        raise HTTPException(404, f"Wing '{wing}' ikke fundet")
+        raise HTTPException(404, f"Wing '{wing}' not found")
     subs = wing_data.get("subcategories", [])
     if subcat not in subs:
-        raise HTTPException(404, f"Subcategory '{subcat}' ikke fundet")
+        raise HTTPException(404, f"Subcategory '{subcat}' not found")
     subs.remove(subcat)
     save_wings(data)
     return {"wing": wing, "subcategory": subcat, "deleted": True}
@@ -457,7 +457,7 @@ def delete_by_source(wing: str, source: str = Query(..., description="Kildefilna
     data = load_wings()
     wing_data = find_wing(data, wing)
     if not wing_data:
-        raise HTTPException(404, f"Wing '{wing}' ikke fundet")
+        raise HTTPException(404, f"Wing '{wing}' not found")
 
     collection = wing_data["collection"]
     try:
@@ -468,7 +468,7 @@ def delete_by_source(wing: str, source: str = Query(..., description="Kildefilna
         )
         r.raise_for_status()
     except Exception as e:
-        raise HTTPException(503, f"Qdrant slet fejl: {e}")
+        raise HTTPException(503, f"Qdrant delete error: {e}")
 
     return {"deleted": True, "wing": wing, "source": source}
 
@@ -504,7 +504,7 @@ def _fetch_chunks_text(collection: str, source: str) -> str:
             )
             r.raise_for_status()
         except Exception as e:
-            raise HTTPException(503, f"Qdrant scroll fejl: {e}")
+            raise HTTPException(503, f"Qdrant scroll error: {e}")
         result = r.json().get("result", {})
         for pt in result.get("points", []):
             pl = pt.get("payload", {})
@@ -524,10 +524,10 @@ def get_document_content(wing: str, source: str = Query(..., description="Kildef
     data = load_wings()
     wing_data = find_wing(data, wing)
     if not wing_data:
-        raise HTTPException(404, f"Wing '{wing}' ikke fundet")
+        raise HTTPException(404, f"Wing '{wing}' not found")
     text = _fetch_chunks_text(wing_data["collection"], source)
     if not text:
-        raise HTTPException(404, f"Ingen chunks fundet for '{source}'")
+        raise HTTPException(404, f"No chunks found for '{source}'")
     return {"wing": wing, "source": source, "text": text, "chunks": text.count("\n\n") + 1}
 
 
@@ -549,7 +549,7 @@ def download_document(wing: str, source: str = Query(..., description="Kildefiln
     data = load_wings()
     wing_data = find_wing(data, wing)
     if not wing_data:
-        raise HTTPException(404, f"Wing '{wing}' ikke fundet")
+        raise HTTPException(404, f"Wing '{wing}' not found")
 
     from urllib.parse import quote
     archive_path = ARCHIVE_BASE / wing / source
@@ -563,10 +563,10 @@ def download_document(wing: str, source: str = Query(..., description="Kildefiln
             headers={"Content-Disposition": cd, "X-Source-Type": "original-file"},
         )
 
-    # Original ikke fundet — generer .txt fra chunks
+    # Original not found — generer .txt fra chunks
     text = _fetch_chunks_text(wing_data["collection"], source)
     if not text:
-        raise HTTPException(404, f"Hverken originalfil eller chunks fundet for '{source}'")
+        raise HTTPException(404, f"Neither original file nor chunks found for '{source}'")
     stem    = Path(source).stem
     txtname = quote(f"{stem}.txt")
     return Response(
@@ -582,7 +582,7 @@ def delete_document(wing: str, doc_id: str):
     data = load_wings()
     wing_data = find_wing(data, wing)
     if not wing_data:
-        raise HTTPException(404, f"Wing '{wing}' ikke fundet")
+        raise HTTPException(404, f"Wing '{wing}' not found")
 
     r = httpx.post(
         f"{QDRANT_URL}/collections/{wing_data['collection']}/points/delete",
@@ -590,7 +590,7 @@ def delete_document(wing: str, doc_id: str):
         timeout=15,
     )
     if r.status_code != 200:
-        raise HTTPException(500, f"Slet fejl: {r.text[:300]}")
+        raise HTTPException(500, f"Delete error: {r.text[:300]}")
 
 
 # === Dokument endpoints ===
@@ -600,7 +600,7 @@ def list_documents(wing: str):
     data = load_wings()
     wing_data = find_wing(data, wing)
     if not wing_data:
-        raise HTTPException(404, f"Wing '{wing}' ikke fundet")
+        raise HTTPException(404, f"Wing '{wing}' not found")
 
     collection = wing_data["collection"]
     counts: dict[str, int] = {}
@@ -618,7 +618,7 @@ def list_documents(wing: str):
             )
             r.raise_for_status()
         except Exception as e:
-            raise HTTPException(503, f"Qdrant scroll fejl: {e}")
+            raise HTTPException(503, f"Qdrant scroll error: {e}")
 
         result = r.json().get("result", {})
         for pt in result.get("points", []):
@@ -641,7 +641,7 @@ def memory_add(req: MemoryAddRequest):
     data = load_wings()
     wing_entry = find_wing(data, req.wing)
     if not wing_entry:
-        raise HTTPException(404, f"Wing '{req.wing}' ikke fundet")
+        raise HTTPException(404, f"Wing '{req.wing}' not found")
     collection = wing_entry["collection"]
     scope = wing_entry.get("scope", "PRIVATE")
 
@@ -654,7 +654,7 @@ def memory_add(req: MemoryAddRequest):
         embed_r.raise_for_status()
         vector = embed_r.json()["embedding"]
     except Exception as e:
-        raise HTTPException(503, f"Embedding fejl: {e}")
+        raise HTTPException(503, f"Embedding error: {e}")
 
     point = {
         "id":      str(uuid.uuid4()),
@@ -676,7 +676,7 @@ def memory_add(req: MemoryAddRequest):
         )
         r.raise_for_status()
     except Exception as e:
-        raise HTTPException(503, f"Arbiter fejl: {e}")
+        raise HTTPException(503, f"Arbiter error: {e}")
 
     return {"ok": True, "wing": req.wing, "collection": collection}
 
@@ -813,7 +813,7 @@ def chat(req: ChatRequest):
         ok = _save_direct_memory(collection, content)
         if ok:
             return {"answer": f"Gemt i {wing_label}.", "sources": [], "mode": "memory", "model": None}
-        raise HTTPException(503, "Qdrant-fejl ved gemning af hukommelse")
+        raise HTTPException(503, "Qdrant error saving memory")
 
     mode = _detect_mode(req.query)
 
@@ -827,14 +827,14 @@ def chat(req: ChatRequest):
         embed_r.raise_for_status()
         vector = embed_r.json()["embedding"]
     except Exception as e:
-        raise HTTPException(503, f"Embedding fejl: {e}")
+        raise HTTPException(503, f"Embedding error: {e}")
 
     # Vælg wings og søge-parametre baseret på mode
     wings_data = load_wings()
     if req.wing:
         wing_entry = find_wing(wings_data, req.wing)
         if not wing_entry:
-            raise HTTPException(404, f"Wing '{req.wing}' ikke fundet")
+            raise HTTPException(404, f"Wing '{req.wing}' not found")
         collections_to_search = [wing_entry]
     else:
         all_colls = {w["collection"] for w in wings_data["wings"]}
@@ -853,19 +853,14 @@ def chat(req: ChatRequest):
     elif mode == "legacy":
         threshold, limit, system_prompt = 0.50, 10, LEGACY_SYSTEM
     else:
-        user_lang = _load_ui_prefs().get(req.user or "", {}).get("lang", "da") if req.user else "da"
-        if user_lang == "en":
-            assistant_sys = ASSISTANT_SYSTEM.replace("Svar kort og præcist på dansk.", "Always respond in English, briefly and precisely.")
-        else:
-            assistant_sys = ASSISTANT_SYSTEM
-        threshold, limit, system_prompt = 0.45, 6, assistant_sys
+        threshold, limit, system_prompt = 0.45, 6, ASSISTANT_SYSTEM
 
     # To-trins søgning
     context_parts: list[str] = []
     sources: list[dict] = []
     seen: set = set()
     relevant_sources: set[str] = set()
-    type_labels = {"summary": "OPSUMMERING", "fact": "FACT"}
+    type_labels = {"summary": "SUMMARY", "fact": "FACT"}
     sub_filter = req.subcategories or ([req.subcategory] if req.subcategory else None)
 
     for w in collections_to_search:
@@ -880,12 +875,12 @@ def chat(req: ChatRequest):
                 text = hit["payload"].get("text", "")
                 ptype = hit["payload"].get("type", "summary")
                 relevant_sources.add(sf)
-                label = type_labels.get(ptype, "TEKST")
+                label = type_labels.get(ptype, "TEXT")
                 context_parts.append(f"[{label} — {sf}]\n{text[:600]}")
                 sources.append({"wing": w["name"], "score": round(hit["score"], 3),
                                  "id": hit["id"], "type": ptype, "preview": text[:200]})
 
-        # Trin 2: chunks (kun for legacy: spring over)
+        # Step 2: chunks (skip for legacy)
         if mode != "legacy":
             type_f = "chunk" if mode == "legal" else None
             for hit in _qdrant_search(vector, coll, limit, threshold, type_f, req.source_filter, sub_filter):
@@ -933,7 +928,7 @@ def chat(req: ChatRequest):
         llm_r.raise_for_status()
         answer = llm_r.json()["message"]["content"]
     except Exception as e:
-        raise HTTPException(503, f"LLM fejl: {e}")
+        raise HTTPException(503, f"LLM error: {e}")
 
     return {"answer": answer, "sources": sources, "mode": mode, "model": model}
 
@@ -944,7 +939,7 @@ def chat(req: ChatRequest):
 async def upload_file(wing: str, file: UploadFile = File(...), subcategory: Optional[str] = None):
     data = load_wings()
     if not find_wing(data, wing):
-        raise HTTPException(404, f"Wing '{wing}' ikke fundet")
+        raise HTTPException(404, f"Wing '{wing}' not found")
 
     target_dir = INCOMING_DIR / wing / subcategory if subcategory else INCOMING_DIR / wing
     target_dir.mkdir(parents=True, exist_ok=True)
@@ -976,7 +971,7 @@ def ingest_status():
             "stderr": result.stderr[:300] if result.stderr else None,
         }
     except Exception as e:
-        raise HTTPException(500, f"journalctl fejl: {e}")
+        raise HTTPException(500, f"journalctl error: {e}")
 
 
 # === System status ===
@@ -1041,7 +1036,7 @@ async def transcribe_audio(file: UploadFile = File(...)):
         resp.raise_for_status()
         text = (resp.json().get("text") or "").strip()
     except Exception as e:
-        raise HTTPException(503, f"Whisper fejl: {e}")
+        raise HTTPException(503, f"Whisper error: {e}")
     return {"text": text}
 
 
@@ -1057,7 +1052,7 @@ def speak_text(req: SpeakRequest):
                 timeout=30,
             )
             if r.returncode != 0:
-                raise HTTPException(500, f"piper fejl: {r.stderr.decode()[:300]}")
+                raise HTTPException(500, f"piper error: {r.stderr.decode()[:300]}")
         except subprocess.TimeoutExpired:
             raise HTTPException(500, "piper timeout")
 
@@ -1087,7 +1082,7 @@ async def audio_transcribe(file: UploadFile = File(...), language: str = "da"):
         resp.raise_for_status()
         text = (resp.json().get("text") or "").strip()
     except Exception as e:
-        raise HTTPException(503, f"Speaches fejl: {e}")
+        raise HTTPException(503, f"Speaches error: {e}")
     return {"text": text, "language": language}
 
 
@@ -1122,7 +1117,7 @@ def list_scraper_jobs():
 def create_scraper_job(body: ScraperJobCreate):
     data = load_wings()
     if not find_wing(data, body.wing):
-        raise HTTPException(404, f"Wing '{body.wing}' ikke fundet")
+        raise HTTPException(404, f"Wing '{body.wing}' not found")
 
     jobs   = _load_scraper_jobs()
     job_id = f"{body.wing}_{uuid.uuid4().hex[:6]}"
@@ -1145,7 +1140,7 @@ def delete_scraper_job(job_id: str):
     jobs = _load_scraper_jobs()
     new  = [j for j in jobs if j["id"] != job_id]
     if len(new) == len(jobs):
-        raise HTTPException(404, f"Job '{job_id}' ikke fundet")
+        raise HTTPException(404, f"Job '{job_id}' not found")
     _save_scraper_jobs(new)
 
 
@@ -1170,7 +1165,7 @@ def _run_scraper_bg(job_id: str) -> None:
 def run_scraper_job(job_id: str, background_tasks: BackgroundTasks):
     jobs = _load_scraper_jobs()
     if not any(j["id"] == job_id for j in jobs):
-        raise HTTPException(404, f"Job '{job_id}' ikke fundet")
+        raise HTTPException(404, f"Job '{job_id}' not found")
     if _scraper_status.get(job_id, {}).get("status") == "running":
         raise HTTPException(409, "Job kører allerede")
     background_tasks.add_task(_run_scraper_bg, job_id)
@@ -1215,7 +1210,7 @@ def list_research_jobs():
 def create_research_job(body: ResearchJobCreate):
     data = load_wings()
     if not find_wing(data, body.wing):
-        raise HTTPException(404, f"Wing '{body.wing}' ikke fundet")
+        raise HTTPException(404, f"Wing '{body.wing}' not found")
     jobs   = _load_research_jobs()
     job_id = f"res_{body.wing}_{uuid.uuid4().hex[:6]}"
     entry  = {
@@ -1238,7 +1233,7 @@ def delete_research_job(job_id: str):
     jobs = _load_research_jobs()
     new  = [j for j in jobs if j["id"] != job_id]
     if len(new) == len(jobs):
-        raise HTTPException(404, f"Job '{job_id}' ikke fundet")
+        raise HTTPException(404, f"Job '{job_id}' not found")
     _save_research_jobs(new)
 
 
@@ -1268,7 +1263,7 @@ def _run_research_bg(job_id: str) -> None:
 def run_research_job(job_id: str, background_tasks: BackgroundTasks):
     jobs = _load_research_jobs()
     if not any(j["id"] == job_id for j in jobs):
-        raise HTTPException(404, f"Job '{job_id}' ikke fundet")
+        raise HTTPException(404, f"Job '{job_id}' not found")
     if _research_status.get(job_id, {}).get("status") == "running":
         raise HTTPException(409, "Job kører allerede")
     background_tasks.add_task(_run_research_bg, job_id)
@@ -1326,7 +1321,7 @@ async def list_models():
         ]
         return {"models": models}
     except Exception as e:
-        raise HTTPException(502, f"Ollama utilgængelig: {e}")
+        raise HTTPException(502, f"Ollama unavailable: {e}")
 
 
 @app.get("/models/roles")
@@ -1458,7 +1453,7 @@ async def search_models(q: str = Query(..., min_length=1, max_length=100)):
             })
         return {"results": results[:10]}
     except Exception as e:
-        raise HTTPException(502, f"Modelsøgning fejlede: {e}")
+        raise HTTPException(502, f"Model search failed: {e}")
 
 
 def _safe_model_name(filename: str) -> str:
@@ -1497,7 +1492,7 @@ def _do_gguf_upload(job_id: str, tmp_path: Path, filename: str) -> None:
                         upd("transfer", 10 + pct * 8 // 10, f"Overfører til NX… {pct}%")
             proc.wait()
             if proc.returncode != 0:
-                raise RuntimeError(f"rsync fejl: {proc.stderr.read()[:300]}")
+                raise RuntimeError(f"rsync error: {proc.stderr.read()[:300]}")
             model_path = f"{NX_MODELS_DIR}/{filename}"
 
             # ── Modelfile via SCP → SSH ollama create ────────────────────
@@ -1511,7 +1506,7 @@ def _do_gguf_upload(job_id: str, tmp_path: Path, filename: str) -> None:
             )
             mf_local.unlink(missing_ok=True)
             if scp.returncode != 0:
-                raise RuntimeError(f"SCP modelfile fejl: {scp.stderr[:200]}")
+                raise RuntimeError(f"SCP modelfile error: {scp.stderr[:200]}")
             ssh = subprocess.run(
                 ["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=10", NX_HOST,
                  f"ollama create '{model_name}:latest' -f /tmp/nous_mf_{job_id}.tmp "
@@ -1519,7 +1514,7 @@ def _do_gguf_upload(job_id: str, tmp_path: Path, filename: str) -> None:
                 capture_output=True, text=True, timeout=300,
             )
             if ssh.returncode != 0:
-                raise RuntimeError(f"ollama create fejl: {ssh.stderr[:300]}")
+                raise RuntimeError(f"ollama create error: {ssh.stderr[:300]}")
         else:
             # ── Single-node: flyt lokalt ─────────────────────────────────
             upd("transfer", 30, "Gemmer lokalt…")
@@ -1537,9 +1532,9 @@ def _do_gguf_upload(job_id: str, tmp_path: Path, filename: str) -> None:
             )
             mf.unlink(missing_ok=True)
             if result.returncode != 0:
-                raise RuntimeError(f"ollama create fejl: {result.stderr[:300]}")
+                raise RuntimeError(f"ollama create error: {result.stderr[:300]}")
 
-        upd("done", 100, f"{model_name}:latest klar i Ollama")
+        upd("done", 100, f"{model_name}:latest ready in Ollama")
     except Exception as e:
         upd("error", 0, str(e))
     finally:
@@ -1566,7 +1561,7 @@ async def upload_model_file(
     tmp_dir.mkdir(parents=True, exist_ok=True)
     tmp_path = tmp_dir / safe
 
-    _upload_status[job_id] = {"phase": "receiving", "progress": 2, "msg": "Modtager fil…"}
+    _upload_status[job_id] = {"phase": "receiving", "progress": 2, "msg": "Receiving file…"}
     try:
         with open(tmp_path, "wb") as f:
             while True:
@@ -1576,7 +1571,7 @@ async def upload_model_file(
                 f.write(chunk)
     except Exception as e:
         shutil.rmtree(tmp_dir, ignore_errors=True)
-        raise HTTPException(500, f"Fil-modtagelse fejlede: {e}")
+        raise HTTPException(500, f"File upload failed: {e}")
 
     _upload_status[job_id] = {"phase": "queued", "progress": 5, "msg": "Fil modtaget — starter overførsel…"}
     background_tasks.add_task(_do_gguf_upload, job_id, tmp_path, safe)
@@ -1585,7 +1580,7 @@ async def upload_model_file(
 
 @app.get("/models/upload-status/{job_id}")
 def get_upload_status(job_id: str):
-    return _upload_status.get(job_id, {"phase": "not_found", "progress": 0, "msg": "Ukendt job"})
+    return _upload_status.get(job_id, {"phase": "not_found", "progress": 0, "msg": "Unknown job"})
 
 
 # === Model download (ollama pull via SSH eller lokalt) ===
@@ -1601,7 +1596,7 @@ def _do_model_download(job_id: str, model: str) -> None:
     def upd(phase: str, pct: int, msg: str) -> None:
         _download_status[job_id] = {"phase": phase, "progress": pct, "msg": msg}
 
-    upd("pulling", 2, f"Starter ollama pull {model}…")
+    upd("pulling", 2, f"Starting ollama pull {model}…")
     try:
         if NX_HOST:
             cmd = ["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=10",
@@ -1625,9 +1620,9 @@ def _do_model_download(job_id: str, model: str) -> None:
             upd("pulling", cur_pct, line[:150])
         proc.wait()
         if proc.returncode != 0:
-            upd("error", 0, f"ollama pull fejlede (exit {proc.returncode})")
+            upd("error", 0, f"ollama pull failed (exit {proc.returncode})")
         else:
-            upd("done", 100, f"{model} klar i Ollama")
+            upd("done", 100, f"{model} ready in Ollama")
     except Exception as e:
         upd("error", 0, str(e)[:200])
 
@@ -1635,7 +1630,7 @@ def _do_model_download(job_id: str, model: str) -> None:
 @app.post("/models/download", status_code=202)
 async def download_model(body: ModelDownloadRequest, background_tasks: BackgroundTasks):
     if not _SAFE_MODEL_RE.match(body.model):
-        raise HTTPException(400, "Ugyldigt modelnavn")
+        raise HTTPException(400, "Invalid model name")
     job_id = uuid.uuid4().hex[:12]
     _download_status[job_id] = {"phase": "queued", "progress": 0, "msg": f"Downloader {body.model}…"}
     background_tasks.add_task(_do_model_download, job_id, body.model)
@@ -1644,7 +1639,7 @@ async def download_model(body: ModelDownloadRequest, background_tasks: Backgroun
 
 @app.get("/models/download-status/{job_id}")
 def get_download_status(job_id: str):
-    return _download_status.get(job_id, {"phase": "not_found", "progress": 0, "msg": "Ukendt job"})
+    return _download_status.get(job_id, {"phase": "not_found", "progress": 0, "msg": "Unknown job"})
 
 
 # === Analysis results ===
@@ -1674,7 +1669,7 @@ def save_analysis(req: AnalysisSaveRequest):
     data = load_wings()
     wing_entry = find_wing(data, req.wing)
     if not wing_entry:
-        raise HTTPException(404, f"Wing '{req.wing}' ikke fundet")
+        raise HTTPException(404, f"Wing '{req.wing}' not found")
     collection = wing_entry["collection"]
     scope      = wing_entry.get("scope", "PRIVATE")
     try:
@@ -1686,7 +1681,7 @@ def save_analysis(req: AnalysisSaveRequest):
         embed_r.raise_for_status()
         vector = embed_r.json()["embedding"]
     except Exception as e:
-        raise HTTPException(503, f"Embedding fejl: {e}")
+        raise HTTPException(503, f"Embedding error: {e}")
 
     point_id = str(uuid.uuid5(uuid.NAMESPACE_DNS, f"{collection}:{req.source_file}:{req.type}:manual"))
     point = {
@@ -1710,7 +1705,7 @@ def save_analysis(req: AnalysisSaveRequest):
         )
         r.raise_for_status()
     except Exception as e:
-        raise HTTPException(503, f"Arbiter fejl: {e}")
+        raise HTTPException(503, f"Arbiter error: {e}")
     return {"saved": True, "id": point_id, "wing": req.wing, "source_file": req.source_file}
 
 
@@ -1720,7 +1715,7 @@ def get_analysis_results(wing: Optional[str] = None):
     if wing:
         wing_entry = find_wing(data, wing)
         if not wing_entry:
-            raise HTTPException(404, f"Wing '{wing}' ikke fundet")
+            raise HTTPException(404, f"Wing '{wing}' not found")
         collections = [wing_entry]
     else:
         collections = data["wings"]
@@ -1786,13 +1781,13 @@ def search_chunks(
         embed_r.raise_for_status()
         vector = embed_r.json()["embedding"]
     except Exception as e:
-        raise HTTPException(503, f"Embedding fejl: {e}")
+        raise HTTPException(503, f"Embedding error: {e}")
 
     data = load_wings()
     if wing:
         w = find_wing(data, wing)
         if not w:
-            raise HTTPException(404, f"Wing '{wing}' ikke fundet")
+            raise HTTPException(404, f"Wing '{wing}' not found")
         targets = [w]
     else:
         targets = data["wings"]
@@ -1834,7 +1829,7 @@ def system_temperature():
 @app.post("/external/chat")
 def external_chat(req: ExternalChatRequest):
     if req.provider not in PROVIDER_DEFAULTS:
-        raise HTTPException(400, f"Ukendt provider '{req.provider}'")
+        raise HTTPException(400, f"Unknown provider '{req.provider}'")
     if not req.api_key.strip():
         raise HTTPException(400, "api_key er påkrævet")
 
@@ -1843,7 +1838,7 @@ def external_chat(req: ExternalChatRequest):
     if req.wing:
         wing_entry = find_wing(wings_data, req.wing)
         if not wing_entry:
-            raise HTTPException(404, f"Wing '{req.wing}' ikke fundet")
+            raise HTTPException(404, f"Wing '{req.wing}' not found")
         scope = wing_entry.get("scope", "PRIVATE")
         if scope == "SECRET" and not req.scope_confirmed:
             return JSONResponse(status_code=403, content={"error": "scope_blocked", "scope": "SECRET"})
@@ -1860,7 +1855,7 @@ def external_chat(req: ExternalChatRequest):
         embed_r.raise_for_status()
         vector = embed_r.json()["embedding"]
     except Exception as e:
-        raise HTTPException(503, f"Embedding fejl: {e}")
+        raise HTTPException(503, f"Embedding error: {e}")
 
     # Resolve mode og wings
     mode = _detect_mode(req.prompt)
@@ -1883,18 +1878,13 @@ def external_chat(req: ExternalChatRequest):
     elif mode == "legacy":
         threshold, limit, system_prompt = 0.50, 10, LEGACY_SYSTEM
     else:
-        user_lang = _load_ui_prefs().get(req.user or "", {}).get("lang", "da") if req.user else "da"
-        if user_lang == "en":
-            assistant_sys = ASSISTANT_SYSTEM.replace("Svar kort og præcist på dansk.", "Always respond in English, briefly and precisely.")
-        else:
-            assistant_sys = ASSISTANT_SYSTEM
-        threshold, limit, system_prompt = 0.45, 6, assistant_sys
+        threshold, limit, system_prompt = 0.45, 6, ASSISTANT_SYSTEM
 
     # RAG-søgning (identisk logik som /chat)
     context_parts: list[str] = []
     sources: list[dict] = []
     seen: set = set()
-    type_labels = {"summary": "OPSUMMERING", "fact": "FACT"}
+    type_labels = {"summary": "SUMMARY", "fact": "FACT"}
     sub_filter = req.subcategories or ([req.subcategory] if req.subcategory else None)
 
     for w in collections_to_search:
@@ -1907,7 +1897,7 @@ def external_chat(req: ExternalChatRequest):
                 sf    = hit["payload"].get("source_file", "")
                 text  = hit["payload"].get("text", "")
                 ptype = hit["payload"].get("type", "summary")
-                label = type_labels.get(ptype, "TEKST")
+                label = type_labels.get(ptype, "TEXT")
                 context_parts.append(f"[{label} — {sf}]\n{text[:600]}")
                 sources.append({"wing": w["name"], "score": round(hit["score"], 3),
                                  "id": hit["id"], "type": ptype, "preview": text[:200]})
@@ -1964,9 +1954,9 @@ def external_chat(req: ExternalChatRequest):
             r.raise_for_status()
             answer = r.json()["choices"][0]["message"]["content"]
     except httpx.HTTPStatusError as e:
-        raise HTTPException(502, f"Ekstern API fejl HTTP {e.response.status_code}")
+        raise HTTPException(502, f"External API error HTTP {e.response.status_code}")
     except Exception as e:
-        raise HTTPException(503, f"Ekstern API fejl: {type(e).__name__}")
+        raise HTTPException(503, f"External API error: {type(e).__name__}")
 
     return {
         "answer":   answer,
@@ -1981,49 +1971,49 @@ def external_chat(req: ExternalChatRequest):
 # === Panel-debat endpoint ===
 
 DEBATE_PARTICIPANT_SYSTEM = """\
-Du er deltager i en ekspert-panel debat.
-Emne: {topic}
+You are a participant in an expert panel debate.
+Topic: {topic}
 {ctx_line}
-Regler:
-- Svar ALTID på dansk — uanset dit modersmål
-- Svar direkte og præcist på max 200 ord
-- Referer til de andre deltageres pointer hvis relevant
-- Vær faglig, ikke høflig
-- Mål: nå frem til den bedste løsning i fællesskab
+Rules:
+- ALWAYS respond in English — regardless of your training language
+- Be direct and precise — maximum 200 words
+- Reference other participants' points where relevant
+- Be professional, not polite
+- Goal: reach the best solution together
 """
 
 DEBATE_MODERATOR_ASSESSMENT = """\
-Du er ordstyrer i en ekspert-panel debat.
+You are the moderator of an expert panel debate.
 
-Debathistorik:
+Debate history:
 {history}
 
-Runde: {round_num}
+Round: {round_num}
 
-Din opgave:
-1. Vurder om deltagerne har nået konsensus om den bedste løsning
-2. Identificer resterende uenigheder
-3. Formuler én præcis, skarp udfordring til næste runde — det konkrete stridspunkt eller spørgsmål deltagerne SKAL tage direkte stilling til
-4. Svar KUN med JSON (ingen markdown, ingen forklaring):
+Your task:
+1. Assess whether the participants have reached consensus on the best solution
+2. Identify remaining disagreements
+3. Formulate one precise, sharp challenge for the next round — the specific point of contention participants MUST address directly
+4. Respond ONLY with JSON (no markdown, no explanation):
 
-{{"consensus_reached": true/false, "summary": "kort sammenfatning", "remaining_disagreements": ["liste af uenigheder"], "next_challenge": "præcis udfordring til næste runde"}}
+{{"consensus_reached": true/false, "summary": "brief summary", "remaining_disagreements": ["list of disagreements"], "next_challenge": "precise challenge for next round"}}
 """
 
 DEBATE_MODERATOR_FINAL = """\
-Du er ordstyrer i en panel-debat. Baseret på debathistorikken nedenfor, skriv en sammenfatning i præcis dette format — start direkte med "SVAR:", ingen intro:
+You are the moderator of a panel debate. Based on the debate history below, write a summary in exactly this format — start directly with "ANSWER:", no intro:
 
-SVAR: [1-2 sætninger der direkte besvarer debatemnet]
+ANSWER: [1-2 sentences directly addressing the debate topic]
 
-KONSENSUS:
-- [Hvad deltagerne var enige om]
+CONSENSUS:
+- [What the participants agreed on]
 
-UENIGHEDER:
-- [Tilbageværende uenigheder, eller "Ingen" hvis fuld konsensus]
+DISAGREEMENTS:
+- [Remaining disagreements, or "None" if full consensus]
 
-Debathistorik:
+Debate history:
 {history}
 
-Skriv nu sammenfatningen (start med "SVAR:"):"""
+Write the summary now (start with "ANSWER:"):"""
 
 
 def _utf8_clean(s: str) -> str:
@@ -2048,7 +2038,7 @@ async def _debate_call_participant(
     other_labels: list[str] | None = None,
 ) -> str:
     if participant.provider not in PROVIDER_DEFAULTS:
-        return f"[Ukendt provider: {participant.provider}]"
+        return f"[Unknown provider: {participant.provider}]"
     pconf    = PROVIDER_DEFAULTS[participant.provider]
     base_url = (participant.base_url or pconf["base_url"]).rstrip("/")
     model    = participant.model or pconf["default_model"]
@@ -2061,7 +2051,7 @@ async def _debate_call_participant(
     messages = [{"role": "user", "content": _utf8_clean(f"Emne: {topic}\n\nBidrag din ekspertanalyse:")}]
     if history:
         others = ", ".join(other_labels) if other_labels else "de andre deltagere"
-        challenge_line = f"\n\nOrdstyrers udfordring til runde {round_num}: {challenge}" if challenge else ""
+        challenge_line = f"\n\nModerator challenge for round {round_num}: {challenge}" if challenge else ""
         followup = (
             f"Runde {round_num}: Du skal nu svare direkte på {others}' argumenter fra forrige runde. "
             f"Hvad er du uenig i? Hvad vil du revidere i din egen position? Vær konkret.{challenge_line}"
@@ -2115,18 +2105,18 @@ async def _debate_call_participant(
             return _utf8_clean(r.json()["choices"][0]["message"]["content"].strip())
     except httpx.HTTPStatusError as e:
         logger.error(f"HTTP {e.response.status_code} fra {participant.provider}/{model}: {e.response.text[:300]}")
-        return f"[API fejl HTTP {e.response.status_code}]"
+        return f"[API error HTTP {e.response.status_code}]"
     except Exception as e:
         import traceback
         logger.error(
-            f"Fejl i debate_call ({participant.provider}/{model}): {type(e).__name__}: {e}\n"
+            f"Error in debate_call ({participant.provider}/{model}): {type(e).__name__}: {e}\n"
             + traceback.format_exc()
         )
-        return f"[Fejl: {type(e).__name__}]"
+        return f"[Error: {type(e).__name__}]"
 
 
 async def _call_external_llm(client: httpx.AsyncClient, participant: "DebateParticipant", prompt: str) -> str:
-    """Kald ekstern deltager direkte med en prompt — bruges som ordstyrer-fallback."""
+    """Call an external participant directly with a prompt — used as moderator fallback."""
     pconf    = PROVIDER_DEFAULTS.get(participant.provider, {})
     base_url = (participant.base_url or pconf.get("base_url", "")).rstrip("/")
     model    = participant.model or pconf.get("default_model", "")
@@ -2170,8 +2160,8 @@ async def _debate_moderator_assess(
         if m:
             return json.loads(m.group())
     except Exception as e:
-        logger.error(f"Ordstyrer fejl (lokal): {type(e).__name__}: {e}")
-        logger.warning("Ordstyrer fallback: bruger ekstern deltager")
+        logger.error(f"Moderator error (local): {type(e).__name__}: {e}")
+        logger.warning("Moderator fallback: using external participant")
 
     for p in fallback_participants:
         try:
@@ -2180,8 +2170,8 @@ async def _debate_moderator_assess(
             if m:
                 return json.loads(m.group())
         except Exception as e:
-            logger.error(f"Ordstyrer fallback fejl ({p.label}): {type(e).__name__}: {e}")
-    return {"consensus_reached": False, "summary": "Ordstyrer utilgængelig", "remaining_disagreements": []}
+            logger.error(f"Moderator fallback error ({p.label}): {type(e).__name__}: {e}")
+    return {"consensus_reached": False, "summary": "Moderator unavailable", "remaining_disagreements": []}
 
 
 async def _debate_moderator_final(
@@ -2200,10 +2190,10 @@ async def _debate_moderator_final(
         result = _utf8_clean(r.json()["message"]["content"].strip())
         if result:
             return result
-        logger.warning("Ordstyrer sammenfatning: tom streng fra lokal model")
+        logger.warning("Moderator summary: empty response from local model")
     except Exception as e:
-        logger.error(f"Ordstyrer sammenfatning fejl (lokal): {type(e).__name__}: {e}")
-        logger.warning("Ordstyrer fallback: bruger ekstern deltager til sammenfatning")
+        logger.error(f"Moderator summary error (local): {type(e).__name__}: {e}")
+        logger.warning("Moderator fallback: using external participant for summary")
 
     for p in fallback_participants:
         try:
@@ -2211,8 +2201,8 @@ async def _debate_moderator_final(
             if result:
                 return result
         except Exception as e:
-            logger.error(f"Ordstyrer sammenfatning fallback fejl ({p.label}): {type(e).__name__}: {e}")
-    return "SVAR: Sammenfatning utilgængelig.\n\nKONSENSUS:\n- Ingen data\n\nUENIGHEDER:\n- Ingen data"
+            logger.error(f"Moderator summary fallback error ({p.label}): {type(e).__name__}: {e}")
+    return "ANSWER: Summary unavailable.\n\nCONSENSUS:\n- No data\n\nDISAGREEMENTS:\n- No data"
 
 
 async def _run_debate_stream(req: DebateRequest):
@@ -2286,7 +2276,7 @@ async def _run_debate_stream(req: DebateRequest):
                 except asyncio.TimeoutError:
                     yield sse("user_input_timeout", {
                         "round": round_num,
-                        "message": f"Ingen kommentar inden {req.user_input_timeout}s — fortsætter"
+                        "message": f"No comment within {req.user_input_timeout}s — continuing"
                     })
                 finally:
                     _debate_user_inputs.pop(debate_id, None)
@@ -2308,7 +2298,7 @@ async def _run_debate_stream(req: DebateRequest):
             wings_data = load_wings()
             wing_entry = find_wing(wings_data, req.save_to_wing)
             if not wing_entry:
-                save_error = f"Wing '{req.save_to_wing}' ikke fundet"
+                save_error = f"Wing '{req.save_to_wing}' not found"
                 logger.error(f"Debat gem fejl: {save_error}")
             else:
                 scope  = wing_entry.get("scope", "PRIVATE")
@@ -2376,7 +2366,7 @@ async def _run_debate_stream(req: DebateRequest):
         try:
             yield sse("final", final_payload)
         except Exception as e:
-            logger.error(f"SSE final serialisering fejlede: {type(e).__name__}: {e}")
+            logger.error(f"SSE final serialization failed: {type(e).__name__}: {e}")
             safe_summary = final_summary.encode("utf-8", errors="replace").decode("utf-8")
             yield (
                 f"event: final\ndata: "
@@ -2393,7 +2383,7 @@ async def debate(req: DebateRequest):
         raise HTTPException(400, "max_rounds skal være 1-10")
     for p in req.participants:
         if p.provider not in PROVIDER_DEFAULTS:
-            raise HTTPException(400, f"Ukendt provider '{p.provider}'")
+            raise HTTPException(400, f"Unknown provider '{p.provider}'")
         if not p.api_key.strip():
             raise HTTPException(400, f"api_key mangler for deltager '{p.label}'")
 
@@ -2401,7 +2391,7 @@ async def debate(req: DebateRequest):
         wings_data = load_wings()
         wing_entry = find_wing(wings_data, req.save_to_wing)
         if not wing_entry:
-            raise HTTPException(404, f"Wing '{req.save_to_wing}' ikke fundet")
+            raise HTTPException(404, f"Wing '{req.save_to_wing}' not found")
         scope = wing_entry.get("scope", "PRIVATE")
         if scope == "SECRET" and not req.scope_confirmed:
             return JSONResponse(status_code=403, content={"error": "scope_blocked", "scope": "SECRET"})
@@ -2442,12 +2432,12 @@ async def debate_context_upload(file: UploadFile = File(...)):
         from ingest import extract_text
         text = extract_text(tmp_path)
         if not text:
-            raise HTTPException(422, "Ingen tekst fundet i filen")
+            raise HTTPException(422, "No text found in file")
         return {"text": text[:20000]}
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(422, f"Tekstudtræk fejlede: {type(e).__name__}: {e}")
+        raise HTTPException(422, f"Text extraction failed: {type(e).__name__}: {e}")
     finally:
         tmp_path.unlink(missing_ok=True)
 
@@ -2493,7 +2483,7 @@ def get_features():
 @app.post("/agent/chat")
 async def agent_chat(body: AgentChatRequest):
     if not _AGENTS_AVAILABLE:
-        raise HTTPException(503, "Agent-system ikke tilgængeligt — tjek at LangGraph er installeret")
+        raise HTTPException(503, "Agent system unavailable — check that LangGraph is installed")
     try:
         result = await asyncio.to_thread(
             _run_agent_graph,
@@ -2501,7 +2491,7 @@ async def agent_chat(body: AgentChatRequest):
             body.user or "dan",
         )
     except Exception as e:
-        raise HTTPException(503, f"Agent-fejl: {e}")
+        raise HTTPException(503, f"Agent error: {e}")
     return {
         "response":   result.get("response", ""),
         "agent":      result.get("agent_name", ""),
@@ -2583,7 +2573,7 @@ def _approve_row_hash(queue_item_id: int, original_wing: str, approved_at: str,
 
 
 def _ensure_swarm_public_collection() -> None:
-    """Opret swarm_public Qdrant-collection hvis den ikke eksisterer."""
+    """Create swarm_public Qdrant collection if it does not exist."""
     try:
         r = httpx.get(f"{QDRANT_URL}/collections/{SWARM_PUB_COL}", timeout=5)
         if r.status_code == 200:
@@ -2630,7 +2620,7 @@ def approve_swarm_item(item_id: int):
     ).fetchone()
     if not row:
         conn.close()
-        raise HTTPException(404, f"Queue-item {item_id} ikke fundet")
+        raise HTTPException(404, f"Queue-item {item_id} not found")
     if row["status"] != "pending":
         conn.close()
         raise HTTPException(409, f"Item har status '{row['status']}' — kun pending kan godkendes")
@@ -2651,7 +2641,7 @@ def approve_swarm_item(item_id: int):
         vector = embed_r.json()["embedding"]
     except Exception as e:
         conn.close()
-        raise HTTPException(503, f"Embedding fejl: {e}")
+        raise HTTPException(503, f"Embedding error: {e}")
 
     # Skriv til swarm_outgoing via Arbiter
     swarm_point_id = str(uuid.uuid4())
@@ -2679,7 +2669,7 @@ def approve_swarm_item(item_id: int):
         r.raise_for_status()
     except Exception as e:
         conn.close()
-        raise HTTPException(503, f"Arbiter fejl: {e}")
+        raise HTTPException(503, f"Arbiter error: {e}")
 
     # Marker original med swarm_reviewed: true
     try:
@@ -2734,7 +2724,7 @@ def reject_swarm_item(item_id: int):
     ).fetchone()
     if not row:
         conn.close()
-        raise HTTPException(404, f"Queue-item {item_id} ikke fundet")
+        raise HTTPException(404, f"Queue-item {item_id} not found")
 
     now = datetime.now(timezone.utc).isoformat()
 
@@ -2859,7 +2849,7 @@ class ComputeToggleBody(BaseModel):
 def get_swarm_peers():
     data = _swarm_agent("GET", "/swarm/peers")
     if data is None:
-        raise HTTPException(503, "Swarm agent ikke tilgængelig")
+        raise HTTPException(503, "Swarm agent unavailable")
     return data
 
 
@@ -2868,7 +2858,7 @@ def get_swarm_peers_status():
     """Peer-liste med live load-status (via PeerLoadCache, 30s TTL)."""
     data = _swarm_agent("GET", "/swarm/peers/status")
     if data is None:
-        raise HTTPException(503, "Swarm agent ikke tilgængelig")
+        raise HTTPException(503, "Swarm agent unavailable")
     return data
 
 
@@ -2876,7 +2866,7 @@ def get_swarm_peers_status():
 def add_swarm_peer(body: AddPeerBody):
     data = _swarm_agent("POST", "/swarm/peers/add", json=body.model_dump())
     if data is None:
-        raise HTTPException(503, "Swarm agent ikke tilgængelig")
+        raise HTTPException(503, "Swarm agent unavailable")
     return data
 
 
@@ -2884,7 +2874,7 @@ def add_swarm_peer(body: AddPeerBody):
 def remove_swarm_peer(node_id: str):
     data = _swarm_agent("DELETE", f"/swarm/peers/{node_id}")
     if data is None:
-        raise HTTPException(503, "Swarm agent ikke tilgængelig")
+        raise HTTPException(503, "Swarm agent unavailable")
     return data
 
 
@@ -2892,7 +2882,7 @@ def remove_swarm_peer(node_id: str):
 def trigger_swarm_sync():
     data = _swarm_agent("POST", "/swarm/sync")
     if data is None:
-        raise HTTPException(503, "Swarm agent ikke tilgængelig eller sync fejlede")
+        raise HTTPException(503, "Swarm agent unavailable or sync failed")
     return data
 
 
@@ -2909,13 +2899,13 @@ def get_incoming_facts(limit: int = Query(50, le=200)):
         r.raise_for_status()
         points = r.json().get("result", {}).get("points", [])
     except Exception as e:
-        raise HTTPException(503, f"Qdrant fejl: {e}")
+        raise HTTPException(503, f"Qdrant error: {e}")
     return {
         "facts": [
             {
                 "id":            str(pt["id"]),
                 "text":          pt["payload"].get("text", ""),
-                "source_label":  pt["payload"].get("source_label", "Ukendt"),
+                "source_label":  pt["payload"].get("source_label", "Unknown"),
                 "source_node":   pt["payload"].get("source_node", ""),
                 "verified":      pt["payload"].get("verified", False),
                 "confidence":    pt["payload"].get("confidence", 0),
@@ -2938,7 +2928,7 @@ def verify_incoming_fact(point_id: str):
         )
         r.raise_for_status()
     except Exception as e:
-        raise HTTPException(503, f"Qdrant fejl: {e}")
+        raise HTTPException(503, f"Qdrant error: {e}")
     return {"ok": True, "point_id": point_id, "verified": True}
 
 
@@ -2952,7 +2942,7 @@ def reject_incoming_fact(point_id: str):
         )
         r.raise_for_status()
     except Exception as e:
-        raise HTTPException(503, f"Qdrant fejl: {e}")
+        raise HTTPException(503, f"Qdrant error: {e}")
     return {"ok": True, "point_id": point_id, "deleted": True}
 
 
@@ -2991,7 +2981,7 @@ class AddMemberRequest(BaseModel):
 def get_swarm_groups():
     data = _swarm_agent("GET", "/swarm/groups")
     if data is None:
-        raise HTTPException(503, "Swarm agent ikke tilgængelig")
+        raise HTTPException(503, "Swarm agent unavailable")
     return data
 
 
@@ -3003,7 +2993,7 @@ def create_swarm_group(body: CreateGroupRequest):
         "allowed_wings": body.allowed_wings,
     })
     if data is None:
-        raise HTTPException(503, "Swarm agent ikke tilgængelig")
+        raise HTTPException(503, "Swarm agent unavailable")
     return data
 
 
@@ -3011,7 +3001,7 @@ def create_swarm_group(body: CreateGroupRequest):
 def add_group_member(group_id: str, body: AddMemberRequest):
     data = _swarm_agent("POST", f"/swarm/groups/{group_id}/members", json=body.model_dump())
     if data is None:
-        raise HTTPException(503, "Swarm agent ikke tilgængelig")
+        raise HTTPException(503, "Swarm agent unavailable")
     return data
 
 
@@ -3019,7 +3009,7 @@ def add_group_member(group_id: str, body: AddMemberRequest):
 def delete_swarm_group(group_id: str):
     data = _swarm_agent("DELETE", f"/swarm/groups/{group_id}")
     if data is None:
-        raise HTTPException(503, "Swarm agent ikke tilgængelig")
+        raise HTTPException(503, "Swarm agent unavailable")
     return data
 
 
@@ -3029,7 +3019,7 @@ def delete_swarm_group(group_id: str):
 def get_swarm_credits():
     data = _swarm_agent("GET", "/swarm/credits")
     if data is None:
-        raise HTTPException(503, "Swarm agent ikke tilgængelig")
+        raise HTTPException(503, "Swarm agent unavailable")
     return data
 
 
@@ -3060,7 +3050,7 @@ def get_never_swarm():
 def get_wing_swarm_config():
     data = _swarm_agent("GET", "/swarm/wing-config")
     if data is None:
-        raise HTTPException(503, "Swarm agent ikke tilgængelig")
+        raise HTTPException(503, "Swarm agent unavailable")
     return data
 
 
@@ -3071,7 +3061,7 @@ def update_wing_swarm_config(body: WingSwarmConfigRequest):
         "config": {"familia": body.familia, "global": body.global_, "work": body.work},
     })
     if data is None:
-        raise HTTPException(503, "Swarm agent ikke tilgængelig")
+        raise HTTPException(503, "Swarm agent unavailable")
     return data
 
 
@@ -3093,7 +3083,7 @@ def get_public_eligible(limit: int = Query(100, le=500)):
         r.raise_for_status()
         points = r.json().get("result", {}).get("points", [])
     except Exception as e:
-        raise HTTPException(503, f"Qdrant fejl: {e}")
+        raise HTTPException(503, f"Qdrant error: {e}")
 
     # Hent allerede publicerede point_id'er for at markere dem
     conn = _swarm_db()
@@ -3133,7 +3123,7 @@ def publish_to_public(point_id: str, body: PublishRequest):
             timeout=10,
         )
         if r.status_code == 404:
-            raise HTTPException(404, f"Punkt {point_id} ikke fundet i {SWARM_OUT_COL}")
+            raise HTTPException(404, f"Point {point_id} not found inn {SWARM_OUT_COL}")
         r.raise_for_status()
         src_point = r.json().get("result")
         if not src_point:
@@ -3141,7 +3131,7 @@ def publish_to_public(point_id: str, body: PublishRequest):
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(503, f"Qdrant fejl ved hentning: {e}")
+        raise HTTPException(503, f"Qdrant fetch error: {e}")
 
     payload   = src_point.get("payload", {})
     text      = payload.get("text", "")
@@ -3200,7 +3190,7 @@ def publish_to_public(point_id: str, body: PublishRequest):
         )
         pub_r.raise_for_status()
     except Exception as e:
-        raise HTTPException(503, f"Qdrant fejl ved publicering: {e}")
+        raise HTTPException(503, f"Qdrant publish error: {e}")
 
     logger.info(f"Publiceret punkt {point_id} til {SWARM_PUB_COL}, hash={row_hash[:12]}…")
     return {
@@ -3219,32 +3209,32 @@ try:
     import legacy_ingest as _lingest
     _LEGACY_AVAILABLE = True
 except ImportError as _le:
-    logging.warning("Legacy-modul ikke tilgængeligt: %s", _le)
+    logging.warning("Legacy module unavailable: %s", _le)
     _LEGACY_AVAILABLE = False
 
 
 class AnswerRequest(BaseModel):
     question_id:        str
     answer:             str
-    parent_question_id: Optional[str] = None  # kun for opfølgningssvar
-    question_text:      Optional[str] = None   # kun for opfølgningsspørgsmål ikke i question bank
+    parent_question_id: Optional[str] = None  # only for follow-up answers
+    question_text:      Optional[str] = None   # only for follow-up questions not in the question bank
 
 
 def _require_legacy():
     if not _LEGACY_AVAILABLE:
-        raise HTTPException(503, "Legacy-modul ikke tilgængeligt — tjek /srv/nous/legacy/")
+        raise HTTPException(503, "Legacy module unavailable — check /srv/nous/legacy/")
 
 
 _FOLLOWUP_PROMPT = """\
-Dan har svaret på spørgsmålet: "{question}"
-Hans svar: "{answer}"
+The owner answered the question: "{question}"
+Their answer: "{answer}"
 
-Hvis svaret åbner for noget der er værd at udfolde — en historie, en følelse, en læring — stil ét kort naturligt opfølgningsspørgsmål på dansk. Max 20 ord.
-Hvis svaret er fyldestgørende og ikke kalder på uddybning, returner kun: INGEN"""
+If the answer opens something worth exploring — a story, a feeling, a lesson — ask one short, natural follow-up question. Max 20 words.
+If the answer is complete and needs no elaboration, return only: NONE"""
 
 
 def _generate_followup_sync(question: str, answer: str) -> str | None:
-    """Generér opfølgningsspørgsmål via LLM_MODEL. Returnerer None hvis ikke relevant."""
+    """Generate follow-up question via LLM_MODEL. Returns None if not relevant."""
     try:
         r = httpx.post(
             f"{OLLAMA_URL}/api/chat",
@@ -3260,12 +3250,11 @@ def _generate_followup_sync(question: str, answer: str) -> str | None:
         )
         r.raise_for_status()
         raw = r.json()["message"]["content"].strip()
-        if raw.upper().startswith("INGEN") or len(raw) < 8:
+        if raw.upper().startswith("NONE") or raw.upper().startswith("INGEN") or len(raw) < 8:
             return None
-        # Fjern evt. anførselstegn og trim
         return raw.strip('"').strip("'").strip()
     except Exception as e:
-        logging.warning("Legacy follow-up generering fejlede: %s", e)
+        logging.warning("Legacy follow-up generation failed: %s", e)
         return None
 
 
@@ -3279,7 +3268,7 @@ def get_daily_question():
 
 @app.get("/legacy/questions")
 def get_questions(category: Optional[str] = None, answered: Optional[bool] = None):
-    """Hent spørgsmål med status — filtrér på kategori og/eller besvaret-flag."""
+    """Get questions with status — filter by category and/or answered flag."""
     _require_legacy()
     questions = _istate.get_all_questions_with_status()
     if category:
@@ -3292,19 +3281,19 @@ def get_questions(category: Optional[str] = None, answered: Optional[bool] = Non
 @app.post("/legacy/answer", status_code=201)
 async def submit_answer(body: AnswerRequest):
     """
-    Gem Dans svar — ordret, ingen ændringer.
-    1. Gem i interview_state.db
-    2. Ingest i legacy-wing via Memory Arbiter
-    3. Generér opfølgningsspørgsmål (max ét, ikke for opfølgningssvar)
+    Save the owner's answer — verbatim, no modifications.
+    1. Save to interview_state.db
+    2. Ingest into legacy wing via Memory Arbiter
+    3. Generate follow-up question (max one, not for follow-up answers)
     """
     _require_legacy()
     if not body.answer.strip():
-        raise HTTPException(400, "Svar må ikke være tomt")
+        raise HTTPException(400, "Answer must not be empty")
 
     answer = body.answer.strip()
     is_followup = body.parent_question_id is not None
 
-    # Hent spørgsmålstekst — enten fra bank eller fra request (opfølgning)
+    # Fetch question text — from bank or from request (follow-up)
     from questions import by_id as _by_id
     q = _by_id(body.question_id)
     if q:
@@ -3314,7 +3303,7 @@ async def submit_answer(body: AnswerRequest):
         q_text    = body.question_text
         q_cat     = "followup"
     else:
-        raise HTTPException(404, f"Spørgsmål '{body.question_id}' ikke fundet")
+        raise HTTPException(404, f"Spørgsmål '{body.question_id}' not found")
 
     saved = _istate.save_answer(
         body.question_id, answer,
@@ -3322,7 +3311,7 @@ async def submit_answer(body: AnswerRequest):
         question_text=body.question_text,
     )
     if not saved:
-        raise HTTPException(500, "Kunne ikke gemme svar i database")
+        raise HTTPException(500, "Could not save answer to database")
 
     ingested = True
     try:
@@ -3335,10 +3324,10 @@ async def submit_answer(body: AnswerRequest):
             body.parent_question_id,
         )
     except Exception as e:
-        logging.error("Legacy ingest fejl: %s", e)
+        logging.error("Legacy ingest error: %s", e)
         ingested = False
 
-    # Generér opfølgningsspørgsmål — kun for primære svar (ikke for opfølgninger selv)
+    # Generate follow-up question — only for primary answers (not for follow-ups themselves)
     followup_question: str | None = None
     if not is_followup:
         followup_question = await asyncio.to_thread(
@@ -3347,7 +3336,7 @@ async def submit_answer(body: AnswerRequest):
 
     resp: dict = {"status": "saved", "ingested": ingested}
     if not ingested:
-        resp["warning"] = "Ingest fejlede — svar er gemt i DB"
+        resp["warning"] = "Ingest failed — response saved to DB"
     if followup_question:
         resp["followup_question"] = followup_question
         resp["followup_question_id"] = f"followup_{body.question_id}"
@@ -3364,7 +3353,7 @@ def get_legacy_progress():
 # === Kamera & Vision ===
 
 class CameraAnalyzeRequest(BaseModel):
-    prompt: str = "Beskriv hvad du ser på billedet. Svar på dansk."
+    prompt: str = "Describe what you see in the image."
 
 
 async def _nx_capture() -> tuple[Path, str]:
@@ -3378,14 +3367,14 @@ async def _nx_capture() -> tuple[Path, str]:
         f"ffmpeg -y -f v4l2 -video_size 640x480 -i {NX_CAM_DEVICE} -frames:v 1 -q:v 4 {remote} 2>&1",
     ], capture_output=True, text=True)
     if cap.returncode != 0:
-        raise HTTPException(502, f"Kamera capture fejl: {(cap.stdout or cap.stderr)[-300:]}")
+        raise HTTPException(502, f"Camera capture error: {(cap.stdout or cap.stderr)[-300:]}")
 
     scp = await asyncio.to_thread(subprocess.run, [
         "scp", "-o", "BatchMode=yes", "-o", "ConnectTimeout=10",
         f"{NX_HOST}:{remote}", str(local),
     ], capture_output=True, text=True)
     if scp.returncode != 0:
-        raise HTTPException(502, f"SCP fejl: {scp.stderr[-300:]}")
+        raise HTTPException(502, f"SCP error: {scp.stderr[-300:]}")
 
     asyncio.create_task(asyncio.to_thread(
         subprocess.run,
@@ -3434,9 +3423,9 @@ async def camera_analyze(body: CameraAnalyzeRequest):
         data = resp.json()
         analysis = data["content"]
     except httpx.ConnectError:
-        raise HTTPException(503, "llama.cpp-server ikke tilgængelig på NX:8181")
+        raise HTTPException(503, "llama.cpp-server unavailable at NX:8181")
     except Exception as exc:
-        raise HTTPException(502, f"Gemma 4 fejl: {exc}")
+        raise HTTPException(502, f"Gemma 4 error: {exc}")
     finally:
         await gemma_manager.stop()
     return {
@@ -3489,7 +3478,7 @@ def get_voice_prefs():
 @app.post("/voice/pref")
 def set_voice_pref(body: VoicePrefSet):
     if body.user not in ("Dan", "Gaia", "Gabriel"):
-        raise HTTPException(400, "Ukendt bruger")
+        raise HTTPException(400, "Unknown user")
     prefs = _load_voice_prefs()
     prefs[body.user] = {"model_key": body.model_key, "model_path": body.model_path}
     _save_voice_prefs(prefs)
@@ -3562,7 +3551,7 @@ def _do_voice_download(job_id: str, model_key: str, onnx_path: str) -> None:
 
         upd("done", 100, f"{model_key} installeret ✓")
     except Exception as e:
-        upd("error", 0, f"Download fejlede: {str(e)[:180]}")
+        upd("error", 0, f"Download failed: {str(e)[:180]}")
         onnx_local.unlink(missing_ok=True)
         json_local.unlink(missing_ok=True)
 
@@ -3577,7 +3566,7 @@ async def download_voice(body: VoiceDownloadRequest, background_tasks: Backgroun
 
 @app.get("/voice/download-status/{job_id}")
 def get_voice_download_status(job_id: str):
-    return _voice_dl_status.get(job_id, {"phase": "not_found", "progress": 0, "msg": "Ukendt job"})
+    return _voice_dl_status.get(job_id, {"phase": "not_found", "progress": 0, "msg": "Unknown job"})
 
 
 # === UI preferences (language etc.) ===
@@ -3624,7 +3613,7 @@ def get_ui_prefs():
 @app.get("/ui/pref/{user}")
 def get_ui_pref_user(user: str):
     if user not in ("Dan", "Gaia", "Gabriel"):
-        raise HTTPException(400, "Ukendt bruger")
+        raise HTTPException(400, "Unknown user")
     prefs = _load_ui_prefs()
     return prefs.get(user, {"lang": "da"})
 
@@ -3632,9 +3621,9 @@ def get_ui_pref_user(user: str):
 @app.post("/ui/pref")
 def set_ui_pref(body: UiPrefSet):
     if body.user not in ("Dan", "Gaia", "Gabriel"):
-        raise HTTPException(400, "Ukendt bruger")
+        raise HTTPException(400, "Unknown user")
     if body.lang not in ("da", "en"):
-        raise HTTPException(400, "Ugyldigt sprog — skal være 'da' eller 'en'")
+        raise HTTPException(400, "Invalid language — must be 'da' or 'en'")
     prefs = _load_ui_prefs()
     prefs.setdefault(body.user, {})["lang"] = body.lang
     _save_ui_prefs(prefs)
@@ -3662,7 +3651,7 @@ def get_all_features():
 @app.get("/ui/features/{user}")
 def get_user_features(user: str):
     if user not in ("Dan", "Gaia", "Gabriel"):
-        raise HTTPException(400, "Ukendt bruger")
+        raise HTTPException(400, "Unknown user")
     prefs = _load_ui_prefs()
     stored = prefs.get(user, {}).get("features", {})
     return {**_DEFAULT_FEATURES.get(user, {}), **stored}
@@ -3671,10 +3660,10 @@ def get_user_features(user: str):
 @app.post("/ui/features")
 def set_user_features(body: FeatureSet):
     if body.user not in ("Dan", "Gaia", "Gabriel"):
-        raise HTTPException(400, "Ukendt bruger")
+        raise HTTPException(400, "Unknown user")
     unknown = set(body.features.keys()) - _KNOWN_FEATURES
     if unknown:
-        raise HTTPException(400, f"Ukendte features: {unknown}")
+        raise HTTPException(400, f"Unknown features: {unknown}")
     prefs = _load_ui_prefs()
     prefs.setdefault(body.user, {}).setdefault("features", {}).update(body.features)
     _save_ui_prefs(prefs)
@@ -3772,7 +3761,7 @@ def set_wake_config(body: WakeConfigSet, background_tasks: BackgroundTasks):
     errors = []
     for entry in body.entries:
         if entry.user not in ("Dan", "Gaia", "Gabriel"):
-            errors.append(f"Ukendt bruger: {entry.user}")
+            errors.append(f"Unknown user: {entry.user}")
             continue
         word = entry.word.strip().upper()
         if not word:

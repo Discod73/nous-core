@@ -2,30 +2,30 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## ABSOLUT SIKKERHEDSREGEL — MÅ ALDRIG BRYDES
+## ABSOLUTE SECURITY RULE — MUST NEVER BE BROKEN
 
-Før enhver `git add`, `git commit` eller `git push`:
+Before any `git add`, `git commit` or `git push`:
 
-1. Kør `git diff --cached --name-only` og gennemgå ALLE filer
-2. STOP og afvis hvis nogen fil matcher:
+1. Run `git diff --cached --name-only` and review ALL files
+2. STOP and reject if any file matches:
    - `*Overleveringsdokument*`, `*SESSION*`, `*NOUS_v[0-9]*`, `*rapport*`
    - `*voice_prefs*`, `*ui_prefs*`, `*wake_prefs*`, `*research_jobs*`
    - `*.docx`, `*SECRET*`, `*credentials*`, `*secrets*`
-   - `config/` (hele mappen er forbudt)
-3. Kør grep på diff og STOP hvis noget matcher:
+   - `config/` (entire directory is forbidden)
+3. Run grep on diff and STOP if anything matches:
    - `boernesag`, `fbf`, `Isabella`, `Helle`, `CPR`, `personnummer`
-   - `192\.168`, `100\.65` (IP-adresser)
+   - `192\.168`, `100\.65` (IP addresses)
    - `password`, `api_key`, `token`, `secret_key`
-4. Bed Dan om eksplicit godkendelse af komplet filliste inden push
-5. Ingen `--force` push uden Dans eksplicitte ordre
+4. Ask the repository owner for explicit approval of the complete file list before pushing
+5. No `--force` push without explicit order
 
-Hardkodede værdier er forbudt i al kode der pushes:
-- Ingen IP-adresser (brug miljøvariabler)
-- Ingen passwords, tokens, nøgler
-- Ingen personnavne fra sensitive wings
-- Ingen systemstier i README eller dokumentation
+Hardcoded values are forbidden in all code that is pushed:
+- No IP addresses (use environment variables)
+- No passwords, tokens, keys
+- No personal names from sensitive wings
+- No system paths in README or documentation
 
-Hook fejler = STOP. Ingen undtagelser.
+Hook failure = STOP. No exceptions.
 
 ---
 
@@ -67,7 +67,7 @@ source /srv/nous/pipeline/.venv/bin/activate
 python3 /srv/nous/scripts/voice_chat.py
 
 # Text chat (no voice)
-python3 /srv/nous/scripts/nous_chat.py 'dit spørgsmål'
+python3 /srv/nous/scripts/nous_chat.py 'your question'
 
 # Start the internet proxy manually (normally a service)
 cd /srv/nous/proxy && uvicorn nous_proxy:app --host 0.0.0.0 --port 8090
@@ -79,15 +79,15 @@ bash /srv/nous/scripts/nous-backup.sh
 python3 /srv/nous/scripts/nous-setup-collections.py
 
 # Ingest a document interactively
-python3 /srv/nous/scripts/nous-ingest-manual.py /sti/til/fil.pdf
+python3 /srv/nous/scripts/nous-ingest-manual.py /path/to/file.pdf
 
 # Promote document chunks between wings with PII review
 python3 /srv/nous/scripts/promote.py <source_wing> <target_scope> [doc_id]
 
 # PII detection/anonymization CLI
-python3 /srv/nous/pipeline/privacy_guard.py detect "tekst"
-python3 /srv/nous/pipeline/privacy_guard.py mask "tekst" PUBLIC
-python3 /srv/nous/pipeline/privacy_guard.py audit "tekst" SWARM
+python3 /srv/nous/pipeline/privacy_guard.py detect "text"
+python3 /srv/nous/pipeline/privacy_guard.py mask "text" PUBLIC
+python3 /srv/nous/pipeline/privacy_guard.py audit "text" SWARM
 
 # Repair a corrupted Qdrant collection
 python3 /srv/nous/pipeline/fix_wing.py <wing_name>
@@ -179,7 +179,7 @@ The ingest pipeline watches `/home/nous/incoming/` and routes files to wings bas
 
 ## Coding conventions
 
-All user-facing strings, system prompts, comments, and log messages are written in **Danish**. This applies to LLM `SYSTEM` prompt text, TTS output, CLI tool docstrings, and inline comments. English is acceptable in code identifiers and technical error messages that will never reach the user.
+System prompts, comments, and log messages are written in **English**. User-facing language (TTS output, LLM responses) depends on the Piper model and LLM configuration — the default deployment uses Danish (`da`), but this can be changed by swapping the Piper TTS model and updating system prompts.
 
 ## Known issues (from v1.9 status doc)
 

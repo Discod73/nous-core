@@ -1,37 +1,36 @@
 # NOUS Credits & Acknowledgments
 
-NOUS er udgivet under **GNU Affero General Public License v3.0 (AGPL-3.0)** — se `LICENSE`.
+NOUS is released under the **GNU Affero General Public License v3.0 (AGPL-3.0)** — see `LICENSE`.
 
-NOUS bygger på open-source komponenter og tager inspiration fra andre projekter.
-Dette dokument holder styr på begge dele.
+NOUS builds on open-source components and draws inspiration from other projects.
+This document tracks both.
 
-## Direkte komponenter (open-source software vi bruger)
+## Direct components (open-source software we use)
 
-| Komponent | Licens | Brug |
-|-----------|--------|------|
-| Whisper.cpp | MIT | Speech-to-text på Jetson |
-| Piper TTS | MIT | Tekst-til-tale på Pi 5 |
-| Ollama | MIT | LLM-runtime på Jetson |
-| Qwen2.5 | Apache 2.0 | LLM-model |
-| SearXNG | AGPL-3.0 | Privat søgning |
-| Qdrant | Apache 2.0 | Vektordatabase |
-| FastAPI | MIT | Internet-proxy |
+| Component | Licence | Use |
+|-----------|---------|-----|
+| Whisper.cpp | MIT | Speech-to-text on Jetson |
+| Piper TTS | MIT | Text-to-speech on Pi 5 |
+| Ollama | MIT | LLM runtime on Jetson |
+| Qwen2.5 | Apache 2.0 | LLM model |
+| SearXNG | AGPL-3.0 | Private search |
+| Qdrant | Apache 2.0 | Vector database |
+| FastAPI | MIT | API framework |
 
-## Inspiration (mønstre vi har lært af)
+## Inspiration (patterns we learned from)
 
 ### jetson-orin-kian (aschweig)
 https://github.com/aschweig/jetson-orin-kian
-Licens: MIT
+Licence: MIT
 
-Inspiration taget:
-- Pipeline-arkitektur: VAD → STT → LLM → TTS → Speaker
-- Streaming TTS-mønster (split på tegnsætning, afspil løbende)
-- Memory budget-analyse for Jetson Orin Nano 8GB
-- Headless-mode anbefaling for at frigøre RAM
+Patterns taken from:
+- Pipeline architecture: VAD → STT → LLM → TTS → Speaker
+- Streaming TTS pattern (split on punctuation, play progressively)
+- Memory budget analysis for Jetson Orin Nano 8GB
+- Headless-mode recommendation to free up RAM
 
-Forskelle:
-- NOUS er dansk-først, Kian er engelsk
-- NOUS har distribueret arkitektur (Pi 5 + Jetson), Kian er enkelt-node
-- NOUS har internet-proxy med tool-isolation
-- NOUS har scope/wing-baseret hukommelse
-
+Differences:
+- NOUS targets multilingual use; Kian is English-only
+- NOUS has a distributed architecture (Pi 5 + Jetson); Kian is single-node
+- NOUS has an internet proxy with tool isolation
+- NOUS has scope/wing-based memory

@@ -22,19 +22,19 @@ The system is designed for a two-device LAN setup, but can run on a single machi
 
 Single-machine: point `NOUS_OLLAMA_URL` and `NOUS_WHISPER_URL` at `localhost`.
 
-## Multi-agent arkitektur
+## Multi-agent architecture
 
-NOUS bruger specialiserede agenter til forskellige domæner (husstand, juridisk, legacy).
-Hver agent er designet til at køre sin egen model, men på begrænset hardware
-deles modeller intelligent:
+NOUS uses specialised agents for different domains (household, legal, legacy).
+Each agent is designed to run its own model, but on constrained hardware
+models are shared intelligently:
 
-- **Daglig brug** (supervisor, husstand, børn): qwen2.5:7b — holdes permanent
-  i hukommelsen for øjeblikkelig respons
-- **Nat-analyse** (juridisk, inkonsistens): qwen3:14b — loader on-demand
+- **Daily use** (supervisor, household, children): qwen2.5:7b — kept permanently
+  in memory for instant response
+- **Night analysis** (legal, inconsistency): qwen3:14b — loads on-demand
 
-Når hardware med større unified memory (32GB+) bliver tilgængeligt,
-eller domænespecifikke modeller frigives som GGUF, kan hver agent
-konfigureres med sin egen specialiserede model uden arkitekturændringer.
+When hardware with larger unified memory (32GB+) becomes available,
+or domain-specific models are released as GGUF, each agent can be
+configured with its own specialised model without architectural changes.
 
 ## Quick start
 
@@ -115,7 +115,7 @@ See `CLAUDE.md` for full architecture details.
 
 The web cockpit includes an optional external AI panel (🌐) in Analyse and Assistant modes. When enabled, queries are sent to Anthropic / OpenAI / Groq / custom endpoint after scope confirmation. The API key is never stored — it lives only in the browser session.
 
-PRIVATE wings require one confirmation click. SECRET wings require typing `JEG FORSTÅR RISIKOEN` before sending.
+PRIVATE wings require one confirmation click. SECRET wings require typing a confirmation phrase (configurable in `web/index.html`) before sending.
 
 ## Project structure
 
