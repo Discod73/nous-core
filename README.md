@@ -10,6 +10,9 @@ NOUS is a privacy-first, locally-hosted personal AI system. All data stays on yo
 - **Scope system** — documents tagged SECRET / PRIVATE / SWARM / PUBLIC with enforced access controls
 - **Optional external AI** — send queries to Anthropic, OpenAI, Groq or a custom endpoint; key stays in browser session only
 - **Multi-user** — admin user plus family profiles with configurable wing access
+- **Compute lending** — swarm nodes can delegate inference to idle peers during off-hours; SECRET/PRIVATE scope is hardcoded never to leave the originating node; credit system tracks contribution on both sides; automatic local fallback on peer failure
+- **GBrain** — graph inference over the Kuzu knowledge base; identifies alienation patterns and source-concentration across extracted facts
+- **Swarm shadow observer** — read-only telemetry agent verified over 24 h with zero boundary violations; monitors health, Qdrant, and isolation gates every minute
 
 ## Hardware
 
@@ -18,7 +21,8 @@ The system is designed for a two-device LAN setup, but can run on a single machi
 | Device | Role | Tested on |
 |---|---|---|
 | Primary host (Pi 5 recommended) | API, RAG, ingest, web UI, proxy | Raspberry Pi 5 16GB |
-| Inference host (optional) | LLM + STT | Jetson Orin Nano 8GB |
+| Inference host | LLM + STT | Jetson Orin NX 16GB |
+| Swarm + compute node | Peer inference, knowledge sharing | Jetson Orin NX 8GB (permanent swarm node) |
 
 Single-machine: point `NOUS_OLLAMA_URL` and `NOUS_WHISPER_URL` at `localhost`.
 
@@ -129,6 +133,17 @@ proxy/        Lightweight internet proxy for LAN-isolated inference host
 scripts/      CLI tools: voice_chat.py, nous_chat.py, promote.py, ...
 web/          Single-file cockpit UI (index.html)
 ```
+
+## Changelog
+
+### v0.2.0
+- Compute lending: swarm peers can serve delegated inference with scope-guard and credit tracking
+- GBrain: graph inference over Kuzu DB for pattern detection across facts
+- Swarm shadow observer: 24 h read-only telemetry verification with zero boundary violations
+- Jetson Orin NX 8GB added as permanent swarm + compute node
+
+### v0.1.0
+- Initial release: RAG, voice, cockpit UI, scope system, swarm knowledge sharing, night pipeline
 
 ## License
 

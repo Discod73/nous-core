@@ -17,6 +17,20 @@ from datetime import datetime
 
 from task_router import router
 
+# === RNA Telemetry Tap (optional, fail-open) ===
+# Writes passive telemetry events to sandbox JSONL. RNA reads them separately.
+# Production code does NOT depend on this — if import fails, _tel() is a no-op.
+_TEL_SANDBOX = "/srv/nous/gaia/sandbox/rna_phase1a"
+_TEL_ENABLED = False
+try:
+    if _TEL_SANDBOX not in sys.path:
+        sys.path.insert(0, _TEL_SANDBOX)
+    from telemetry.writer import write_event as _tel
+    _TEL_ENABLED = True
+except Exception:
+    def _tel(*_a, **_kw) -> bool:  # type: ignore[misc]
+        return False
+
 # === CONFIG ===
 WATCH_DIR = Path("/home/nous/incoming")
 QDRANT_URL = "http://localhost:6333"
@@ -143,32 +157,36 @@ def process_file(filepath):
     """Hovedflow: extract → chunk → embed → upsert"""
     filepath = Path(filepath)
     log(f"=== Processing: {filepath.name} ===")
-    
+
+    _tel("ingest_start", source="ingest", extra={"file": filepath.name})
+
     # Bestem wing
     wing, scope = get_wing(filepath)
     log(f"  Wing: {wing}, Scope: {scope}")
-    
+
     # Extract tekst
     text = extract_text(filepath)
     if not text or len(text.strip()) == 0:
         log("  Ingen tekst extracted, skipper")
+        _tel("error", source="ingest", extra={"reason": "no_text", "file": filepath.name})
         return False
-    
+
     log(f"  Tekst længde: {len(text)} chars")
-    
+
     # Chunk
     chunks = chunk_text(text)
     log(f"  Chunks: {len(chunks)}")
-    
-    
+
     # Embed og upsert batch
     points = []
     for i, chunk in enumerate(chunks):
         vector = embed_text(chunk)
         if vector is None:
             log(f"  Chunk {i}: embedding fejlede, skipper")
+            _tel("error", source="ingest",
+                 extra={"reason": "embed_failed", "chunk": i, "file": filepath.name})
             continue
-        
+
         point = {
             "id": str(uuid.uuid4()),
             "vector": vector,
@@ -183,17 +201,30 @@ def process_file(filepath):
         }
         points.append(point)
         log(f"  Chunk {i}: embedded ({len(vector)} dim)")
-    
+
     # Upsert til Qdrant
     if points:
-        if upsert_to_qdrant(wing, scope, points):
+        t0 = time.time()
+        ok = upsert_to_qdrant(wing, scope, points)
+        write_lat = round((time.time() - t0) * 1000, 1)
+        if ok:
             log(f"  UPSERTET: {len(points)} points til {wing}")
+            _tel("ingest_batch", source="ingest",
+                 documents_processed=len(points),
+                 write_latency_ms=write_lat,
+                 extra={"wing": wing, "scope": scope, "file": filepath.name})
             return True
         else:
             log(f"  FEJL: Kunne ikke upserte til {wing}")
+            _tel("error", source="ingest",
+                 documents_processed=len(points),
+                 write_latency_ms=write_lat,
+                 extra={"reason": "qdrant_upsert_failed", "wing": wing})
             return False
     else:
         log("  Ingen points at upserte")
+        _tel("error", source="ingest",
+             extra={"reason": "no_points", "file": filepath.name})
         return False
 
 def scan_existing():

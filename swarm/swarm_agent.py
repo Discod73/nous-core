@@ -492,6 +492,22 @@ async def _sync_plain(peer: dict, our_facts: list[dict]) -> dict:
                 new_count += 1
             except Exception as e:
                 log.warning(f"Write fejl (fact fra {peer['label']}): {e}")
+        # Cross-analyse: delegér til peer hvis bedre egnet — kun SWARM scope
+        if new_count > 0:
+            _analysis = await delegate_compute_if_better(
+                prompt=(
+                    f"Cross-analysér {new_count} nye swarm-facts fra {peer['label']}. "
+                    "Find mønstre, modsigelser eller usædvanlige sammenhænge. Svar kort."
+                ),
+                wing="swarm_incoming",
+                scope="SWARM",
+                nat_hours=_is_allowed_compute_hour(),
+            )
+            if _analysis:
+                log.info(
+                    f"Cross-analyse {peer['label']}: "
+                    f"{_analysis.get('response', '')[:200]}"
+                )
         entry["received"] = new_count
 
         await _push_facts_to_peer(peer, our_facts)
@@ -879,6 +895,61 @@ def find_idle_peer_for_compute() -> dict | None:
         return None
     candidates.sort(key=lambda x: x[0], reverse=True)
     return candidates[0][1]
+
+
+async def delegate_compute_if_better(
+    prompt: str,
+    wing: str,
+    scope: str,
+    nat_hours: bool,
+) -> dict | None:
+    """Delegér et LLM-kald til bedste idle peer. Returnerer response-dict eller None (kør lokalt)."""
+    FORBIDDEN_SCOPES = frozenset({"SECRET", "PRIVATE"})
+    if scope.upper() in FORBIDDEN_SCOPES:
+        log.debug(f"delegate_compute: afvist scope={scope}")
+        return None
+
+    if not nat_hours:
+        return None
+
+    peer = find_idle_peer_for_compute()
+    if not peer:
+        return None
+
+    with _active_inference_lock:
+        nx_busy = _active_inference_count > 0
+    priority = get_priority_for_peer(peer["node_id"])
+
+    if not nx_busy and priority < 7:
+        log.debug(
+            f"delegate_compute: ingen delegation (nx_idle, priority={priority}<7)"
+        )
+        return None
+
+    reason = "A_nx_busy" if nx_busy else "B_high_priority"
+    url = f"http://{peer['tailscale_ip']}:{peer['port']}/swarm/infer"
+    log.info(
+        f"delegate_compute → {peer['label']} "
+        f"node={peer['node_id']} priority={priority} reason={reason}"
+    )
+    try:
+        async with httpx.AsyncClient(timeout=120.0) as c:
+            r = await c.post(url, json={
+                "prompt":     prompt,
+                "wing":       wing,
+                "scope":      scope,
+                "max_tokens": 512,
+            })
+            r.raise_for_status()
+        result = r.json()
+        add_credit("consume_compute", node_id=peer["node_id"])
+        log.info(
+            f"delegate_compute: OK tokens={result.get('tokens', '?')} reason={reason}"
+        )
+        return result
+    except Exception as e:
+        log.warning(f"delegate_compute: fejl {peer['label']}: {e} — kører lokalt")
+        return None
 
 
 # ── Wing-config ───────────────────────────────────────────────────────────────

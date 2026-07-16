@@ -911,22 +911,34 @@ def chat(req: ChatRequest):
         "num_ctx":     _stored_params.get("num_ctx", 8192),
         "num_gpu":     _stored_params.get("num_gpu", 99),
     }
+    _req_body: dict = {
+        "model": model,
+        "stream": True,
+        "messages": [
+            {"role": "system", "content": system},
+            {"role": "user",   "content": req.query},
+        ],
+        "options": _llm_options,
+    }
+    if "qwen3" in model.lower():
+        _req_body["think"] = False
     try:
-        llm_r = httpx.post(
+        _parts: list[str] = []
+        with httpx.stream(
+            "POST",
             f"{OLLAMA_URL}/api/chat",
-            json={
-                "model": model,
-                "stream": False,
-                "messages": [
-                    {"role": "system", "content": system},
-                    {"role": "user",   "content": req.query},
-                ],
-                "options": _llm_options,
-            },
-            timeout=90,
-        )
-        llm_r.raise_for_status()
-        answer = llm_r.json()["message"]["content"]
+            json=_req_body,
+            timeout=httpx.Timeout(15, read=90),
+        ) as llm_r:
+            llm_r.raise_for_status()
+            for _line in llm_r.iter_lines():
+                if not _line:
+                    continue
+                _chunk = json.loads(_line)
+                _tok = _chunk.get("message", {}).get("content", "")
+                if _tok:
+                    _parts.append(_tok)
+        answer = "".join(_parts)
     except Exception as e:
         raise HTTPException(503, f"LLM error: {e}")
 
@@ -2148,10 +2160,13 @@ async def _debate_moderator_assess(
     fallback_participants: list,
 ) -> dict:
     prompt = DEBATE_MODERATOR_ASSESSMENT.format(history=history_text, round_num=round_num)
+    _mod_body: dict = {"model": LLM_MODEL, "stream": False, "messages": [{"role": "user", "content": prompt}]}
+    if "qwen3" in LLM_MODEL.lower():
+        _mod_body["think"] = False
     try:
         r = await client.post(
             f"{OLLAMA_URL}/api/chat",
-            json={"model": LLM_MODEL, "stream": False, "messages": [{"role": "user", "content": prompt}]},
+            json=_mod_body,
             timeout=120,
         )
         r.raise_for_status()
@@ -2180,10 +2195,13 @@ async def _debate_moderator_final(
     fallback_participants: list,
 ) -> str:
     prompt = DEBATE_MODERATOR_FINAL.format(history=history_text)
+    _fin_body: dict = {"model": LLM_MODEL, "stream": False, "messages": [{"role": "user", "content": prompt}]}
+    if "qwen3" in LLM_MODEL.lower():
+        _fin_body["think"] = False
     try:
         r = await client.post(
             f"{OLLAMA_URL}/api/chat",
-            json={"model": LLM_MODEL, "stream": False, "messages": [{"role": "user", "content": prompt}]},
+            json=_fin_body,
             timeout=120,
         )
         r.raise_for_status()
