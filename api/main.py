@@ -45,6 +45,7 @@ except ImportError as _e:
     _AGENTS_AVAILABLE = False
 
 import gemma_manager
+from audit_log import log_event as _audit
 
 import httpx
 from fastapi import BackgroundTasks, FastAPI, HTTPException, Query, UploadFile, File
@@ -525,6 +526,8 @@ def get_document_content(wing: str, source: str = Query(..., description="Kildef
     wing_data = find_wing(data, wing)
     if not wing_data:
         raise HTTPException(404, f"Wing '{wing}' not found")
+    if wing_data.get("scope") in ("SECRET", "PRIVATE"):
+        _audit("READ", wing, wing_data["scope"], None, f"document content: {source[:80]}")
     text = _fetch_chunks_text(wing_data["collection"], source)
     if not text:
         raise HTTPException(404, f"No chunks found for '{source}'")
@@ -550,6 +553,8 @@ def download_document(wing: str, source: str = Query(..., description="Kildefiln
     wing_data = find_wing(data, wing)
     if not wing_data:
         raise HTTPException(404, f"Wing '{wing}' not found")
+    if wing_data.get("scope") in ("SECRET", "PRIVATE"):
+        _audit("READ", wing, wing_data["scope"], None, f"document download: {source[:80]}")
 
     from urllib.parse import quote
     archive_path = ARCHIVE_BASE / wing / source
@@ -601,6 +606,9 @@ def list_documents(wing: str):
     wing_data = find_wing(data, wing)
     if not wing_data:
         raise HTTPException(404, f"Wing '{wing}' not found")
+
+    if wing_data.get("scope") in ("SECRET", "PRIVATE"):
+        _audit("READ", wing, wing_data["scope"], None, f"list_documents: {wing}")
 
     collection = wing_data["collection"]
     counts: dict[str, int] = {}
@@ -854,6 +862,10 @@ def chat(req: ChatRequest):
         threshold, limit, system_prompt = 0.50, 10, LEGACY_SYSTEM
     else:
         threshold, limit, system_prompt = 0.45, 6, ASSISTANT_SYSTEM
+
+    for _w in collections_to_search:
+        if _w.get("scope") in ("SECRET", "PRIVATE"):
+            _audit("QUERY", _w["name"], _w["scope"], req.user, req.query[:100])
 
     # To-trins søgning
     context_parts: list[str] = []
@@ -1853,8 +1865,12 @@ def external_chat(req: ExternalChatRequest):
             raise HTTPException(404, f"Wing '{req.wing}' not found")
         scope = wing_entry.get("scope", "PRIVATE")
         if scope == "SECRET" and not req.scope_confirmed:
+            _audit("SCOPE_VIOLATION", req.wing, scope, req.user,
+                   "external_chat blocked: SECRET unconfirmed")
             return JSONResponse(status_code=403, content={"error": "scope_blocked", "scope": "SECRET"})
         if scope == "PRIVATE" and not req.scope_confirmed:
+            _audit("SCOPE_VIOLATION", req.wing, scope, req.user,
+                   "external_chat blocked: PRIVATE unconfirmed")
             return JSONResponse(status_code=403, content={"error": "scope_warning", "scope": "PRIVATE"})
 
     # Embed forespørgsel
@@ -2412,8 +2428,12 @@ async def debate(req: DebateRequest):
             raise HTTPException(404, f"Wing '{req.save_to_wing}' not found")
         scope = wing_entry.get("scope", "PRIVATE")
         if scope == "SECRET" and not req.scope_confirmed:
+            _audit("SCOPE_VIOLATION", req.save_to_wing, scope, None,
+                   "debate save blocked: SECRET unconfirmed")
             return JSONResponse(status_code=403, content={"error": "scope_blocked", "scope": "SECRET"})
         if scope == "PRIVATE" and not req.scope_confirmed:
+            _audit("SCOPE_VIOLATION", req.save_to_wing, scope, None,
+                   "debate save blocked: PRIVATE unconfirmed")
             return JSONResponse(status_code=403, content={"error": "scope_warning", "scope": "PRIVATE"})
 
     return StreamingResponse(

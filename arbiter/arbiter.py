@@ -31,6 +31,7 @@ import asyncio
 import json
 import logging
 import os
+import sys
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from pathlib import Path
@@ -38,6 +39,13 @@ from pathlib import Path
 import httpx
 from fastapi import FastAPI, HTTPException, Request
 from pydantic import BaseModel, field_validator
+
+# Audit log lives at the NOUS root — add it to path so both the arbiter service
+# (which runs with CWD=/srv/nous/arbiter) and test imports can find it.
+_NOUS_ROOT = str(Path(__file__).resolve().parent.parent)
+if _NOUS_ROOT not in sys.path:
+    sys.path.insert(0, _NOUS_ROOT)
+from audit_log import log_event as _audit
 
 from intent_bus import (
     get_cold_points,
@@ -260,6 +268,13 @@ async def _process_intent(intent: dict) -> None:
                 )
                 r.raise_for_status()
 
+            n_pts = len(payload.get("points", []))
+            _audit(
+                "WRITE", intent["wing"], intent["scope"],
+                intent.get("source"),
+                f"upsert {n_pts} point(s) via {intent.get('source', '?')}",
+            )
+
             # Shadow-log Curator v1-forudsigelse for hvert punkt med tekst.
             # Fejler stille — shadow-fejl stopper ALDRIG en skrivning.
             wing_actual  = intent["wing"]
@@ -296,6 +311,13 @@ async def _process_intent(intent: dict) -> None:
                 )
                 r.raise_for_status()
 
+            n_pts = len(payload.get("points", []))
+            _audit(
+                "WRITE", intent["wing"], intent["scope"],
+                intent.get("source"),
+                f"delete {n_pts} point(s) via {intent.get('source', '?')}",
+            )
+
         await update_status(intent_id, "done")
         log.info(
             "intent %d done  wing=%s scope=%s op=%s points=%d",
@@ -306,6 +328,8 @@ async def _process_intent(intent: dict) -> None:
     except ScopeError as e:
         await update_status(intent_id, "failed", str(e))
         log.warning("intent %d AFVIST (scope): %s", intent_id, e)
+        _audit("SCOPE_VIOLATION", intent.get("wing", "?"), intent.get("scope", "?"),
+               intent.get("source"), str(e)[:100])
     except Exception as e:
         await update_status(intent_id, "failed", str(e))
         log.error("intent %d FEJL: %s", intent_id, e)
@@ -355,6 +379,7 @@ async def write_async(req: WriteRequest):
     try:
         validate(req.wing, req.scope)
     except ScopeError as e:
+        _audit("SCOPE_VIOLATION", req.wing, req.scope, req.source, str(e)[:100])
         raise HTTPException(403, str(e))
 
     intent_id = await insert_intent(
@@ -372,6 +397,7 @@ async def write_sync(req: WriteRequest):
     try:
         validate(req.wing, req.scope)
     except ScopeError as e:
+        _audit("SCOPE_VIOLATION", req.wing, req.scope, req.source, str(e)[:100])
         raise HTTPException(403, str(e))
 
     intent_id = await insert_intent(
