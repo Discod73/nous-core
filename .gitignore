@@ -15,6 +15,10 @@ __pycache__/
 *.backup.*
 *.backup
 
+# Gaia — midlertidigt udelukket, afventer migration til eget repository
+# (beslutning 2026-07-20: Gaia versionsstyres i eget repo, ikke som del af NOUS)
+gaia/
+
 # Absolut udelukkede — personlige data og konfiguration
 docs/NOUS_Overleveringsdokument*
 docs/NOUS_v*_Status*
@@ -30,6 +34,7 @@ config/research_jobs.json
 config/scraper_jobs.json
 config/external_keys.json
 external_keys.json
+config/integrations.json
 config/systemd/
 scripts/night_pipeline.py
 .env

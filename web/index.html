@@ -182,6 +182,30 @@ body{background:var(--bg);color:#b0ccd8;font-family:'Segoe UI',system-ui,sans-se
 #fov-close{width:30px;height:30px;border:1px solid var(--pb);background:var(--bb);color:var(--ac);border-radius:3px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;transition:.2s}
 #fov-close:hover{background:var(--glow);box-shadow:0 0 10px var(--glow)}
 #fov-body{flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:6px}
+#ww-fs{display:none;position:fixed;inset:0;z-index:180;background:rgba(2,4,10,.97);backdrop-filter:blur(8px);flex-direction:column}
+#ww-fs.open{display:flex}
+#ww-fs-hdr{display:flex;align-items:center;padding:10px 20px;border-bottom:1px solid var(--pb);flex-shrink:0;gap:10px;background:rgba(0,8,14,.6)}
+#ww-fs-title{font-family:monospace;font-size:11px;letter-spacing:3px;color:var(--ac);flex:1;text-transform:uppercase;text-shadow:0 0 12px var(--glow)}
+#ww-fs-close{width:30px;height:30px;border:1px solid var(--pb);background:var(--bb);color:var(--ac);border-radius:3px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;transition:.2s}
+#ww-fs-close:hover{background:rgba(0,212,255,.2);box-shadow:0 0 10px var(--glow)}
+#ww-fs-body{flex:1;overflow-y:auto;padding:20px 28px}
+.ww-cols{column-width:300px;column-gap:24px}
+.ww-cols .wk-group{break-inside:avoid;margin-bottom:16px}
+.wk-draft{border:1px dashed rgba(234,179,8,.35);border-radius:4px;padding:8px 10px;background:rgba(234,179,8,.03);margin-top:10px}
+.wk-draft-hdr{font-family:monospace;font-size:9px;letter-spacing:1.5px;color:rgba(234,179,8,.7);margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.wk-draft-hint{font-size:8px;opacity:.5;flex:1;text-align:right;letter-spacing:0}
+.wk-draft-group{margin-bottom:8px;break-inside:avoid}
+.wk-draft-cat{display:flex;align-items:center;gap:6px;margin-bottom:3px}
+.wk-draft-cat-inp{background:rgba(0,8,14,.7);border:1px solid rgba(234,179,8,.3);color:rgba(234,179,8,.85);font-family:monospace;font-size:10px;padding:3px 6px;border-radius:2px;outline:none;flex:1;min-width:0}
+.wk-draft-cat-inp:focus{border-color:rgba(234,179,8,.7)}
+.wk-draft-doc{font-family:monospace;font-size:9px;color:rgba(130,160,175,.5);padding:1px 0 1px 14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wk-draft-actions{display:flex;gap:6px;margin-top:10px;padding-top:8px;border-top:1px solid rgba(234,179,8,.15)}
+.wk-draft-save{font-family:monospace;font-size:9px;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.4);color:rgba(34,197,94,.85);padding:4px 12px;border-radius:2px;cursor:pointer;transition:.15s}
+.wk-draft-save:hover:not(:disabled){background:rgba(34,197,94,.2);border-color:rgba(34,197,94,.7)}
+.wk-draft-save:disabled{opacity:.4;cursor:default}
+.wk-draft-discard{font-family:monospace;font-size:9px;background:transparent;border:1px solid rgba(130,160,175,.2);color:rgba(130,160,175,.5);padding:4px 12px;border-radius:2px;cursor:pointer;transition:.15s}
+.wk-draft-discard:hover{border-color:rgba(130,160,175,.5);color:rgba(130,160,175,.8)}
+.wk-q-badge{background:rgba(234,179,8,.8);color:#020a12;font-size:7px;font-family:monospace;font-weight:bold;border-radius:8px;padding:0 4px;margin-left:3px;line-height:1.5;vertical-align:middle;display:inline-block}
 
 /* ── PUBLIC MODE ─────────────────────────────── */
 body.pub #sl,body.pub #sr,body.pub #transcript,body.pub #resp-hdr{display:none}
@@ -552,6 +576,58 @@ body:not([data-mode="assistent"]) #ass-legacy-btn{display:none!important}
 .mm-prog-fill{height:100%;background:var(--ac);border-radius:2px;box-shadow:0 0 4px var(--ac);transition:width .35s;width:0}
 .mm-prog-txt{font-family:monospace;font-size:9px;color:rgba(130,160,175,.55);min-height:13px}
 .mm-prog-txt.ok{color:#00ff88}.mm-prog-txt.err{color:#ff4455}
+.hw-dot{display:inline-block;width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.hw-legend{display:flex;gap:10px;font-family:monospace;font-size:8px;color:rgba(130,160,175,.5);padding:0 0 8px;flex-wrap:wrap}
+.hw-legend span{display:inline-flex;align-items:center;gap:3px}
+.mm-cdd{flex:1;min-width:0}
+.mm-cdd-val{display:flex;align-items:center;gap:5px;background:rgba(0,8,14,.7);border:1px solid var(--pb);color:var(--ac);font-family:monospace;font-size:10px;padding:3px 5px;border-radius:2px;cursor:pointer;user-select:none}
+.mm-cdd-val:hover,.mm-cdd.open .mm-cdd-val{border-color:var(--ac)}
+.mm-cdd-txt{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mm-cdd-arrow{color:rgba(160,190,210,.35);font-size:8px;flex-shrink:0;transition:transform .15s}
+.mm-cdd.open .mm-cdd-arrow{transform:rotate(180deg)}
+.mm-cdd-list{display:none;background:#020a12;border:1px solid var(--ac);border-radius:2px;max-height:180px;overflow-y:auto;margin-top:2px}
+.mm-cdd.open .mm-cdd-list{display:block}
+.mm-cdd-opt{display:flex;align-items:center;gap:5px;padding:4px 7px;font-family:monospace;font-size:10px;color:var(--ac);cursor:pointer;white-space:nowrap;overflow:hidden}
+.mm-cdd-opt:hover{background:rgba(0,212,255,.08)}
+.mm-cdd-opt.sel{background:rgba(0,212,255,.12)}
+.mm-cdd-opt-sub{font-size:8px;color:rgba(130,160,175,.45);flex-shrink:0}
+.wk-wing-row{display:flex;align-items:center;gap:5px;margin-bottom:8px}
+.wk-wing-sel{flex:1;background:var(--bb);border:1px solid var(--pb);color:var(--ac);font-family:monospace;font-size:10px;padding:4px 6px;border-radius:3px;outline:none}
+.wk-group{margin-bottom:10px}
+.wk-group-hdr{display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid rgba(0,212,255,.12);margin-bottom:4px}
+.wk-group-title{font-family:monospace;font-size:9px;letter-spacing:1.5px;color:var(--ac);opacity:.8;text-transform:uppercase;flex:1}
+.wk-gen-btn{font-family:monospace;font-size:8px;background:transparent;border:1px solid rgba(0,212,255,.3);color:rgba(0,212,255,.6);padding:2px 6px;border-radius:2px;cursor:pointer;transition:.15s;white-space:nowrap}
+.wk-gen-btn:hover:not(:disabled){border-color:var(--ac);color:var(--ac)}
+.wk-gen-btn:disabled{opacity:.4;cursor:default}
+.wk-del-btn{font-family:monospace;font-size:8px;background:transparent;border:1px solid rgba(255,68,85,.3);color:rgba(255,68,85,.5);padding:2px 5px;border-radius:2px;cursor:pointer;transition:.15s;flex-shrink:0}
+.wk-del-btn:hover:not(:disabled){border-color:#ff4455;color:#ff4455}
+.wk-del-btn:disabled{opacity:.3;cursor:default}
+.wk-add-cat-row{display:flex;align-items:center;gap:6px;margin-top:10px;padding-top:8px;border-top:1px solid rgba(0,212,255,.08)}
+.wk-add-cat-inp{flex:1;background:var(--bb);border:1px solid rgba(0,212,255,.2);color:var(--ac);font-family:monospace;font-size:10px;padding:3px 6px;border-radius:2px;outline:none}
+.wk-add-cat-inp:focus{border-color:rgba(0,212,255,.5)}
+.wk-move-sel{font-family:monospace;font-size:8px;background:var(--bb);border:1px solid rgba(0,212,255,.2);color:rgba(0,212,255,.55);padding:1px 2px;border-radius:2px;cursor:pointer;flex-shrink:0;max-width:80px;outline:none}
+.wk-move-sel:focus{border-color:rgba(0,212,255,.5)}
+/* ── ANALYSE WIKI ─────────────────────────────────────────── */
+#aw-filter-row{display:flex;gap:6px;align-items:center;flex-shrink:0;margin-bottom:6px}
+#aw-content{flex:1;overflow-y:auto;padding-right:2px}
+.aw-item{display:flex;align-items:center;gap:6px;padding:3px 4px;border-radius:2px;cursor:pointer;font-family:monospace;font-size:10px;color:rgba(130,160,175,.7);transition:.12s}
+.aw-item:hover{background:var(--bb);color:var(--ac)}
+.aw-type{font-size:7px;padding:1px 4px;border-radius:2px;flex-shrink:0;text-transform:uppercase;letter-spacing:.8px;font-family:monospace}
+.aw-t-summary{background:rgba(0,212,255,.12);color:rgba(0,212,255,.7)}
+.aw-t-cross{background:rgba(136,68,255,.15);color:rgba(136,68,255,.8)}
+.aw-t-incon{background:rgba(255,170,0,.12);color:rgba(255,170,0,.7)}
+.aw-t-debate{background:rgba(255,68,85,.12);color:rgba(255,68,85,.7)}
+.aw-wing{font-size:8px;color:rgba(0,212,255,.35);flex-shrink:0}
+.aw-ts{font-size:8px;color:rgba(130,160,175,.35);flex-shrink:0;margin-left:auto}
+.aw-open-btn{font-family:monospace;font-size:8px;background:transparent;border:1px solid rgba(0,212,255,.25);color:rgba(0,212,255,.5);padding:1px 5px;border-radius:2px;cursor:pointer;flex-shrink:0;transition:.12s}
+.aw-open-btn:hover{border-color:var(--ac);color:var(--ac)}
+.wk-doc-name{font-family:monospace;font-size:10px;color:rgba(130,160,175,.7);padding:3px 4px;border-radius:2px;display:flex;align-items:center;gap:5px;cursor:pointer}
+.wk-doc-name:hover{background:var(--bb);color:var(--ac)}
+.wk-arr{font-size:8px;color:rgba(0,212,255,.3);transition:.15s;flex-shrink:0}
+.wk-doc-name.open .wk-arr{transform:rotate(90deg);color:var(--ac)}
+.wk-preview{display:none;padding:4px 8px;font-size:9px;font-family:monospace;color:rgba(130,160,175,.55);line-height:1.6;border-left:2px solid rgba(0,212,255,.15);margin:2px 0 4px 12px;white-space:pre-wrap;word-break:break-word}
+.wk-preview.open{display:block}
+.wk-chunks{font-size:8px;color:rgba(0,212,255,.3);margin-left:auto;flex-shrink:0}
 
 /* ── MOBIL STATE BADGE (skjult på desktop) ───── */
 #mob-state{display:none;font-family:monospace;font-size:10px;letter-spacing:1px;padding:2px 8px;border:1px solid var(--pb);border-radius:2px;color:rgba(160,190,210,.5);transition:.3s;white-space:nowrap}
@@ -788,6 +864,42 @@ body:not([data-mode="assistent"]) #ass-legacy-btn{display:none!important}
 .fm-save-btn:hover{background:rgba(0,212,255,.12);box-shadow:0 0 8px var(--glow)}
 .fm-status{font-family:monospace;font-size:9px;color:rgba(0,212,255,.5);text-align:center;margin-top:4px;min-height:12px}
 .ww-status{font-family:monospace;font-size:9px;margin-top:5px;padding:3px 0;min-height:14px;color:rgba(130,160,175,.5)}
+/* ── INTEGRATIONS ───────────────────────────────────────────────────── */
+.int-card{border:1px solid var(--pb);border-radius:4px;padding:10px 12px;margin-bottom:8px;background:rgba(0,0,0,.2)}
+.int-card.enabled{border-color:rgba(0,212,255,.4);background:rgba(0,212,255,.04)}
+.int-card.coming-soon{opacity:.45}
+.int-header{display:flex;align-items:center;gap:8px;margin-bottom:0}
+.int-label{font-family:monospace;font-size:11px;color:var(--ta);flex:1;letter-spacing:.5px}
+.int-badge{font-family:monospace;font-size:8px;padding:1px 5px;border-radius:2px;letter-spacing:1px}
+.int-badge.soon{border:1px solid rgba(130,160,175,.3);color:rgba(130,160,175,.4)}
+.int-badge.on{border:1px solid #00ff88;color:#00ff88}
+.int-badge.off{border:1px solid rgba(255,34,68,.4);color:#ff4455}
+.int-body{margin-top:8px;display:none}
+.int-body.open{display:block}
+.int-warn{font-size:10px;color:rgba(255,180,60,.8);background:rgba(255,150,0,.07);border:1px solid rgba(255,150,0,.2);border-radius:3px;padding:6px 8px;margin-bottom:8px;line-height:1.5}
+.int-field{display:flex;align-items:center;gap:6px;padding:5px 0;border-bottom:1px solid rgba(20,40,50,.2);font-family:monospace;font-size:10px;color:#809aaa}
+.int-field label{width:90px;flex-shrink:0;font-size:9px;letter-spacing:.5px}
+.int-inp{flex:1;background:rgba(0,8,14,.7);border:1px solid var(--pb);color:var(--ac);font-family:monospace;font-size:10px;padding:3px 6px;border-radius:2px;outline:none}
+.int-inp:focus{border-color:var(--ac)}
+.int-sel{flex:1;background:rgba(0,8,14,.7);border:1px solid var(--pb);color:var(--ac);font-family:monospace;font-size:10px;padding:3px 5px;border-radius:2px;outline:none}
+.int-sel option{background:#020a12}
+.int-save-btn{width:100%;margin-top:8px;padding:5px;background:rgba(0,212,255,.06);border:1px solid var(--ac);color:var(--ac);font-family:monospace;font-size:9px;letter-spacing:2px;border-radius:3px;cursor:pointer;transition:.2s}
+.int-save-btn:hover{background:rgba(0,212,255,.12);box-shadow:0 0 8px var(--glow)}
+.int-status{font-family:monospace;font-size:9px;margin-top:5px;min-height:12px;color:rgba(130,160,175,.5)}
+.int-status.ok{color:#00ff88}.int-status.err{color:#ff4455}
+.int-mount-info{font-family:monospace;font-size:8px;color:rgba(130,160,175,.4);margin-top:4px;padding:3px 0;letter-spacing:.5px}
+.int-browser{margin-top:8px;border:1px solid var(--pb);border-radius:3px;background:rgba(0,3,8,.4)}
+.int-browser-hdr{display:flex;align-items:center;gap:5px;padding:5px 8px;border-bottom:1px solid var(--pb);font-family:monospace;font-size:9px;color:rgba(130,160,175,.6)}
+.int-browser-hdr .int-path-lbl{flex:1;color:var(--ac);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.int-browser-list{max-height:220px;overflow-y:auto;padding:4px}
+.int-entry{display:flex;align-items:center;gap:6px;padding:3px 5px;border-radius:2px;cursor:pointer;font-family:monospace;font-size:10px;color:#a0b8c0;transition:.12s}
+.int-entry:hover{background:var(--bb);color:var(--ac)}
+.int-entry .ie-icon{font-size:11px;flex-shrink:0;width:16px;text-align:center}
+.int-entry .ie-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.int-entry .ie-size{font-size:8px;color:rgba(130,160,175,.4);flex-shrink:0}
+.int-entry .ie-imp-btn{font-family:monospace;font-size:8px;padding:1px 5px;background:transparent;border:1px solid rgba(0,212,255,.3);color:rgba(0,212,255,.6);border-radius:2px;cursor:pointer;transition:.15s;white-space:nowrap;flex-shrink:0}
+.int-entry .ie-imp-btn:hover{background:var(--bb);border-color:var(--ac);color:var(--ac)}
+.int-browser-empty{font-family:monospace;font-size:9px;color:rgba(130,160,175,.3);padding:10px;text-align:center}
 /* ── SWARM VIEW ─────────────────────────────────────────────────────── */
 #swarm-view{flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0;background:rgba(0,3,8,.4)}
 #swarm-tier{display:flex;align-items:center;justify-content:center;gap:0;padding:10px 16px 8px;border-bottom:1px solid rgba(0,212,255,.12);flex-shrink:0}
@@ -875,6 +987,7 @@ body:not([data-mode="assistent"]) #ass-legacy-btn{display:none!important}
           <button class="tb act" onclick="swTab('docs',this)">DOCS</button>
           <button class="tb"     onclick="swTab('upload',this)">UPLOAD</button>
           <button class="tb"     onclick="swTab('nw',this)">+ NY</button>
+          <button class="tb"     onclick="swTab('wiki',this);wwLoad()" data-i18n="wk_tab">WIKI<span id="wk-q-badge" class="wk-q-badge" style="display:none" title=""></span></button>
         </div>
         <div id="tc-docs" class="tc act">
           <div id="wings-list"><span style="color:rgba(130,160,175,.4);font-family:monospace;font-size:10px">Henter wings…</span></div>
@@ -927,6 +1040,13 @@ body:not([data-mode="assistent"]) #ass-legacy-btn{display:none!important}
           </div>
           <div id="nw-feedback"></div>
           <button class="upbtn" id="nw-btn" onclick="createWing()">+ OPRET WING</button>
+        </div>
+        <div id="tc-wiki" class="tc">
+          <div class="wk-wing-row">
+            <select id="wk-wing-sel" class="wk-wing-sel" onchange="wwLoad()"><option value="">— wing —</option></select>
+            <button class="mxbtn" onclick="wwOpenFull()" title="Fullscreen (⛶)" style="flex-shrink:0">⛶</button>
+          </div>
+          <div id="wk-content"><span style="color:rgba(130,160,175,.4);font-family:monospace;font-size:10px" data-i18n="wk_select_wing">Vælg wing…</span></div>
         </div>
       </div>
     </div>
@@ -1225,6 +1345,7 @@ body:not([data-mode="assistent"]) #ass-legacy-btn{display:none!important}
   <div id="ana-tab-row">
     <button class="tb act" onclick="swAnaTab('analyse',this)">ANALYSE</button>
     <button class="tb"     onclick="swAnaTab('debate',this)">⚡ DEBAT</button>
+    <button class="tb"     onclick="swAnaTab('anawiki',this)">WIKI</button>
   </div>
   <div id="tc-analyse" class="ana-tab-panel">
   <div id="ana-left">
@@ -1371,6 +1492,19 @@ body:not([data-mode="assistent"]) #ass-legacy-btn{display:none!important}
       <div id="deb-output"><div class="deb-output-empty">Vælg deltagere, skriv emnet og tryk START DEBAT…</div></div>
     </div>
   </div><!-- /tc-debate -->
+
+  <!-- ANALYSE WIKI TAB -->
+  <div id="tc-ana-wiki" class="ana-tab-panel hidden" style="flex-direction:column;padding:8px 10px">
+    <div id="aw-filter-row">
+      <select id="aw-wing-sel" class="ana-filter-sel" onchange="awLoad()">
+        <option value="">Alle wings</option>
+      </select>
+      <button class="ana-filter-btn" onclick="awLoad()" title="Opdater">↻</button>
+    </div>
+    <div id="aw-content">
+      <div class="ana-status-txt">Vælg wing for at se analyse-wiki…</div>
+    </div>
+  </div><!-- /tc-ana-wiki -->
 </div><!-- /analyse-view -->
 
 <!-- ══ SWARM VIEW ══════════════════════════════════════════════════════════ -->
@@ -1474,6 +1608,14 @@ body:not([data-mode="assistent"]) #ass-legacy-btn{display:none!important}
   <div id="fov-body"></div>
 </div>
 
+<div id="ww-fs" onclick="if(event.target===this)wwCloseFull()">
+  <div id="ww-fs-hdr">
+    <span id="ww-fs-title">// WING WIKI</span>
+    <button id="ww-fs-close" onclick="wwCloseFull()" title="Luk (Esc)">✕</button>
+  </div>
+  <div id="ww-fs-body"></div>
+</div>
+
 <!-- ANALYSE RESULT OVERLAY -->
 <div id="ana-ov" onclick="if(event.target===this)closeAnaOv()">
   <div id="ana-ov-box">
@@ -1525,9 +1667,22 @@ body:not([data-mode="assistent"]) #ass-legacy-btn{display:none!important}
 
     <div id="model-manager-section">
       <h3>MODEL MANAGER<span class="tip-q" data-tip="Vælg hvilken Ollama-model der bruges til dag-chat og til nat-kørsel. Dag-modellen loades automatisk i RAM. Klik GEM for at aktivere.">?</span></h3>
+      <div class="hw-legend">
+        <span><span class="hw-dot" style="background:#22c55e"></span><span data-i18n="hw_legend_ok">Anbefalet</span></span>
+        <span><span class="hw-dot" style="background:#eab308"></span><span data-i18n="hw_legend_slow">Langsom</span></span>
+        <span><span class="hw-dot" style="background:#ef4444"></span><span data-i18n="hw_legend_big">For lidt hardware</span></span>
+      </div>
       <div class="mm-row">
         <label data-i18n="mm_day">DAG</label>
-        <select id="mm-day-sel" class="mm-sel"><option value="">– henter –</option></select>
+        <div class="mm-cdd" id="mm-day-cdd">
+          <div class="mm-cdd-val" onclick="mmCddToggle('day')">
+            <span class="hw-dot" id="mm-day-dot" style="opacity:0"></span>
+            <span class="mm-cdd-txt" id="mm-day-txt">– henter –</span>
+            <span class="mm-cdd-arrow">▾</span>
+          </div>
+          <div class="mm-cdd-list" id="mm-day-list"></div>
+        </div>
+        <select id="mm-day-sel" style="display:none"><option value="">– ingen –</option></select>
         <button class="mm-btn" data-i18n="mm_save" onclick="mmSetRole('day')">GEM</button>
         <button class="mm-btn" data-i18n="mm_run" onclick="mmLoadNow('day')" title="Load dag-model i RAM nu">KØR NU</button>
       </div>
@@ -1550,7 +1705,15 @@ body:not([data-mode="assistent"]) #ass-legacy-btn{display:none!important}
       </div>
       <div class="mm-row">
         <label data-i18n="mm_night">NAT</label>
-        <select id="mm-night-sel" class="mm-sel"><option value="">– henter –</option></select>
+        <div class="mm-cdd" id="mm-night-cdd">
+          <div class="mm-cdd-val" onclick="mmCddToggle('night')">
+            <span class="hw-dot" id="mm-night-dot" style="opacity:0"></span>
+            <span class="mm-cdd-txt" id="mm-night-txt">– henter –</span>
+            <span class="mm-cdd-arrow">▾</span>
+          </div>
+          <div class="mm-cdd-list" id="mm-night-list"></div>
+        </div>
+        <select id="mm-night-sel" style="display:none"><option value="">– ingen –</option></select>
         <button class="mm-btn" data-i18n="mm_save" onclick="mmSetRole('night')">GEM</button>
         <button class="mm-btn" data-i18n="mm_run" onclick="mmLoadNow('night')" title="Load nat-model i RAM nu">KØR NU</button>
       </div>
@@ -1713,6 +1876,90 @@ body:not([data-mode="assistent"]) #ass-legacy-btn{display:none!important}
         <button class="pin-sbtn clr" data-i18n="pin_clr" onclick="clearPin('gabriel')">✕</button>
       </div>
     </div>
+
+    <!-- INTEGRATIONER -->
+    <h3>INTEGRATIONER<span class="tip-q" data-tip="Tilslut NOUS til eksterne kilder. Alt er opt-in — ingen kilde aktiveres automatisk. NOUS fungerer fuldt ud med alle integrationer deaktiveret.">?</span></h3>
+    <div style="font-size:9px;color:rgba(130,160,175,.3);margin-bottom:8px;font-family:monospace">Alle integrationer er deaktiverede som standard · Eksplicit opt-in krævet</div>
+    <div id="int-list">
+
+      <!-- NAS -->
+      <div class="int-card" id="int-card-nas">
+        <div class="int-header">
+          <span class="int-label">Netværkslager (NAS / SMB / NFS)</span>
+          <span class="int-badge off" id="int-badge-nas">AUS</span>
+          <label class="tsw" title="Aktiver NAS-integration">
+            <input type="checkbox" id="int-tog-nas" onchange="intToggleNas(this.checked)">
+            <span class="tsl"></span>
+          </label>
+        </div>
+        <div class="int-body" id="int-body-nas">
+          <div class="int-warn">
+            &#9888; Aktivering giver NOUS adgang til at læse filer fra det konfigurerede mount-punkt.
+            Ingen automatisk indeksering — du vælger eksplicit hvilke filer der importeres.
+            Alle læse-handlinger logges i audit-loggen.
+          </div>
+          <div class="int-field">
+            <label>MOUNT-STI</label>
+            <input type="text" class="int-inp" id="int-nas-path" placeholder="/mnt/nas">
+          </div>
+          <div class="int-field">
+            <label>STANDARD WING</label>
+            <select class="int-sel" id="int-nas-wing"><option value="">– vælg –</option></select>
+          </div>
+          <div class="int-field">
+            <label>SCOPE</label>
+            <select class="int-sel" id="int-nas-scope">
+              <option value="PRIVATE">PRIVATE</option>
+              <option value="SECRET">SECRET</option>
+              <option value="SWARM">SWARM</option>
+              <option value="PUBLIC">PUBLIC</option>
+            </select>
+          </div>
+          <div class="int-mount-info" id="int-nas-mount-info"></div>
+          <button class="int-save-btn" onclick="intSaveNas()">GEM NAS-INDSTILLINGER</button>
+          <div class="int-status" id="int-nas-status"></div>
+
+          <!-- Filbrowser -->
+          <div class="int-browser" id="int-nas-browser" style="display:none">
+            <div class="int-browser-hdr">
+              <span>&#x1F4C1;</span>
+              <span class="int-path-lbl" id="int-nas-cur-path">/</span>
+              <button class="pin-sbtn" onclick="intNasNavUp()" title="Op" style="padding:1px 7px">&#x2191; OP</button>
+              <button class="pin-sbtn" onclick="intNasBrowse(intNasCurPath)" title="Opdater">&#x21BA;</button>
+            </div>
+            <div class="int-browser-list" id="int-nas-entries">
+              <div class="int-browser-empty">Tryk Browse for at vise NAS-indhold</div>
+            </div>
+          </div>
+          <button class="int-save-btn" style="margin-top:6px" onclick="intNasBrowse('')" id="int-nas-browse-btn">BROWSE NAS</button>
+        </div>
+      </div>
+
+      <!-- Gmail (kommer snart) -->
+      <div class="int-card coming-soon" id="int-card-gmail">
+        <div class="int-header">
+          <span class="int-label">Gmail</span>
+          <span class="int-badge soon">KOMMER SNART</span>
+        </div>
+      </div>
+
+      <!-- Hotmail (kommer snart) -->
+      <div class="int-card coming-soon" id="int-card-hotmail">
+        <div class="int-header">
+          <span class="int-label">Hotmail / Outlook</span>
+          <span class="int-badge soon">KOMMER SNART</span>
+        </div>
+      </div>
+
+      <!-- Protonmail (kommer snart) -->
+      <div class="int-card coming-soon" id="int-card-protonmail">
+        <div class="int-header">
+          <span class="int-label">Protonmail</span>
+          <span class="int-badge soon">KOMMER SNART</span>
+        </div>
+      </div>
+
+    </div><!-- #int-list -->
   </div>
 </div>
 
@@ -1908,29 +2155,147 @@ function togKids(on) {
   if (on) applyTheme('calm_heartbeat');
 }
 
-function openSet()  { document.getElementById('sov').classList.add('open'); buildPanelTogList(); initFeatures(); mmInit(); vsInit(); wwInit(); if (currentUser === 'dan') fmInit(); }
+function openSet()  { document.getElementById('sov').classList.add('open'); buildPanelTogList(); initFeatures(); mmInit(); vsInit(); wwInit(); if (currentUser === 'dan') fmInit(); intInit(); }
 function closeSet() { document.getElementById('sov').classList.remove('open'); }
 function sovClick(e){ if (e.target === document.getElementById('sov')) closeSet(); }
 
 // ── MODEL MANAGER ──────────────────────────────────────────────
+
+let _hwRecs    = [];
+let _mmModels  = [];
+let _vramAvail = 0;
+
+function _hwMatchRec(rawName, recs) {
+  // Tolerant matching: qwen2.5:7b, qwen2.5:7b-instruct-q4_K_M og qwen2.5-7b
+  // matcher alle samme anbefaling. Returnerer rec-objekt eller null.
+  if (!recs || !recs.length) return null;
+  const s = rawName.toLowerCase().replace(/_/g, '-');
+  const colon = s.indexOf(':');
+  const base  = colon >= 0 ? s.slice(0, colon) : s;
+  // MoE: NxMb
+  let params_b = null;
+  const moe = s.match(/(\d+)x(\d+\.?\d*)b/);
+  if (moe) {
+    params_b = parseInt(moe[1]) * parseFloat(moe[2]);
+  } else {
+    const pm = s.match(/[:\-](\d+\.?\d*)b(?:[:\-_]|$)/);
+    if (pm) params_b = parseFloat(pm[1]);
+  }
+  if (params_b === null) return null;
+  const family = base.replace(/[:\-_]?\d+\.?\d*b.*$/, '').replace(/[\-:_]+$/, '');
+  const pb = Math.round(params_b);
+  for (const r of recs) {
+    if (r.family === family && Math.round(r.params_b) === pb) return r;
+  }
+  return null;
+}
+
+function _hwEstimateRec(rawName) {
+  if (!_vramAvail) return null;
+  const s   = rawName.toLowerCase().replace(/_/g, '-');
+  let pb    = null;
+  const moe = s.match(/(\d+)x(\d+\.?\d*)b/);
+  if (moe) { pb = parseInt(moe[1]) * parseFloat(moe[2]); }
+  else {
+    const pm = s.match(/[:\-](\d+\.?\d*)b(?:[:\-_]|$)/);
+    if (pm) pb = parseFloat(pm[1]);
+  }
+  if (pb === null) return null;
+  const needed = pb * 0.5 * 1.25;  // q4-default bpp * KV-overhead
+  let status;
+  if      (needed > _vramAvail * 0.93) status = 'RØD';
+  else if (needed > _vramAvail * 0.75) status = 'GUL';
+  else                                 status = 'GRØN';
+  return { status, params_b: pb, estimated_vram_gb: Math.round(needed * 10) / 10 };
+}
+function _hwStatusColor(status) {
+  if (status === 'GRØN') return '#22c55e';
+  if (status === 'GUL')  return '#eab308';
+  if (status === 'RØD')  return '#ef4444';
+  return null;
+}
+function _hwStatusLabel(status) {
+  const t = TRANSLATIONS[_lang] || TRANSLATIONS.da;
+  if (status === 'GRØN') return t.hw_ok;
+  if (status === 'GUL')  return t.hw_slow;
+  if (status === 'RØD')  return t.hw_big;
+  return null;
+}
+function mmCddToggle(role) {
+  const cdd = document.getElementById(`mm-${role}-cdd`);
+  if (!cdd) return;
+  const wasOpen = cdd.classList.contains('open');
+  document.querySelectorAll('.mm-cdd.open').forEach(c => c.classList.remove('open'));
+  if (!wasOpen) cdd.classList.add('open');
+}
+function mmCddSel(role, val) {
+  document.querySelectorAll('.mm-cdd.open').forEach(c => c.classList.remove('open'));
+  const sel = document.getElementById(`mm-${role}-sel`);
+  if (sel) sel.value = val;
+  _mmCddRefreshVal(role, val);
+}
+function _mmCddRefreshVal(role, val) {
+  const dot  = document.getElementById(`mm-${role}-dot`);
+  const txt  = document.getElementById(`mm-${role}-txt`);
+  const list = document.getElementById(`mm-${role}-list`);
+  const m    = _mmModels.find(x => x.name === val);
+  const rec  = val ? _hwMatchRec(val, _hwRecs) : null;
+  const color = rec ? _hwStatusColor(rec.status) : null;
+  if (dot) { dot.style.background = color || ''; dot.style.opacity = color ? '1' : '0'; }
+  if (txt) {
+    const t = TRANSLATIONS[_lang] || TRANSLATIONS.da;
+    txt.textContent = val ? `${val}${m ? ` (${m.size_gb} GB)` : ''}` : `– ${t.mm_none||'ingen'} –`;
+  }
+  if (list) list.querySelectorAll('.mm-cdd-opt').forEach(o =>
+    o.classList.toggle('sel', o.dataset.val === val));
+}
+document.addEventListener('click', e => {
+  if (!e.target.closest('.mm-cdd'))
+    document.querySelectorAll('.mm-cdd.open').forEach(c => c.classList.remove('open'));
+});
+
 async function mmInit() {
-  const [listRes, rolesRes] = await Promise.all([
+  const hwCtl   = new AbortController();
+  const hwTimer = setTimeout(() => hwCtl.abort(), 3000);
+  const [listRes, rolesRes, hwRes] = await Promise.all([
     fetch(`${API}/models/list`).catch(() => null),
     fetch(`${API}/models/roles`).catch(() => null),
+    fetch(`${API}/system/hardware-profile`, {signal: hwCtl.signal}).catch(() => null),
   ]);
-  const models = listRes?.ok ? (await listRes.json()).models || [] : [];
-  const roles  = rolesRes?.ok ? await rolesRes.json() : {day:'', night:''};
+  clearTimeout(hwTimer);
+  _mmModels        = listRes?.ok  ? (await listRes.json()).models || []  : [];
+  const roles      = rolesRes?.ok ? await rolesRes.json()               : {day:'', night:''};
+  const hwData     = hwRes?.ok    ? await hwRes.json()                  : null;
+  _hwRecs          = hwData?.model_recs   || [];
+  _vramAvail       = hwData?.hardware?.vram_avail_gb || 0;
+  const t     = TRANSLATIONS[_lang] || TRANSLATIONS.da;
   ['day','night'].forEach(role => {
-    const sel = document.getElementById(`mm-${role}-sel`);
+    const sel  = document.getElementById(`mm-${role}-sel`);
+    const list = document.getElementById(`mm-${role}-list`);
     if (!sel) return;
-    sel.innerHTML = '<option value="">– ingen –</option>' +
-      models.map(m => `<option value="${m.name}"${m.name===roles[role]?' selected':''}>${m.name} (${m.size_gb} GB)</option>`).join('');
-    const p = roles[`${role}_params`] || {};
+    sel.innerHTML = `<option value="">– ${t.mm_none||'ingen'} –</option>` +
+      _mmModels.map(m => `<option value="${esc(m.name)}"${m.name===roles[role]?' selected':''}>${esc(m.name)}</option>`).join('');
+    if (list) {
+      list.innerHTML = `<div class="mm-cdd-opt" data-val="" onclick="mmCddSel('${role}',this.dataset.val)">– ${t.mm_none||'ingen'} –</div>` +
+        _mmModels.map(m => {
+          const rec   = _hwMatchRec(m.name, _hwRecs);
+          const color = rec ? _hwStatusColor(rec.status) : null;
+          const label = rec ? _hwStatusLabel(rec.status) : null;
+          const dot   = color
+            ? `<span class="hw-dot" style="background:${color}"></span>`
+            : `<span class="hw-dot" style="opacity:0"></span>`;
+          const sub   = label ? `<span class="mm-cdd-opt-sub">— ${esc(label)}</span>` : '';
+          const isSel = m.name === roles[role];
+          return `<div class="mm-cdd-opt${isSel?' sel':''}" data-val="${esc(m.name)}" onclick="mmCddSel('${role}',this.dataset.val)">${dot}<span>${esc(m.name)} (${m.size_gb} GB)</span>${sub}</div>`;
+        }).join('');
+    }
+    _mmCddRefreshVal(role, roles[role]);
+    const p    = roles[`${role}_params`] || {};
     const temp = p.temperature ?? 0.7;
-    const ctx  = p.num_ctx  ?? 8192;
-    const gpu  = p.num_gpu  ?? 99;
+    const ctx  = p.num_ctx     ?? 8192;
+    const gpu  = p.num_gpu     ?? 99;
     ['temp','ctx','gpu'].forEach(k => {
-      const v = k === 'temp' ? temp : k === 'ctx' ? ctx : gpu;
+      const v  = k === 'temp' ? temp : k === 'ctx' ? ctx : gpu;
       const sl = document.getElementById(`mm-${role}-${k}`);
       const nm = document.getElementById(`mm-${role}-${k}-n`);
       if (sl) sl.value = v;
@@ -2010,15 +2375,35 @@ async function mmSearch() {
       box.innerHTML = '<div class="mm-search-empty">Ingen resultater</div>';
       return;
     }
-    box.innerHTML = results.map(m => `
+    if (!_vramAvail) {
+      try {
+        const hr = await fetch(`${API}/system/hardware-profile`);
+        if (hr.ok) {
+          const hd = await hr.json();
+          _hwRecs    = hd.model_recs || [];
+          _vramAvail = hd.hardware?.vram_avail_gb || 0;
+        }
+      } catch(_) {}
+    }
+    box.innerHTML = results.map(m => {
+      const sizeTags = m.sizes.map(s => {
+        const rec   = _hwMatchRec(`${m.name}:${s}`, _hwRecs) || _hwEstimateRec(`${m.name}:${s}`);
+        const color = rec ? _hwStatusColor(rec.status) : null;
+        const label = rec ? _hwStatusLabel(rec.status) : null;
+        const dot   = color ? `<span class="hw-dot" style="background:${color};margin-right:2px;vertical-align:middle"></span>` : '';
+        const tip   = label ? ` title="${esc(label)}"` : '';
+        return `<span class="mm-search-size"${tip}>${dot}${esc(s)}</span>`;
+      }).join('');
+      return `
       <div class="mm-search-card">
         <div style="display:flex;align-items:center;justify-content:space-between;gap:6px">
           <div class="mm-search-name">${esc(m.name)}</div>
           <button class="mm-btn" onclick="mmDownload('${esc(m.name)}')" style="font-size:8px;padding:1px 7px;flex-shrink:0">DOWNLOAD</button>
         </div>
         ${m.description ? `<div class="mm-search-desc" title="${esc(m.description)}">${esc(m.description)}</div>` : ''}
-        ${m.sizes.length ? `<div class="mm-search-sizes">${m.sizes.map(s=>`<span class="mm-search-size">${esc(s)}</span>`).join('')}</div>` : ''}
-      </div>`).join('');
+        ${m.sizes.length ? `<div class="mm-search-sizes">${sizeTags}</div>` : ''}
+      </div>`;
+    }).join('');
   } catch(e) {
     box.innerHTML = `<div class="mm-search-empty" style="color:#ff4455">Fejl: ${esc(e.message)}</div>`;
   } finally {
@@ -2192,7 +2577,7 @@ function openMax(title, srcId) {
 }
 function closeMax() { document.getElementById('fov').classList.remove('open'); }
 function fovClick(e){ if (e.target === document.getElementById('fov')) closeMax(); }
-document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeMax(); closeMaxChat(); closeSet(); } });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeMax(); closeMaxChat(); closeSet(); wwCloseFull(); } });
 
 function swTab(name, btn) {
   const panel = btn.closest('.pb') || btn.closest('.panel');
@@ -3166,6 +3551,7 @@ async function loadWings() {
   wings = Array.isArray(data) ? data : (data.wings || []);
   window._wings = wings;
   renderWings(); updateWingSelects(); updateScraperWingSelects(); updateAnalyseWingSelects(); loadScraperJobs();
+  jget(`${API}/category-queue`).then(q => { if (q) wwUpdateBadge(q.total || 0); });
 }
 
 function scopeClass(sc) { return {SECRET:'bS',PRIVATE:'bP',SWARM:'bW',PUBLIC:'bU'}[sc]||'bP'; }
@@ -3244,11 +3630,12 @@ function renderWings() {
 }
 
 function updateWingSelects() {
-  [document.getElementById('wing-sel'), document.getElementById('up-wing')].forEach(sel => {
+  [document.getElementById('wing-sel'), document.getElementById('up-wing'), document.getElementById('wk-wing-sel'), document.getElementById('aw-wing-sel')].forEach(sel => {
     if (!sel) return;
     const prev = sel.value;
     const isMain = sel.id === 'wing-sel';
-    sel.innerHTML = isMain ? '<option value="">ALL</option>' : '<option value="">— wing —</option>';
+    const isAllWings = ['ana-filter-wing', 'aw-wing-sel'].includes(sel.id);
+    sel.innerHTML = isMain ? '<option value="">ALL</option>' : isAllWings ? '<option value="">Alle wings</option>' : '<option value="">— wing —</option>';
     visibleWings().forEach(w => {
       const n = typeof w==='string'?w:(w.name||w.wing||w.id||'');
       const opt = document.createElement('option');
@@ -3282,6 +3669,669 @@ function selWing(name, el) {
   document.getElementById('wing-sel').value = name;
   _hideSubcatIndicator();
 }
+
+// ── WING WIKI ─────────────────────────────────────────────────────────────
+let _wwGenCache = {};
+let _wwLastGroups = null;
+let _wwLastWing = null;
+let _wwDraftWing = null;
+let _wwDraftFromQueue = false;
+
+function wwUpdateBadge(count) {
+  const badge = document.getElementById('wk-q-badge');
+  if (!badge) return;
+  const t = TRANSLATIONS[_lang] || TRANSLATIONS.da;
+  if (count > 0) {
+    badge.textContent = count;
+    badge.title = t.wk_q_badge_tip;
+    badge.style.display = 'inline-block';
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
+async function wwLoad() {
+  const wing = document.getElementById('wk-wing-sel')?.value;
+  const cont = document.getElementById('wk-content');
+  if (!cont) return;
+  const t = TRANSLATIONS[_lang] || TRANSLATIONS.da;
+  if (!wing) {
+    cont.innerHTML = `<span style="color:rgba(130,160,175,.4);font-family:monospace;font-size:10px">${t.wk_select_wing}</span>`;
+    _wwLastGroups = null; _wwLastWing = null;
+    return;
+  }
+  cont.innerHTML = `<span style="color:rgba(130,160,175,.4);font-family:monospace;font-size:10px">${t.wk_loading}</span>`;
+  const [data, queueData] = await Promise.all([
+    jget(`${API}/wings/${encodeURIComponent(wing)}/wiki`),
+    jget(`${API}/category-queue`)
+  ]);
+  if (!data) { cont.innerHTML = `<span style="color:#ff4455;font-size:10px;font-family:monospace">API fejl</span>`; return; }
+  _wwLastGroups = data.groups || [];
+  _wwLastWing = wing;
+  wwRender(cont, wing, _wwLastGroups);
+  // Auto-populate draft from queue if suggestions exist for this wing
+  if (queueData) {
+    wwUpdateBadge(queueData.total || 0);
+    const wingEntry = (queueData.wings || []).find(w => w.wing === wing);
+    if (wingEntry && wingEntry.suggestions?.length && !_wwDraftWing) {
+      wwRenderDraftFromQueue(wingEntry.suggestions, wingEntry.queued_at);
+    }
+  }
+}
+
+function wwOpenFull() {
+  const wing = _wwLastWing;
+  if (!wing || !_wwLastGroups) return;
+  const t = TRANSLATIONS[_lang] || TRANSLATIONS.da;
+  document.getElementById('ww-fs-title').textContent = '// WIKI — ' + wing.toUpperCase();
+  const body = document.getElementById('ww-fs-body');
+  body.innerHTML = '';
+  const cols = document.createElement('div');
+  cols.className = 'ww-cols';
+  body.appendChild(cols);
+  wwRender(cols, wing, _wwLastGroups);
+  document.getElementById('ww-fs').classList.add('open');
+}
+
+function wwCloseFull() {
+  const ov = document.getElementById('ww-fs');
+  if (!ov) return;
+  ov.classList.remove('open');
+  document.getElementById('ww-fs-body').innerHTML = '';
+}
+
+function wwRender(cont, wing, groups) {
+  const t = TRANSLATIONS[_lang] || TRANSLATIONS.da;
+  cont.innerHTML = '';
+  if (!groups.length) {
+    cont.innerHTML = `<span style="color:rgba(130,160,175,.4);font-family:monospace;font-size:10px">${t.wk_no_docs}</span>`;
+    wwRenderAddCat(cont, wing);
+    return;
+  }
+  groups.forEach((g, gi) => {
+    const sub = g.subcategory;
+    const cacheKey = `${wing}::${sub ?? '__none__'}`;
+    const grpDiv = document.createElement('div');
+    grpDiv.className = 'wk-group';
+
+    const hdr = document.createElement('div');
+    hdr.className = 'wk-group-hdr';
+    const titleSpan = document.createElement('span');
+    titleSpan.className = 'wk-group-title';
+    titleSpan.textContent = sub ?? (_wwGenCache[cacheKey] || t.wk_no_cat);
+    hdr.appendChild(titleSpan);
+    if (!sub) {
+      const genBtn = document.createElement('button');
+      genBtn.className = 'wk-gen-btn';
+      genBtn.textContent = t.wk_gen_headings;
+      genBtn.onclick = () => wwGenHeading(wing, cacheKey, g.docs, titleSpan, genBtn);
+      hdr.appendChild(genBtn);
+      const autoBtn = document.createElement('button');
+      autoBtn.className = 'wk-gen-btn';
+      autoBtn.textContent = t.wk_auto_cat;
+      autoBtn.onclick = () => wwAutoCat(wing, g.docs, autoBtn);
+      hdr.appendChild(autoBtn);
+    } else {
+      const delCatBtn = document.createElement('button');
+      delCatBtn.className = 'wk-del-btn';
+      delCatBtn.title = sub;
+      delCatBtn.textContent = t.wk_del_cat;
+      delCatBtn.onclick = () => wwDelCategory(wing, sub, g.docs.length, delCatBtn);
+      hdr.appendChild(delCatBtn);
+    }
+    grpDiv.appendChild(hdr);
+
+    g.docs.forEach(doc => {
+      const docDiv = document.createElement('div');
+      const nameRow = document.createElement('div');
+      nameRow.className = 'wk-doc-name';
+      nameRow.innerHTML = `<span class="wk-arr">▶</span><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(doc.source_file)}</span><span class="wk-chunks">${doc.chunks}c</span>`;
+      // Move select
+      const moveSel = document.createElement('select');
+      moveSel.className = 'wk-move-sel';
+      const phOpt = document.createElement('option');
+      phOpt.value = ''; phOpt.textContent = t.wk_move_ph; phOpt.disabled = true; phOpt.selected = true;
+      moveSel.appendChild(phOpt);
+      if (sub !== null) {
+        const noneOpt = document.createElement('option');
+        noneOpt.value = '__none__'; noneOpt.textContent = t.wk_no_cat;
+        moveSel.appendChild(noneOpt);
+      }
+      groups.forEach(grp => {
+        if (grp.subcategory === sub || grp.subcategory === null) return;
+        const opt = document.createElement('option');
+        opt.value = grp.subcategory; opt.textContent = grp.subcategory;
+        moveSel.appendChild(opt);
+      });
+      if (moveSel.options.length > 1) {
+        moveSel.onchange = (e) => { e.stopPropagation(); const v = moveSel.value; if (v) { moveSel.value = ''; wwMoveDoc(wing, doc.source_file, sub, v, moveSel); } };
+        moveSel.onclick = (e) => e.stopPropagation();
+        nameRow.appendChild(moveSel);
+      }
+      // Delete button
+      const delDocBtn = document.createElement('button');
+      delDocBtn.className = 'wk-del-btn';
+      delDocBtn.textContent = t.wk_del_doc;
+      delDocBtn.title = doc.source_file;
+      delDocBtn.onclick = (e) => { e.stopPropagation(); wwDelDoc(wing, doc.source_file, doc.chunks, delDocBtn); };
+      nameRow.appendChild(delDocBtn);
+      const preview = document.createElement('div');
+      preview.className = 'wk-preview';
+      preview.textContent = doc.preview || '';
+      nameRow.onclick = (e) => { if (e.target === delDocBtn || e.target === moveSel) return; nameRow.classList.toggle('open'); preview.classList.toggle('open'); };
+      docDiv.appendChild(nameRow);
+      docDiv.appendChild(preview);
+      grpDiv.appendChild(docDiv);
+    });
+
+    cont.appendChild(grpDiv);
+  });
+  wwRenderAddCat(cont, wing);
+}
+
+function wwRenderAddCat(cont, wing) {
+  const t = TRANSLATIONS[_lang] || TRANSLATIONS.da;
+  const row = document.createElement('div');
+  row.className = 'wk-add-cat-row';
+  const inp = document.createElement('input');
+  inp.className = 'wk-add-cat-inp';
+  inp.placeholder = t.wk_add_cat_ph;
+  inp.maxLength = 50;
+  const addBtn = document.createElement('button');
+  addBtn.className = 'wk-gen-btn';
+  addBtn.textContent = t.wk_add_cat;
+  addBtn.onclick = () => wwAddCategory(wing, inp, addBtn);
+  inp.onkeydown = (e) => { if (e.key === 'Enter') addBtn.click(); };
+  row.appendChild(inp);
+  row.appendChild(addBtn);
+  cont.appendChild(row);
+}
+
+async function wwAddCategory(wing, inp, btn) {
+  const name = inp.value.trim();
+  if (!name) { inp.focus(); return; }
+  const t = TRANSLATIONS[_lang] || TRANSLATIONS.da;
+  btn.disabled = true;
+  btn.textContent = t.wk_adding;
+  const result = await jpost(`${API}/wings/${encodeURIComponent(wing)}/subcategories`, {name});
+  btn.disabled = false;
+  btn.textContent = t.wk_add_cat;
+  if (result?.created) {
+    inp.value = '';
+    _wwLastGroups = null;
+    await wwLoad();
+  } else {
+    btn.textContent = t.wk_gen_error;
+    setTimeout(() => { btn.textContent = t.wk_add_cat; }, 2500);
+  }
+}
+
+async function wwDelCategory(wing, subcat, docCount, btn) {
+  const t = TRANSLATIONS[_lang] || TRANSLATIONS.da;
+  const msg = _lang === 'da'
+    ? `Slet kategorien '${subcat}'?\n\n${docCount} dokument(er) mister denne kategori og flyttes til 'Uden kategori'.\nDokumenterne slettes IKKE.`
+    : `Delete category '${subcat}'?\n\n${docCount} document(s) will lose this category and move to 'Uncategorised'.\nDocuments are NOT deleted.`;
+  if (!confirm(msg)) return;
+  btn.disabled = true;
+  btn.textContent = t.wk_deleting;
+  const r = await fetch(`${API}/wings/${encodeURIComponent(wing)}/subcategories/${encodeURIComponent(subcat)}`, {method:'DELETE'});
+  if (r.ok) {
+    _wwLastGroups = null;
+    await wwLoad();
+  } else {
+    btn.disabled = false;
+    btn.textContent = t.wk_del_cat;
+  }
+}
+
+async function wwDelDoc(wing, source, chunks, btn) {
+  const t = TRANSLATIONS[_lang] || TRANSLATIONS.da;
+  const msg = _lang === 'da'
+    ? `Slet '${source}' fra ${wing}?\n\n${chunks} chunks slettes permanent.\nHandlingen kan ikke fortrydes.`
+    : `Delete '${source}' from ${wing}?\n\n${chunks} chunks will be permanently deleted.\nThis cannot be undone.`;
+  if (!confirm(msg)) return;
+  btn.disabled = true;
+  btn.textContent = t.wk_deleting;
+  const r = await fetch(`${API}/wings/${encodeURIComponent(wing)}/documents/by-source?source=${encodeURIComponent(source)}`, {method:'DELETE'});
+  if (r.ok) {
+    _wwLastGroups = null;
+    await wwLoad();
+  } else {
+    btn.disabled = false;
+    btn.textContent = t.wk_del_doc;
+  }
+}
+
+function wwRerender() {
+  if (!_wwLastWing || !_wwLastGroups) return;
+  const cont = document.getElementById('wk-content');
+  if (cont) wwRender(cont, _wwLastWing, _wwLastGroups);
+  const fs = document.getElementById('ww-fs');
+  if (fs?.classList.contains('open')) {
+    const cols = document.getElementById('ww-fs-body')?.querySelector('.ww-cols');
+    if (cols) wwRender(cols, _wwLastWing, _wwLastGroups);
+  }
+}
+
+async function wwMoveDoc(wing, source, fromSub, toSubRaw, selEl) {
+  const toSub = toSubRaw === '__none__' ? null : toSubRaw;
+  selEl.disabled = true;
+  const result = await jpost(`${API}/wings/${encodeURIComponent(wing)}/documents/move`, {
+    source_file: source,
+    category: toSub
+  });
+  selEl.disabled = false;
+  if (!result?.ok) return;
+  // Opdater _wwLastGroups in-memory
+  const srcGrp = _wwLastGroups.find(g => g.subcategory === fromSub);
+  if (!srcGrp) { _wwLastGroups = null; await wwLoad(); return; }
+  const docObj = srcGrp.docs.find(d => d.source_file === source);
+  srcGrp.docs = srcGrp.docs.filter(d => d.source_file !== source);
+  if (docObj) {
+    let tgtGrp = _wwLastGroups.find(g => g.subcategory === toSub);
+    if (!tgtGrp) {
+      tgtGrp = {subcategory: toSub, docs: []};
+      if (toSub === null) {
+        _wwLastGroups.push(tgtGrp);
+      } else {
+        // Indsæt alfabetisk
+        const idx = _wwLastGroups.findIndex(g => g.subcategory !== null && g.subcategory > toSub);
+        idx === -1 ? _wwLastGroups.push(tgtGrp) : _wwLastGroups.splice(idx, 0, tgtGrp);
+      }
+    }
+    tgtGrp.docs.push(docObj);
+  }
+  wwRerender();
+}
+
+async function wwGenHeading(wing, cacheKey, docs, titleEl, btn) {
+  const t = TRANSLATIONS[_lang] || TRANSLATIONS.da;
+  btn.textContent = t.wk_loading;
+  btn.disabled = true;
+  const sources = docs.map(d => d.source_file);
+  const samples = docs.map(d => (d.preview || '').slice(0, 120));
+  const result = await jpost(`${API}/wings/${encodeURIComponent(wing)}/heading`, {sources, samples});
+  btn.disabled = false;
+  if (result?.heading) {
+    _wwGenCache[cacheKey] = result.heading;
+    titleEl.textContent = result.heading;
+    btn.textContent = '↻';
+  } else {
+    btn.textContent = t.wk_gen_error;
+    titleEl.style.opacity = '.4';
+    setTimeout(() => { btn.textContent = t.wk_gen_headings; titleEl.style.opacity = ''; }, 3000);
+  }
+}
+
+async function wwAutoCat(wing, docs, btn) {
+  const t = TRANSLATIONS[_lang] || TRANSLATIONS.da;
+  btn.textContent = t.wk_auto_loading;
+  btn.disabled = true;
+  const result = await jpost(`${API}/wings/${encodeURIComponent(wing)}/auto-categorise`, {
+    docs: docs.map(d => ({source_file: d.source_file, preview: d.preview || ''}))
+  });
+  btn.disabled = false;
+  btn.textContent = t.wk_auto_cat;
+  if (!result?.suggestions?.length) {
+    btn.textContent = t.wk_gen_error;
+    setTimeout(() => { btn.textContent = t.wk_auto_cat; }, 2500);
+    return;
+  }
+  // Grupper efter category
+  const groups = {};
+  result.suggestions.forEach(s => {
+    (groups[s.category] = groups[s.category] || []).push(s.source_file);
+  });
+  _wwDraftWing = wing;
+  wwRenderDraft(groups);
+}
+
+function wwRenderDraft(groups, queuedAt) {
+  document.getElementById('wk-draft')?.remove();
+  const cont = document.getElementById('wk-content');
+  if (!cont) return;
+  const t = TRANSLATIONS[_lang] || TRANSLATIONS.da;
+
+  const draft = document.createElement('div');
+  draft.id = 'wk-draft';
+  draft.className = 'wk-draft';
+
+  const hdr = document.createElement('div');
+  hdr.className = 'wk-draft-hdr';
+  let hintHtml = `<span class="wk-draft-hint">${t.wk_draft_hint}</span>`;
+  if (queuedAt) {
+    const d = new Date(queuedAt);
+    const ds = isNaN(d) ? queuedAt : d.toLocaleDateString(_lang === 'da' ? 'da-DK' : 'en-GB', {day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+    hintHtml = `<span class="wk-draft-hint">${t.wk_q_from_night} — ${ds}</span>`;
+  }
+  hdr.innerHTML = `<span>${t.wk_draft_hdr}</span>${hintHtml}`;
+  draft.appendChild(hdr);
+
+  const groupEntries = Array.isArray(groups)
+    ? groups.map(g => [g.category, g.files])
+    : Object.entries(groups);
+  groupEntries.forEach(([cat, files]) => {
+    const grp = document.createElement('div');
+    grp.className = 'wk-draft-group';
+    grp.dataset.files = JSON.stringify(files);
+
+    const catRow = document.createElement('div');
+    catRow.className = 'wk-draft-cat';
+    const inp = document.createElement('input');
+    inp.className = 'wk-draft-cat-inp';
+    inp.value = cat;
+    inp.maxLength = 50;
+    const cnt = document.createElement('span');
+    cnt.className = 'wk-chunks';
+    cnt.textContent = files.length + ' dok';
+    catRow.appendChild(inp);
+    catRow.appendChild(cnt);
+    grp.appendChild(catRow);
+
+    files.forEach(f => {
+      const d = document.createElement('div');
+      d.className = 'wk-draft-doc';
+      d.textContent = '▸ ' + f;
+      grp.appendChild(d);
+    });
+    draft.appendChild(grp);
+  });
+
+  const actions = document.createElement('div');
+  actions.className = 'wk-draft-actions';
+  const saveBtn = document.createElement('button');
+  saveBtn.className = 'wk-draft-save';
+  saveBtn.textContent = t.wk_draft_save;
+  saveBtn.onclick = () => wwSaveCats(saveBtn);
+  const discardBtn = document.createElement('button');
+  discardBtn.className = 'wk-draft-discard';
+  discardBtn.textContent = t.wk_draft_discard;
+  discardBtn.onclick = wwDiscardDraft;
+  actions.appendChild(saveBtn);
+  actions.appendChild(discardBtn);
+  draft.appendChild(actions);
+
+  cont.appendChild(draft);
+  draft.scrollIntoView({behavior: 'smooth', block: 'nearest'});
+}
+
+function wwRenderDraftFromQueue(suggestions, queuedAt) {
+  // Group queue suggestions into {category -> [source_files]}
+  const byCategory = {};
+  for (const s of suggestions) {
+    const cat = s.category || '?';
+    if (!byCategory[cat]) byCategory[cat] = [];
+    byCategory[cat].push(s.source_file);
+  }
+  const groups = Object.entries(byCategory).map(([cat, files]) => ({ category: cat, files }));
+  _wwDraftFromQueue = true;
+  wwRenderDraft(groups, queuedAt);
+}
+
+async function wwSaveCats(btn) {
+  const t = TRANSLATIONS[_lang] || TRANSLATIONS.da;
+  const assignments = [];
+  document.querySelectorAll('#wk-draft .wk-draft-group').forEach(grp => {
+    const cat = grp.querySelector('.wk-draft-cat-inp')?.value?.trim();
+    const files = JSON.parse(grp.dataset.files || '[]');
+    if (cat) files.forEach(f => assignments.push({source_file: f, category: cat}));
+  });
+  if (!assignments.length || !_wwDraftWing) return;
+  btn.textContent = t.wk_saving;
+  btn.disabled = true;
+  const result = await jpost(`${API}/wings/${encodeURIComponent(_wwDraftWing)}/apply-categories`, {assignments});
+  if (result?.ok) {
+    const savedWing = _wwDraftWing;
+    const fromQueue = _wwDraftFromQueue;
+    wwDiscardDraft();
+    if (fromQueue) {
+      await fetch(`${API}/category-queue/${encodeURIComponent(savedWing)}`, {method:'DELETE'});
+      wwUpdateBadge(0);
+    }
+    if (document.getElementById('wk-wing-sel')?.value === savedWing) {
+      _wwLastGroups = null;
+      await wwLoad();
+    }
+  } else {
+    btn.disabled = false;
+    btn.textContent = t.wk_gen_error;
+    setTimeout(() => { btn.textContent = t.wk_draft_save; }, 2500);
+  }
+}
+
+async function wwDiscardDraft() {
+  const fromQueue = _wwDraftFromQueue;
+  const wing = _wwDraftWing;
+  document.getElementById('wk-draft')?.remove();
+  _wwDraftWing = null;
+  _wwDraftFromQueue = false;
+  if (fromQueue && wing) {
+    await fetch(`${API}/category-queue/${encodeURIComponent(wing)}`, {method:'DELETE'});
+    wwUpdateBadge(0);
+  }
+}
+
+// ── WING WIKI SLUT ────────────────────────────────────────────────────────
+
+// ── ANALYSE WIKI ──────────────────────────────────────────────────────────
+let _awLastGroups  = null;
+let _awDraftWing   = null;
+let _awDraftItems  = null;  // [{id, wing}] items der afventer topic-tildeling
+
+function _awTypeClass(type) {
+  return {summary:'aw-t-summary', cross_analysis:'aw-t-cross',
+          inconsistency_analysis:'aw-t-incon', debate:'aw-t-debate'}[type] || 'aw-t-summary';
+}
+
+async function awLoad() {
+  const wing = document.getElementById('aw-wing-sel')?.value || '';
+  const cont = document.getElementById('aw-content');
+  if (!cont) return;
+  const t = TRANSLATIONS[_lang] || TRANSLATIONS.da;
+  cont.innerHTML = `<div class="ana-status-txt">${t.aw_loading}</div>`;
+  const url = wing ? `${API}/analysis/wiki?wing=${encodeURIComponent(wing)}` : `${API}/analysis/wiki`;
+  const data = await jget(url);
+  if (!data) { cont.innerHTML = `<div class="ana-status-txt" style="color:#ff4455">API fejl</div>`; return; }
+  _awLastGroups = data.groups || [];
+  awRender(cont, _awLastGroups);
+}
+
+function awRender(cont, groups) {
+  const t = TRANSLATIONS[_lang] || TRANSLATIONS.da;
+  cont.innerHTML = '';
+  if (!groups.length) {
+    cont.innerHTML = `<div class="ana-status-txt">${t.aw_no_results}</div>`;
+    return;
+  }
+  groups.forEach(g => {
+    const at = g.analysis_topic;
+    const grpDiv = document.createElement('div');
+    grpDiv.className = 'wk-group';
+
+    const hdr = document.createElement('div');
+    hdr.className = 'wk-group-hdr';
+    const titleSpan = document.createElement('span');
+    titleSpan.className = 'wk-group-title';
+    titleSpan.textContent = at ?? t.aw_no_topic;
+    hdr.appendChild(titleSpan);
+
+    const cnt = document.createElement('span');
+    cnt.className = 'wk-chunks';
+    cnt.textContent = g.items.length + ' ' + t.aw_items;
+    hdr.appendChild(cnt);
+
+    if (!at) {
+      const genBtn = document.createElement('button');
+      genBtn.className = 'wk-gen-btn';
+      genBtn.textContent = t.aw_gen_heading;
+      genBtn.onclick = () => awGenHeading(g.items, titleSpan, genBtn);
+      hdr.appendChild(genBtn);
+      const autoBtn = document.createElement('button');
+      autoBtn.className = 'wk-gen-btn';
+      autoBtn.textContent = t.aw_auto_topics;
+      autoBtn.onclick = () => awAutoTopics(g.items, autoBtn);
+      hdr.appendChild(autoBtn);
+    }
+    grpDiv.appendChild(hdr);
+
+    g.items.forEach(item => {
+      const row = document.createElement('div');
+      row.className = 'aw-item';
+      const typeEl = document.createElement('span');
+      typeEl.className = `aw-type ${_awTypeClass(item.type)}`;
+      typeEl.textContent = item.type === 'cross_analysis' ? 'KRYDS' :
+                           item.type === 'inconsistency_analysis' ? 'INKON' :
+                           item.type === 'debate' ? 'DEBAT' : 'SUM';
+      const nameEl = document.createElement('span');
+      nameEl.style.cssText = 'flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap';
+      nameEl.textContent = (item.type === 'debate' && item.topic) ? item.topic : item.source_file;
+      const wingEl = document.createElement('span');
+      wingEl.className = 'aw-wing';
+      wingEl.textContent = '[' + item.wing + ']';
+      const tsEl = document.createElement('span');
+      tsEl.className = 'aw-ts';
+      tsEl.textContent = (item.timestamp || '').slice(0, 10);
+      const openBtn = document.createElement('button');
+      openBtn.className = 'aw-open-btn';
+      openBtn.textContent = t.aw_open;
+      openBtn.title = item.source_file;
+      openBtn.onclick = (e) => { e.stopPropagation(); awOpenItem(item); };
+      row.appendChild(typeEl);
+      row.appendChild(nameEl);
+      row.appendChild(wingEl);
+      row.appendChild(tsEl);
+      row.appendChild(openBtn);
+      row.onclick = () => awOpenItem(item);
+      grpDiv.appendChild(row);
+    });
+
+    cont.appendChild(grpDiv);
+  });
+}
+
+function awOpenItem(item) {
+  const ts = (item.timestamp || '').slice(0, 16).replace('T', ' ');
+  const title = item.type === 'debate' && item.topic
+    ? `debate — ${item.topic} (${ts})`
+    : `${item.type} — [${item.wing}] ${ts}`;
+  document.getElementById('ana-ov-title').textContent = title;
+  document.getElementById('ana-ov-body').textContent  = item.preview || item.text || '';
+  document.getElementById('ana-ov').classList.add('open');
+}
+
+async function awGenHeading(items, titleEl, btn) {
+  const t = TRANSLATIONS[_lang] || TRANSLATIONS.da;
+  btn.disabled = true;
+  btn.textContent = t.aw_loading;
+  const result = await jpost(`${API}/analysis/heading`, {items: items.slice(0, 10).map(i => ({
+    id: i.id, type: i.type, source_file: i.source_file,
+    preview: i.preview || '', topic: i.topic || ''
+  }))});
+  btn.disabled = false;
+  btn.textContent = t.aw_gen_heading;
+  if (!result?.analysis_topic) { btn.textContent = t.wk_gen_error; setTimeout(() => { btn.textContent = t.aw_gen_heading; }, 2500); return; }
+  // Vis som kladde
+  awRenderDraft([{analysis_topic: result.analysis_topic, items}]);
+}
+
+async function awAutoTopics(items, btn) {
+  const t = TRANSLATIONS[_lang] || TRANSLATIONS.da;
+  btn.disabled = true;
+  btn.textContent = t.aw_auto_loading;
+  const result = await jpost(`${API}/analysis/auto-topics`, {items: items.map(i => ({
+    id: i.id, type: i.type, source_file: i.source_file,
+    preview: i.preview || '', topic: i.topic || ''
+  }))});
+  btn.disabled = false;
+  btn.textContent = t.aw_auto_topics;
+  if (!result?.suggestions?.length) { btn.textContent = t.wk_gen_error; setTimeout(() => { btn.textContent = t.aw_auto_topics; }, 2500); return; }
+  // Grupper suggestions
+  const byTopic = {};
+  result.suggestions.forEach(s => {
+    const src = items.find(i => i.id === s.id);
+    if (!src) return;
+    (byTopic[s.analysis_topic] = byTopic[s.analysis_topic] || []).push(src);
+  });
+  awRenderDraft(Object.entries(byTopic).map(([at, its]) => ({analysis_topic: at, items: its})));
+}
+
+function awRenderDraft(groups) {
+  document.getElementById('aw-draft')?.remove();
+  const cont = document.getElementById('aw-content');
+  if (!cont) return;
+  const t = TRANSLATIONS[_lang] || TRANSLATIONS.da;
+  const draft = document.createElement('div');
+  draft.id = 'aw-draft';
+  draft.className = 'wk-draft';
+  const hdr = document.createElement('div');
+  hdr.className = 'wk-draft-hdr';
+  hdr.innerHTML = `<span>${t.aw_draft_hdr}</span><span class="wk-draft-hint">${t.aw_draft_hint}</span>`;
+  draft.appendChild(hdr);
+  groups.forEach(g => {
+    const grp = document.createElement('div');
+    grp.className = 'wk-draft-group';
+    grp.dataset.ids = JSON.stringify(g.items.map(i => ({id: i.id, wing: i.wing})));
+    const catRow = document.createElement('div');
+    catRow.className = 'wk-draft-cat';
+    const inp = document.createElement('input');
+    inp.className = 'wk-draft-cat-inp';
+    inp.value = g.analysis_topic;
+    inp.maxLength = 80;
+    const cntEl = document.createElement('span');
+    cntEl.className = 'wk-chunks';
+    cntEl.textContent = g.items.length + ' res.';
+    catRow.appendChild(inp); catRow.appendChild(cntEl);
+    grp.appendChild(catRow);
+    g.items.forEach(i => {
+      const d = document.createElement('div');
+      d.className = 'wk-draft-doc';
+      d.textContent = '▸ ' + ((i.type === 'debate' && i.topic) ? i.topic : i.source_file);
+      grp.appendChild(d);
+    });
+    draft.appendChild(grp);
+  });
+  const actions = document.createElement('div');
+  actions.className = 'wk-draft-actions';
+  const saveBtn = document.createElement('button');
+  saveBtn.className = 'wk-draft-save';
+  saveBtn.textContent = t.aw_draft_save;
+  saveBtn.onclick = () => awSaveTopics(saveBtn);
+  const discardBtn = document.createElement('button');
+  discardBtn.className = 'wk-draft-discard';
+  discardBtn.textContent = t.aw_draft_discard;
+  discardBtn.onclick = awDiscardDraft;
+  actions.appendChild(saveBtn); actions.appendChild(discardBtn);
+  draft.appendChild(actions);
+  cont.appendChild(draft);
+  draft.scrollIntoView({behavior: 'smooth', block: 'nearest'});
+}
+
+async function awSaveTopics(btn) {
+  const t = TRANSLATIONS[_lang] || TRANSLATIONS.da;
+  const assignments = [];
+  document.querySelectorAll('#aw-draft .wk-draft-group').forEach(grp => {
+    const at = grp.querySelector('.wk-draft-cat-inp')?.value?.trim();
+    const ids = JSON.parse(grp.dataset.ids || '[]');
+    if (at) ids.forEach(({id, wing}) => assignments.push({id, wing, analysis_topic: at}));
+  });
+  if (!assignments.length) return;
+  btn.textContent = t.wk_saving;
+  btn.disabled = true;
+  const result = await jpost(`${API}/analysis/apply-topics`, {assignments});
+  if (result?.ok) {
+    awDiscardDraft();
+    await awLoad();
+  } else {
+    btn.disabled = false;
+    btn.textContent = t.wk_gen_error;
+    setTimeout(() => { btn.textContent = t.aw_draft_save; }, 2500);
+  }
+}
+
+function awDiscardDraft() {
+  document.getElementById('aw-draft')?.remove();
+}
+// ── ANALYSE WIKI SLUT ─────────────────────────────────────────────────────
 
 function selWingSubcat(wingName, subcat) {
   activeWing = wingName;
@@ -5705,9 +6755,11 @@ async function loadSysInfo() {
 function swAnaTab(name, btn) {
   document.querySelectorAll('#ana-tab-row .tb').forEach(b => b.classList.remove('act'));
   btn.classList.add('act');
-  document.getElementById('tc-analyse').classList.toggle('hidden', name !== 'analyse');
-  document.getElementById('tc-debate').classList.toggle('hidden',  name !== 'debate');
-  if (name === 'debate') { loadWings(); _loadSavedKeys(); }
+  document.getElementById('tc-analyse').classList.toggle('hidden',   name !== 'analyse');
+  document.getElementById('tc-debate').classList.toggle('hidden',    name !== 'debate');
+  document.getElementById('tc-ana-wiki').classList.toggle('hidden',  name !== 'anawiki');
+  if (name === 'debate')  { loadWings(); _loadSavedKeys(); }
+  if (name === 'anawiki') { awLoad(); }
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -6408,9 +7460,47 @@ const TRANSLATIONS = {
     mm_search_ph: 'fx qwen, llama, mistral…', mm_search_btn: 'SØG',
     mm_upload_txt: 'Træk en <strong>.gguf</strong>-fil hertil<br><span style="opacity:.5;font-size:9px">eller klik for at vælge fil</span>',
     h3_mm_search: 'OLLAMA LIBRARY SØGNING', h3_mm_upload: 'UPLOAD GGUF',
+    mm_none: 'ingen',
+    hw_ok: 'anbefalet til din hardware', hw_slow: 'langsom på din hardware', hw_big: 'for stor til din hardware',
+    hw_legend_ok: 'Anbefalet', hw_legend_slow: 'Langsom', hw_legend_big: 'For lidt hardware',
     pin_dan: 'Dan (kræver PIN)', pin_gaia: 'Gaia (valgfri)', pin_gabriel: 'Gabriel (valgfri)',
     pin_save: 'GEM', pin_clr: '✕',
     send: 'SEND',
+    wk_tab: 'WIKI',
+    wk_select_wing: 'Vælg wing…',
+    wk_no_docs: 'Ingen dokumenter i denne wing.',
+    wk_no_cat: 'Uden kategori',
+    wk_gen_headings: 'Generér overskrift',
+    wk_loading: 'Henter…',
+    wk_gen_error: 'Fejl',
+    wk_auto_cat: 'Auto-kategorisér',
+    wk_auto_loading: 'Analyserer…',
+    wk_draft_hdr: 'FORESLÅEDE KATEGORIER',
+    wk_draft_hint: 'Rediger navne — klik Gem for at gøre permanent',
+    wk_draft_save: 'Gem kategorier',
+    wk_draft_discard: 'Kassér forslag',
+    wk_saving: 'Gemmer…',
+    wk_q_badge_tip: 'Natanalysen fandt nye forslag',
+    wk_q_from_night: 'Fra natanalysen',
+    wk_add_cat: '+ Ny kategori',
+    wk_add_cat_ph: 'Kategorinavn…',
+    wk_adding: 'Opretter…',
+    wk_del_cat: '🗑',
+    wk_del_doc: '🗑',
+    wk_deleting: 'Sletter…',
+    wk_move_ph: '→',
+    aw_no_results: 'Ingen analyseresultater fundet.',
+    aw_loading: 'Henter…',
+    aw_no_topic: 'Uden emne',
+    aw_gen_heading: 'Generér emneoverskrift',
+    aw_auto_topics: 'Auto-kategorisér emner',
+    aw_auto_loading: 'Analyserer…',
+    aw_draft_hdr: 'FORESLÅEDE EMNER',
+    aw_draft_hint: 'Rediger — klik Gem for at gøre permanent',
+    aw_draft_save: 'Gem emner',
+    aw_draft_discard: 'Kassér forslag',
+    aw_open: '↗',
+    aw_items: 'res.',
   },
   en: {
     h3_lang: 'INTERFACE LANGUAGE', h3_voice: 'VOICE SELECTOR', h3_wake: 'WAKE WORDS', h3_fm: 'USER ACCESS',
@@ -6428,9 +7518,47 @@ const TRANSLATIONS = {
     mm_search_ph: 'e.g. qwen, llama, mistral…', mm_search_btn: 'SEARCH',
     mm_upload_txt: 'Drag a <strong>.gguf</strong> file here<br><span style="opacity:.5;font-size:9px">or click to select file</span>',
     h3_mm_search: 'OLLAMA LIBRARY SEARCH', h3_mm_upload: 'UPLOAD GGUF',
+    mm_none: 'none',
+    hw_ok: 'recommended for your hardware', hw_slow: 'slow on your hardware', hw_big: 'too large for your hardware',
+    hw_legend_ok: 'Recommended', hw_legend_slow: 'Slow', hw_legend_big: 'Insufficient hardware',
     pin_dan: 'Dan (PIN required)', pin_gaia: 'Gaia (optional)', pin_gabriel: 'Gabriel (optional)',
     pin_save: 'SAVE', pin_clr: '✕',
     send: 'SEND',
+    wk_tab: 'WIKI',
+    wk_select_wing: 'Select wing…',
+    wk_no_docs: 'No documents in this wing.',
+    wk_no_cat: 'Uncategorised',
+    wk_gen_headings: 'Generate heading',
+    wk_loading: 'Loading…',
+    wk_gen_error: 'Error',
+    wk_auto_cat: 'Auto-categorise',
+    wk_auto_loading: 'Analysing…',
+    wk_draft_hdr: 'SUGGESTED CATEGORIES',
+    wk_draft_hint: 'Edit names — click Save to make permanent',
+    wk_draft_save: 'Save categories',
+    wk_draft_discard: 'Discard proposal',
+    wk_saving: 'Saving…',
+    wk_q_badge_tip: 'Night analysis found new proposals',
+    wk_q_from_night: 'From night analysis',
+    wk_add_cat: '+ New category',
+    wk_add_cat_ph: 'Category name…',
+    wk_adding: 'Creating…',
+    wk_del_cat: '🗑',
+    wk_del_doc: '🗑',
+    wk_deleting: 'Deleting…',
+    wk_move_ph: '→',
+    aw_no_results: 'No analysis results found.',
+    aw_loading: 'Loading…',
+    aw_no_topic: 'No topic',
+    aw_gen_heading: 'Generate topic heading',
+    aw_auto_topics: 'Auto-categorise topics',
+    aw_auto_loading: 'Analysing…',
+    aw_draft_hdr: 'SUGGESTED TOPICS',
+    aw_draft_hint: 'Edit — click Save to make permanent',
+    aw_draft_save: 'Save topics',
+    aw_draft_discard: 'Discard proposal',
+    aw_open: '↗',
+    aw_items: 'res.',
   }
 };
 
@@ -7028,6 +8156,216 @@ function applyAdminFeatureRestrictions(userKey, feats) {
   show('h3-features', anyVisible);
   show('feat-note', anyVisible);
 }
+
+// ── INTEGRATIONS ─────────────────────────────────────────────────────────────
+
+let intNasCurPath = '';
+
+async function intInit() {
+  try {
+    const r = await fetch('/integrations');
+    if (!r.ok) return;
+    const data = await r.json();
+    const nas = data.integrations.find(i => i.id === 'nas');
+    if (!nas) return;
+    _intApplyNasState(nas.enabled, nas.config);
+  } catch (_) {}
+  _intPopulateWings();
+}
+
+function _intApplyNasState(enabled, cfg) {
+  const tog = document.getElementById('int-tog-nas');
+  const badge = document.getElementById('int-badge-nas');
+  const body = document.getElementById('int-body-nas');
+  const card = document.getElementById('int-card-nas');
+  if (tog) tog.checked = !!enabled;
+  if (badge) { badge.textContent = enabled ? 'TIL' : 'FRA'; badge.className = 'int-badge ' + (enabled ? 'on' : 'off'); }
+  if (body) body.classList.toggle('open', !!enabled);
+  if (card) card.classList.toggle('enabled', !!enabled);
+  if (cfg) {
+    const pathEl = document.getElementById('int-nas-path');
+    const scopeEl = document.getElementById('int-nas-scope');
+    const wingEl = document.getElementById('int-nas-wing');
+    if (pathEl && cfg.mount_path) pathEl.value = cfg.mount_path;
+    if (scopeEl && cfg.scope) scopeEl.value = cfg.scope;
+    if (wingEl && cfg.wing) wingEl.value = cfg.wing;
+  }
+}
+
+async function _intPopulateWings() {
+  try {
+    const r = await fetch('/wings');
+    if (!r.ok) return;
+    const data = await r.json();
+    const sel = document.getElementById('int-nas-wing');
+    if (!sel) return;
+    const cur = sel.value;
+    sel.innerHTML = '<option value="">– vælg –</option>';
+    (data.wings || []).forEach(w => {
+      const opt = document.createElement('option');
+      opt.value = w.name; opt.textContent = w.name + ' (' + w.scope + ')';
+      sel.appendChild(opt);
+    });
+    if (cur) sel.value = cur;
+  } catch (_) {}
+}
+
+async function intToggleNas(enabled) {
+  const body = document.getElementById('int-body-nas');
+  if (body) body.classList.toggle('open', enabled);
+  if (enabled) {
+    const mp = (document.getElementById('int-nas-path') || {}).value || '';
+    if (!mp) { _intStatus('nas', 'Angiv mount-sti og tryk GEM', false); return; }
+  }
+  await intSaveNas(true);
+}
+
+async function intSaveNas(fromToggle = false) {
+  const pathEl = document.getElementById('int-nas-path');
+  const wingEl = document.getElementById('int-nas-wing');
+  const scopeEl = document.getElementById('int-nas-scope');
+  const tog = document.getElementById('int-tog-nas');
+  if (!pathEl) return;
+
+  const payload = {
+    enabled: tog ? tog.checked : false,
+    mount_path: pathEl.value.trim(),
+    wing: wingEl ? wingEl.value : '',
+    scope: scopeEl ? scopeEl.value : 'PRIVATE',
+  };
+  // Strip null-ish overrides
+  Object.keys(payload).forEach(k => { if (payload[k] === null || payload[k] === undefined) delete payload[k]; });
+
+  _intStatus('nas', 'Gemmer…', null);
+  try {
+    const r = await fetch('/integrations/nas', {
+      method: 'PUT',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(payload),
+    });
+    const data = await r.json();
+    if (r.ok) {
+      _intApplyNasState(data.config.enabled, data.config);
+      _intStatus('nas', 'Gemt', true);
+      await _intRefreshMountInfo();
+    } else {
+      _intStatus('nas', data.detail || 'Fejl ved gem', false);
+      if (fromToggle) { const t = document.getElementById('int-tog-nas'); if (t) t.checked = !t.checked; }
+    }
+  } catch (e) {
+    _intStatus('nas', 'Netværksfejl: ' + e.message, false);
+    if (fromToggle) { const t = document.getElementById('int-tog-nas'); if (t) t.checked = !t.checked; }
+  }
+}
+
+async function _intRefreshMountInfo() {
+  try {
+    const r = await fetch('/integrations/nas/status');
+    if (!r.ok) return;
+    const data = await r.json();
+    const el = document.getElementById('int-nas-mount-info');
+    if (!el) return;
+    const m = data.mount || {};
+    el.textContent = m.available
+      ? 'Mount: ' + (m.mount_path || '?') + ' · type: ' + (m.mount_type || 'unknown')
+      : 'Mount-punkt ikke tilgængeligt';
+  } catch (_) {}
+}
+
+async function intNasBrowse(relPath) {
+  intNasCurPath = relPath;
+  const listEl = document.getElementById('int-nas-entries');
+  const pathEl = document.getElementById('int-nas-cur-path');
+  const browser = document.getElementById('int-nas-browser');
+  if (browser) browser.style.display = 'block';
+  if (pathEl) pathEl.textContent = '/' + relPath;
+  if (listEl) listEl.innerHTML = '<div class="int-browser-empty">Henter…</div>';
+
+  try {
+    const r = await fetch('/integrations/nas/browse?path=' + encodeURIComponent(relPath));
+    const data = await r.json();
+    if (!r.ok) {
+      if (listEl) listEl.innerHTML = '<div class="int-browser-empty" style="color:#ff4455">' + (data.detail || 'Fejl') + '</div>';
+      return;
+    }
+    _intRenderEntries(data.entries || []);
+  } catch (e) {
+    if (listEl) listEl.innerHTML = '<div class="int-browser-empty" style="color:#ff4455">Netværksfejl: ' + e.message + '</div>';
+  }
+}
+
+function intNasNavUp() {
+  const parts = intNasCurPath.split('/').filter(Boolean);
+  parts.pop();
+  intNasBrowse(parts.join('/'));
+}
+
+function _intRenderEntries(entries) {
+  const listEl = document.getElementById('int-nas-entries');
+  if (!listEl) return;
+  if (!entries.length) { listEl.innerHTML = '<div class="int-browser-empty">Tom mappe</div>'; return; }
+
+  const frag = document.createDocumentFragment();
+  entries.forEach(e => {
+    const row = document.createElement('div');
+    row.className = 'int-entry';
+    const icon = e.type === 'dir' ? '&#x1F4C1;' : (e.importable ? '&#x1F4C4;' : '&#x1F5CE;');
+    const sizeStr = e.size != null ? _fmtBytes(e.size) : '';
+    row.innerHTML =
+      '<span class="ie-icon">' + icon + '</span>' +
+      '<span class="ie-name">' + _esc(e.name) + '</span>' +
+      '<span class="ie-size">' + sizeStr + '</span>' +
+      (e.type === 'dir'
+        ? '<button class="ie-imp-btn" onclick="intNasBrowse(\'' + _esc(e.rel_path) + '\')">OPEN</button>'
+        : e.importable
+          ? '<button class="ie-imp-btn" onclick="intNasImport(\'' + _esc(e.rel_path) + '\',\'' + _esc(e.name) + '\')">IMPORTER</button>'
+          : ''
+      );
+    frag.appendChild(row);
+  });
+  listEl.innerHTML = '';
+  listEl.appendChild(frag);
+}
+
+async function intNasImport(relPath, filename) {
+  const wingEl = document.getElementById('int-nas-wing');
+  const scopeEl = document.getElementById('int-nas-scope');
+  const wing = wingEl ? wingEl.value : '';
+  const scope = scopeEl ? scopeEl.value : 'PRIVATE';
+  if (!wing) { _intStatus('nas', 'Vælg en wing før import', false); return; }
+
+  _intStatus('nas', 'Importerer ' + filename + '…', null);
+  try {
+    const r = await fetch('/integrations/nas/import', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({path: relPath, wing, scope}),
+    });
+    const data = await r.json();
+    if (r.ok) {
+      _intStatus('nas', filename + ' sat i kø til ' + wing + ' (' + scope + ')', true);
+    } else {
+      _intStatus('nas', data.detail || 'Import fejlede', false);
+    }
+  } catch (e) {
+    _intStatus('nas', 'Netværksfejl: ' + e.message, false);
+  }
+}
+
+function _intStatus(id, msg, ok) {
+  const el = document.getElementById('int-' + id + '-status');
+  if (!el) return;
+  el.textContent = msg;
+  el.className = 'int-status' + (ok === true ? ' ok' : ok === false ? ' err' : '');
+}
+
+function _fmtBytes(b) {
+  if (b < 1024) return b + ' B';
+  if (b < 1048576) return (b / 1024).toFixed(1) + ' KB';
+  return (b / 1048576).toFixed(1) + ' MB';
+}
+
+function _esc(s) { return String(s).replace(/['"<>&]/g, c => ({'\'':'&#39;','"':'&quot;','<':'&lt;','>':'&gt;','&':'&amp;'}[c])); }
 </script>
 
 <!-- BRUGERGUIDE OVERLAY -->

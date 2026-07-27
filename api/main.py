@@ -37,6 +37,11 @@ _NOUS_DIR = Path("/srv/nous")
 if str(_NOUS_DIR) not in sys.path:
     sys.path.insert(0, str(_NOUS_DIR))
 
+# Hardware profiler
+_TOOLS_DIR = Path("/srv/nous/tools")
+if str(_TOOLS_DIR) not in sys.path:
+    sys.path.insert(0, str(_TOOLS_DIR))
+
 try:
     from graph import run_agent_graph as _run_agent_graph
     _AGENTS_AVAILABLE = True
@@ -102,6 +107,7 @@ EMBED_MODEL = os.environ.get("NOUS_EMBED_MODEL", "nomic-embed-text")
 INCOMING_DIR  = Path(os.environ.get("NOUS_INCOMING_DIR", "/home/nous/incoming"))
 WINGS_FILE    = Path("/srv/nous/config/wings.json")
 SCRAPER_JOBS  = Path("/srv/nous/config/scraper_jobs.json")
+CATEGORY_QUEUE_FILE = Path("/mnt/nous-data/category_queue.json")
 RESEARCH_JOBS = Path("/srv/nous/config/research_jobs.json")
 SEARXNG_LOCAL = os.environ.get("NOUS_SEARXNG_URL",    "http://localhost:8080")
 NX_HOST       = os.environ.get("NOUS_NX_HOST",        "nous@localhost")
@@ -310,6 +316,37 @@ class MemoryAddRequest(BaseModel):
     text: str
 
 
+class HeadingRequest(BaseModel):
+    sources: List[str]
+    samples: List[str] = []
+
+
+class AutoCatDoc(BaseModel):
+    source_file: str
+    preview: str = ""
+
+
+class AutoCatRequest(BaseModel):
+    docs: List[AutoCatDoc]
+
+
+class ApplyCategoriesRequest(BaseModel):
+    assignments: List[dict]   # [{source_file, category}]
+
+class AnalysisHeadingRequest(BaseModel):
+    items: List[dict]   # [{id, type, source_file, preview, topic}]
+
+class AnalysisAutoTopicsRequest(BaseModel):
+    items: List[dict]   # [{id, type, source_file, preview, topic}]
+
+class ApplyTopicsRequest(BaseModel):
+    assignments: List[dict]   # [{id, wing, analysis_topic}]
+
+class MoveDocRequest(BaseModel):
+    source_file: str
+    category: Optional[str] = None   # None = flyt til Uden kategori
+
+
 class SpeakRequest(BaseModel):
     text: str
 
@@ -436,6 +473,7 @@ def add_subcategory(wing: str, body: SubcategoryAdd):
     subs.append(body.name)
     (INCOMING_DIR / wing / body.name).mkdir(parents=True, exist_ok=True)
     save_wings(data)
+    _audit("WRITE", wing, wing_data["scope"], None, f"add_subcategory: {body.name}")
     return {"wing": wing, "subcategory": body.name, "created": True}
 
 
@@ -450,6 +488,20 @@ def delete_subcategory(wing: str, subcat: str):
         raise HTTPException(404, f"Subcategory '{subcat}' not found")
     subs.remove(subcat)
     save_wings(data)
+    # Nulstil subcategory-felt i Qdrant for alle punkter med denne kategori
+    collection = wing_data["collection"]
+    try:
+        httpx.post(
+            f"{QDRANT_URL}/collections/{collection}/points/payload",
+            json={
+                "payload": {"subcategory": None},
+                "filter": {"must": [{"key": "subcategory", "match": {"value": subcat}}]},
+            },
+            timeout=15,
+        ).raise_for_status()
+    except Exception as e:
+        raise HTTPException(503, f"Qdrant payload reset error: {e}")
+    _audit("WRITE", wing, wing_data["scope"], None, f"delete_subcategory: {subcat}")
     return {"wing": wing, "subcategory": subcat, "deleted": True}
 
 
@@ -471,7 +523,35 @@ def delete_by_source(wing: str, source: str = Query(..., description="Kildefilna
     except Exception as e:
         raise HTTPException(503, f"Qdrant delete error: {e}")
 
+    _audit("WRITE", wing, wing_data["scope"], None, f"delete_by_source: {source[:80]}")
     return {"deleted": True, "wing": wing, "source": source}
+
+
+@app.post("/wings/{wing}/documents/move", status_code=200)
+def move_document(wing: str, req: MoveDocRequest):
+    data = load_wings()
+    wing_data = find_wing(data, wing)
+    if not wing_data:
+        raise HTTPException(404, f"Wing '{wing}' not found")
+    sf = req.source_file.strip()
+    if not sf:
+        raise HTTPException(400, "source_file required")
+    collection = wing_data["collection"]
+    try:
+        r = httpx.post(
+            f"{QDRANT_URL}/collections/{collection}/points/payload",
+            json={
+                "payload": {"subcategory": req.category},
+                "filter": {"must": [{"key": "source_file", "match": {"value": sf}}]},
+            },
+            timeout=15,
+        )
+        r.raise_for_status()
+    except Exception as e:
+        raise HTTPException(503, f"Qdrant payload update error: {e}")
+    dest = req.category or "null"
+    _audit("WRITE", wing, wing_data["scope"], None, f"move_document: {sf[:80]} → {dest}")
+    return {"ok": True, "wing": wing, "source_file": sf, "category": req.category}
 
 
 def _fetch_chunks_text(collection: str, source: str) -> str:
@@ -640,6 +720,248 @@ def list_documents(wing: str):
 
     documents = [{"source": src, "chunks": n} for src, n in sorted(counts.items())]
     return {"wing": wing, "collection": collection, "documents": documents}
+
+
+@app.get("/wings/{wing}/wiki")
+def wing_wiki(wing: str):
+    data = load_wings()
+    wing_data = find_wing(data, wing)
+    if not wing_data:
+        raise HTTPException(404, f"Wing '{wing}' not found")
+
+    if wing_data.get("scope") in ("SECRET", "PRIVATE"):
+        _audit("READ", wing, wing_data["scope"], None, f"wing_wiki: {wing}")
+
+    collection = wing_data["collection"]
+    docs: dict = {}
+    offset = None
+
+    while True:
+        body: dict = {
+            "limit": 256,
+            "with_payload": ["source_file", "subcategory", "text", "chunk_index"],
+            "with_vector": False,
+        }
+        if offset is not None:
+            body["offset"] = offset
+        try:
+            r = httpx.post(
+                f"{QDRANT_URL}/collections/{collection}/points/scroll",
+                json=body,
+                timeout=20,
+            )
+            r.raise_for_status()
+        except Exception as e:
+            raise HTTPException(503, f"Qdrant scroll error: {e}")
+
+        result = r.json().get("result", {})
+        for pt in result.get("points", []):
+            pl = pt.get("payload", {})
+            src = pl.get("source_file") or pl.get("source")
+            if not src:
+                continue
+            sub = pl.get("subcategory")
+            idx = pl.get("chunk_index", 9999)
+            text = pl.get("text", "")
+            if src not in docs:
+                docs[src] = {"subcategory": sub, "chunks": 0, "preview": "", "best_idx": 9999}
+            docs[src]["chunks"] += 1
+            if idx < docs[src]["best_idx"]:
+                docs[src]["best_idx"] = idx
+                docs[src]["preview"] = text[:200]
+
+        offset = result.get("next_page_offset")
+        if offset is None:
+            break
+
+    groups: dict = {}
+    for src, info in sorted(docs.items()):
+        sub = info["subcategory"]
+        groups.setdefault(sub, []).append({
+            "source_file": src,
+            "chunks": info["chunks"],
+            "preview": info["preview"],
+        })
+
+    sorted_groups = []
+    for sub in sorted((k for k in groups if k is not None)):
+        sorted_groups.append({"subcategory": sub, "docs": groups[sub]})
+    # Tilføj tomme kategorier fra wings.json der endnu ikke har dokumenter
+    known_subs = {g["subcategory"] for g in sorted_groups}
+    for sub in sorted(wing_data.get("subcategories", [])):
+        if sub not in known_subs:
+            sorted_groups.insert(
+                next((i for i, g in enumerate(sorted_groups) if (g["subcategory"] or "ø") > sub), len(sorted_groups)),
+                {"subcategory": sub, "docs": []},
+            )
+    if None in groups:
+        sorted_groups.append({"subcategory": None, "docs": groups[None]})
+
+    return {"wing": wing, "groups": sorted_groups}
+
+
+@app.post("/wings/{wing}/heading")
+def generate_wing_heading(wing: str, req: HeadingRequest):
+    data = load_wings()
+    wing_data = find_wing(data, wing)
+    if not wing_data:
+        raise HTTPException(404, f"Wing '{wing}' not found")
+
+    doc_list = "\n".join(
+        f"- {s}" + (f": {req.samples[i][:80]}" if i < len(req.samples) and req.samples[i] else "")
+        for i, s in enumerate(req.sources[:10])
+    )
+    prompt = (
+        "Giv en meget kort dansk overskrift (max 5 ord) der opsummerer emnet "
+        f"for disse dokumenter:\n{doc_list}\n\n"
+        "Svar kun med overskriften, ingen forklaring, ingen punktum."
+    )
+    try:
+        r = httpx.post(
+            f"{OLLAMA_URL}/api/generate",
+            json={"model": "qwen2.5:7b", "prompt": prompt, "stream": False,
+                  "options": {"temperature": 0.3, "num_predict": 20}},
+            timeout=30,
+        )
+        r.raise_for_status()
+        heading = r.json().get("response", "").strip().split("\n")[0].strip("\"'").strip()
+    except Exception as e:
+        raise HTTPException(503, f"LLM error: {e}")
+
+    return {"heading": heading}
+
+
+@app.post("/wings/{wing}/auto-categorise")
+def wing_auto_categorise(wing: str, req: AutoCatRequest):
+    data = load_wings()
+    wing_data = find_wing(data, wing)
+    if not wing_data:
+        raise HTTPException(404, f"Wing '{wing}' not found")
+
+    docs = req.docs[:30]
+    if not docs:
+        return {"suggestions": []}
+
+    lines = "\n".join(
+        f'- "{d.source_file}": "{d.preview[:120]}"' if d.preview
+        else f'- "{d.source_file}"'
+        for d in docs
+    )
+    prompt = (
+        "Du er en dansk dokumentarkivar. Analyser hvert dokument nedenfor og tildel det "
+        "et præcist emneord på dansk (max 3 ord). Brug konsistente navne så ens dokumenter "
+        "samles under samme kategori.\n\n"
+        "Svar UDELUKKENDE som JSON-array uden forklaring eller markdown:\n"
+        '[{"source_file": "filnavn.pdf", "category": "Emnenavn"}, ...]\n\n'
+        f"Dokumenter:\n{lines}"
+    )
+    try:
+        r = httpx.post(
+            f"{OLLAMA_URL}/api/generate",
+            json={"model": "qwen2.5:7b", "prompt": prompt, "stream": False,
+                  "options": {"temperature": 0.1, "num_predict": 2048}},
+            timeout=120,
+        )
+        r.raise_for_status()
+        raw = r.json().get("response", "")
+    except Exception as e:
+        raise HTTPException(503, f"LLM error: {e}")
+
+    # Robust JSON-udtræk: find første [...] blok
+    m = re.search(r'\[.*?\]', raw, re.DOTALL)
+    if not m:
+        raise HTTPException(503, "LLM returnerede ikke gyldigt JSON")
+    try:
+        parsed = json.loads(m.group())
+    except json.JSONDecodeError:
+        raise HTTPException(503, "LLM JSON parse fejl")
+
+    # Validér og sanitér
+    known = {d.source_file for d in docs}
+    suggestions = []
+    for item in parsed:
+        sf = str(item.get("source_file", "")).strip()
+        cat = str(item.get("category", "")).strip()[:50]
+        if sf in known and cat:
+            suggestions.append({"source_file": sf, "category": cat})
+
+    return {"suggestions": suggestions}
+
+
+@app.post("/wings/{wing}/apply-categories")
+def wing_apply_categories(wing: str, req: ApplyCategoriesRequest):
+    data = load_wings()
+    wing_data = find_wing(data, wing)
+    if not wing_data:
+        raise HTTPException(404, f"Wing '{wing}' not found")
+
+    if wing_data.get("scope") in ("SECRET", "PRIVATE"):
+        _audit("WRITE", wing, wing_data["scope"], None, f"apply_categories: {wing}")
+
+    collection = wing_data["collection"]
+    errors = []
+    for a in req.assignments:
+        sf = str(a.get("source_file", "")).strip()
+        cat = str(a.get("category", "")).strip()[:50]
+        if not sf or not cat:
+            continue
+        try:
+            r = httpx.post(
+                f"{QDRANT_URL}/collections/{collection}/points/payload",
+                json={
+                    "payload": {"subcategory": cat},
+                    "filter": {"must": [{"key": "source_file", "match": {"value": sf}}]},
+                },
+                timeout=15,
+            )
+            r.raise_for_status()
+        except Exception as e:
+            errors.append(f"{sf}: {e}")
+
+    if errors:
+        raise HTTPException(500, f"Delvise fejl: {'; '.join(errors[:3])}")
+    return {"ok": True, "updated": len(req.assignments)}
+
+
+# === Kategori-kø ===
+
+def _load_cat_queue() -> list:
+    if CATEGORY_QUEUE_FILE.exists():
+        try:
+            return json.loads(CATEGORY_QUEUE_FILE.read_text(encoding="utf-8"))
+        except Exception:
+            return []
+    return []
+
+
+def _save_cat_queue(queue: list) -> None:
+    CATEGORY_QUEUE_FILE.parent.mkdir(parents=True, exist_ok=True)
+    CATEGORY_QUEUE_FILE.write_text(
+        json.dumps(queue, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
+
+
+@app.get("/category-queue")
+def get_category_queue():
+    queue = _load_cat_queue()
+    by_wing: dict = {}
+    for e in queue:
+        w = e["wing"]
+        by_wing.setdefault(w, []).append({
+            "source_file": e["source_file"],
+            "category":    e["category"],
+            "preview":     e.get("preview", ""),
+            "queued_at":   e.get("queued_at", ""),
+        })
+    wings_out = [{"wing": w, "count": len(docs), "suggestions": docs}
+                 for w, docs in sorted(by_wing.items())]
+    return {"total": len(queue), "wings": wings_out}
+
+
+@app.delete("/category-queue/{wing}", status_code=204)
+def clear_category_queue_wing(wing: str):
+    queue = _load_cat_queue()
+    _save_cat_queue([e for e in queue if e["wing"] != wing])
 
 
 # === Memory add endpoint ===
@@ -1333,6 +1655,10 @@ def _save_model_roles(roles: dict) -> None:
     MODEL_ROLES_FILE.write_text(json.dumps(roles, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
+def _day_model() -> str:
+    return _load_model_roles().get("day", "qwen3:8b")
+
+
 @app.get("/models/list")
 async def list_models():
     try:
@@ -1668,14 +1994,14 @@ def get_download_status(job_id: str):
 
 # === Analysis results ===
 
-ANALYSIS_TYPES = ["cross_analysis", "inconsistency_analysis", "summary"]
+ANALYSIS_TYPES = ["cross_analysis", "inconsistency_analysis", "summary", "debate"]
 
 # Alle non-verbatim typer — bruges i _fetch_chunks_text() for at garantere
 # at kun rå ingest-chunks returneres (ikke LLM-facts, analyser eller medieindhold).
 # Ældre chunks uden type-felt er også chunks og inkluderes automatisk (ingen type = chunk).
 NON_CHUNK_TYPES = [
     "summary", "fact", "cross_analysis", "inconsistency_analysis",
-    "image_analysis", "audio_transcription", "inferred_fact",
+    "debate", "image_analysis", "audio_transcription", "inferred_fact",
 ]
 
 
@@ -1779,6 +2105,8 @@ def get_analysis_results(wing: Optional[str] = None):
                     "timestamp": payload.get("timestamp", ""),
                     "source": payload.get("source", ""),
                     "source_file": payload.get("source_file", ""),
+                    "topic": payload.get("topic"),
+                    "analysis_topic": payload.get("analysis_topic"),
                 })
             offset = result.get("next_page_offset")
             if offset is None:
@@ -1786,6 +2114,176 @@ def get_analysis_results(wing: Optional[str] = None):
 
     results.sort(key=lambda x: x.get("timestamp", ""), reverse=True)
     return {"results": results}
+
+
+@app.get("/analysis/wiki")
+def analysis_wiki(wing: Optional[str] = None):
+    data = load_wings()
+    targets = [find_wing(data, wing)] if wing else data["wings"]
+    if wing and not targets[0]:
+        raise HTTPException(404, f"Wing '{wing}' not found")
+
+    items: list = []
+    for w in targets:
+        if not w:
+            continue
+        coll = w["collection"]
+        if w.get("scope") in ("SECRET", "PRIVATE"):
+            _audit("READ", w["name"], w["scope"], None, f"analysis_wiki: {w['name']}")
+        offset = None
+        while True:
+            body: dict = {
+                "limit": 100,
+                "with_payload": True,
+                "with_vector": False,
+                "filter": {"must": [{"key": "type", "match": {"any": ANALYSIS_TYPES}}]},
+            }
+            if offset is not None:
+                body["offset"] = offset
+            try:
+                r = httpx.post(f"{QDRANT_URL}/collections/{coll}/points/scroll", json=body, timeout=15)
+                r.raise_for_status()
+            except Exception:
+                break
+            result = r.json().get("result", {})
+            for pt in result.get("points", []):
+                pl = pt.get("payload", {})
+                items.append({
+                    "id": str(pt["id"]),
+                    "wing": w["name"],
+                    "type": pl.get("type", ""),
+                    "source_file": pl.get("source_file", ""),
+                    "topic": pl.get("topic"),
+                    "analysis_topic": pl.get("analysis_topic"),
+                    "timestamp": pl.get("timestamp", ""),
+                    "preview": (pl.get("text") or "")[:200],
+                })
+            offset = result.get("next_page_offset")
+            if offset is None:
+                break
+
+    groups: dict = {}
+    for item in items:
+        at = item["analysis_topic"]
+        groups.setdefault(at, []).append(item)
+
+    sorted_groups = []
+    for at in sorted((k for k in groups if k is not None)):
+        sorted_groups.append({"analysis_topic": at, "items": sorted(groups[at], key=lambda x: x["timestamp"], reverse=True)})
+    if None in groups:
+        sorted_groups.append({"analysis_topic": None, "items": sorted(groups[None], key=lambda x: x["timestamp"], reverse=True)})
+
+    return {"wing": wing, "groups": sorted_groups}
+
+
+@app.post("/analysis/heading")
+def analysis_heading(req: AnalysisHeadingRequest):
+    if not req.items:
+        raise HTTPException(400, "items required")
+    model = _day_model()
+    doc_list = []
+    for item in req.items[:10]:
+        sf = item.get("source_file", "")
+        preview = (item.get("topic") or item.get("preview") or "")[:100]
+        itype = item.get("type", "")
+        doc_list.append(f"- [{itype}] {sf}: {preview}")
+    prompt = (
+        "Giv en meget kort dansk emneoverskrift (max 5 ord) der opsummerer hvad disse "
+        "analyseresultater primært handler om — ikke typen, men selve emnet:\n"
+        + "\n".join(doc_list)
+        + "\n\nSvar kun med overskriften, ingen forklaring, ingen punktum."
+    )
+    try:
+        r = httpx.post(
+            f"{OLLAMA_URL}/api/generate",
+            json={"model": model, "prompt": prompt, "stream": False, "think": False},
+            timeout=60,
+        )
+        r.raise_for_status()
+        raw = r.json().get("response", "")
+    except Exception as e:
+        raise HTTPException(503, f"LLM error: {e}")
+    topic = raw.strip().strip('"\'').strip()[:80]
+    return {"analysis_topic": topic}
+
+
+@app.post("/analysis/auto-topics")
+def analysis_auto_topics(req: AnalysisAutoTopicsRequest):
+    if not req.items:
+        return {"suggestions": []}
+    model = _day_model()
+    lines = []
+    for item in req.items[:20]:
+        sf = item.get("source_file", "")
+        itype = item.get("type", "")
+        desc = (item.get("topic") or item.get("preview") or sf)[:120]
+        lines.append(f'- id: "{item["id"]}", type: "{itype}", kilde: "{sf}", indhold: "{desc}"')
+    prompt = (
+        "Giv hvert analyseresultat et kort dansk emnenavn (max 5 ord) der beskriver emnet "
+        "— ikke typen, men hvad indholdet primært handler om.\n\n"
+        "Resultater:\n" + "\n".join(lines) + "\n\n"
+        "Svar som JSON-array: [{\"id\": \"...\", \"analysis_topic\": \"...\"}]\n"
+        "Svar KUN med JSON-arrayet, ingen forklaring."
+    )
+    try:
+        r = httpx.post(
+            f"{OLLAMA_URL}/api/generate",
+            json={"model": model, "prompt": prompt, "stream": False, "think": False},
+            timeout=120,
+        )
+        r.raise_for_status()
+        raw = r.json().get("response", "")
+    except Exception as e:
+        raise HTTPException(503, f"LLM error: {e}")
+    m = re.search(r'\[.*?\]', raw, re.DOTALL)
+    if not m:
+        raise HTTPException(503, "LLM returnerede ikke gyldigt JSON")
+    try:
+        parsed = json.loads(m.group())
+    except json.JSONDecodeError:
+        raise HTTPException(503, "LLM JSON parse fejl")
+    known_ids = {item["id"] for item in req.items}
+    suggestions = []
+    for entry in parsed:
+        pid = str(entry.get("id", "")).strip()
+        at = str(entry.get("analysis_topic", "")).strip()[:80]
+        if pid in known_ids and at:
+            suggestions.append({"id": pid, "analysis_topic": at})
+    return {"suggestions": suggestions}
+
+
+@app.post("/analysis/apply-topics", status_code=200)
+def analysis_apply_topics(req: ApplyTopicsRequest):
+    data = load_wings()
+    errors = []
+    wings_touched: dict = {}
+    for a in req.assignments:
+        pid = str(a.get("id", "")).strip()
+        wing_name = str(a.get("wing", "")).strip()
+        at = str(a.get("analysis_topic", "")).strip()[:80]
+        if not pid or not wing_name or not at:
+            continue
+        wing_entry = find_wing(data, wing_name)
+        if not wing_entry:
+            errors.append(f"Wing '{wing_name}' not found")
+            continue
+        collection = wing_entry["collection"]
+        try:
+            r = httpx.post(
+                f"{QDRANT_URL}/collections/{collection}/points/payload",
+                json={"payload": {"analysis_topic": at}, "points": [pid]},
+                timeout=15,
+            )
+            r.raise_for_status()
+        except Exception as e:
+            errors.append(f"{pid}: {e}")
+        if wing_entry.get("scope") in ("SECRET", "PRIVATE"):
+            wings_touched[wing_name] = (wing_entry["scope"], wings_touched.get(wing_name, (None, 0))[1] + 1)
+    for wname, (scope, cnt) in wings_touched.items():
+        _audit("WRITE", wname, scope, None, f"apply_analysis_topics: {cnt} items")
+    if errors:
+        raise HTTPException(500, f"Delvise fejl: {'; '.join(errors[:3])}")
+    return {"ok": True, "updated": len(req.assignments)}
 
 
 # === Raw chunk søgning ===
@@ -1848,7 +2346,53 @@ def system_temperature():
     return {"celsius": round(sum(temps) / len(temps), 1), "zones": temps}
 
 
+# === System hardware profile ===
+
+import time as _time
+_hw_cache: dict = {}
+_hw_cache_ts: float = 0.0
+_HW_CACHE_TTL = 60.0
+
+@app.get("/system/hardware-profile")
+async def system_hardware_profile():
+    import asyncio, functools
+    from hardware_profile import get_profile
+
+    global _hw_cache, _hw_cache_ts
+    now = _time.monotonic()
+    if _hw_cache and (now - _hw_cache_ts) < _HW_CACHE_TTL:
+        return _hw_cache
+
+    models: list[dict] = []
+    try:
+        async with httpx.AsyncClient() as client:
+            r = await client.get(f"{OLLAMA_URL}/api/tags", timeout=5)
+            if r.is_success:
+                models = [
+                    {"name": m.get("name", ""), "size_gb": round(m.get("size", 0) / 1e9, 1)}
+                    for m in r.json().get("models", [])
+                ]
+    except Exception:
+        pass
+
+    loop    = asyncio.get_event_loop()
+    profile = await loop.run_in_executor(
+        None, functools.partial(get_profile, models=models)
+    )
+
+    _hw_cache    = profile
+    _hw_cache_ts = now
+    return profile
+
+
 # === Ekstern AI endpoint ===
+
+_SCOPE_403 = {
+    "error":           "scope_confirmation_required",
+    "message":         "Ekstern afsendelse kræver udtrykkelig godkendelse. Angiv wing og sæt scope_confirmed=true.",
+    "required_action": "Angiv wing og bekræft ekstern afsendelse via scope_confirmed=true.",
+}
+
 
 @app.post("/external/chat")
 def external_chat(req: ExternalChatRequest):
@@ -1857,21 +2401,35 @@ def external_chat(req: ExternalChatRequest):
     if not req.api_key.strip():
         raise HTTPException(400, "api_key er påkrævet")
 
-    # Scope-validering
-    wings_data = load_wings()
+    # --- Scope-validering: alle requests vurderes før ekstern afsendelse ---
+    wings_data    = load_wings()
+    resolved_scope = "UNKNOWN"
+    wing_label     = req.wing or "none"
+
     if req.wing:
         wing_entry = find_wing(wings_data, req.wing)
         if not wing_entry:
             raise HTTPException(404, f"Wing '{req.wing}' not found")
-        scope = wing_entry.get("scope", "PRIVATE")
-        if scope == "SECRET" and not req.scope_confirmed:
-            _audit("SCOPE_VIOLATION", req.wing, scope, req.user,
-                   "external_chat blocked: SECRET unconfirmed")
-            return JSONResponse(status_code=403, content={"error": "scope_blocked", "scope": "SECRET"})
-        if scope == "PRIVATE" and not req.scope_confirmed:
-            _audit("SCOPE_VIOLATION", req.wing, scope, req.user,
-                   "external_chat blocked: PRIVATE unconfirmed")
-            return JSONResponse(status_code=403, content={"error": "scope_warning", "scope": "PRIVATE"})
+        resolved_scope = wing_entry.get("scope", "PRIVATE")
+
+    ph = hashlib.sha256(req.prompt.encode()).hexdigest()[:16]
+    # Scope til audit: brug PRIVATE som konservativt minimum for unknown/public
+    # så alle relevante hændelser havner i audit-loggen.
+    audit_scope = resolved_scope if resolved_scope in ("SECRET", "PRIVATE") else "PRIVATE"
+
+    blocked = (
+        resolved_scope in ("SECRET", "PRIVATE") and not req.scope_confirmed
+        or resolved_scope == "UNKNOWN" and not req.scope_confirmed
+    )
+
+    if blocked:
+        _audit("SCOPE_VIOLATION", wing_label, audit_scope, req.user,
+               f"ext_chat blocked|scope={resolved_scope}|confirmed=0|ph:{ph}")
+        return JSONResponse(status_code=403, content=_SCOPE_403)
+
+    # Godkendt — log afsendelsen
+    _audit("EXTERNAL_SEND", wing_label, audit_scope, req.user,
+           f"ext_chat allowed|scope={resolved_scope}|confirmed={int(req.scope_confirmed)}|ph:{ph}")
 
     # Embed forespørgsel
     try:
@@ -2421,20 +2979,38 @@ async def debate(req: DebateRequest):
         if not p.api_key.strip():
             raise HTTPException(400, f"api_key mangler for deltager '{p.label}'")
 
+    # --- Scope-validering: context og save_to_wing vurderes FØR stream startes ---
+    # Resolved scope: brug save_to_wing hvis angivet, ellers UNKNOWN.
+    wings_data     = load_wings()
+    resolved_scope = "UNKNOWN"
+    wing_label     = req.save_to_wing or "none"
+
     if req.save_to_wing:
-        wings_data = load_wings()
         wing_entry = find_wing(wings_data, req.save_to_wing)
         if not wing_entry:
             raise HTTPException(404, f"Wing '{req.save_to_wing}' not found")
-        scope = wing_entry.get("scope", "PRIVATE")
-        if scope == "SECRET" and not req.scope_confirmed:
-            _audit("SCOPE_VIOLATION", req.save_to_wing, scope, None,
-                   "debate save blocked: SECRET unconfirmed")
-            return JSONResponse(status_code=403, content={"error": "scope_blocked", "scope": "SECRET"})
-        if scope == "PRIVATE" and not req.scope_confirmed:
-            _audit("SCOPE_VIOLATION", req.save_to_wing, scope, None,
-                   "debate save blocked: PRIVATE unconfirmed")
-            return JSONResponse(status_code=403, content={"error": "scope_warning", "scope": "PRIVATE"})
+        resolved_scope = wing_entry.get("scope", "PRIVATE")
+
+    ctx_ph    = hashlib.sha256((req.context or "").encode()).hexdigest()[:16]
+    topic_ph  = hashlib.sha256(req.topic.encode()).hexdigest()[:8]
+    audit_scope = resolved_scope if resolved_scope in ("SECRET", "PRIVATE") else "PRIVATE"
+
+    # Context sendes til alle deltagere — scope-check skal ske inden første kald.
+    # UNKNOWN scope uden scope_confirmed blokeres: vi kan ikke garantere indholdet
+    # er sikkert at sende eksternt.
+    context_blocked = (
+        resolved_scope in ("SECRET", "PRIVATE") and not req.scope_confirmed
+        or resolved_scope == "UNKNOWN" and not req.scope_confirmed
+    )
+
+    if context_blocked:
+        _audit("SCOPE_VIOLATION", wing_label, audit_scope, None,
+               f"debate blocked|scope={resolved_scope}|confirmed=0|ctx_ph:{ctx_ph}")
+        return JSONResponse(status_code=403, content=_SCOPE_403)
+
+    # Godkendt — log afsendelsen (context til alle deltagere)
+    _audit("EXTERNAL_SEND", wing_label, audit_scope, None,
+           f"debate allowed|scope={resolved_scope}|confirmed={int(req.scope_confirmed)}|t:{topic_ph}|ctx:{ctx_ph}")
 
     return StreamingResponse(
         _run_debate_stream(req),
@@ -3831,3 +4407,108 @@ def _restart_voice_service() -> None:
         logger.info("nous-voice-assistant.service genstartet")
     except Exception as e:
         logger.warning(f"Kunne ikke genstarte voice-service: {e}")
+
+
+# === Integrations ===
+
+_INTEGRATIONS_DIR = Path("/srv/nous/integrations")
+if str(_INTEGRATIONS_DIR.parent) not in sys.path:
+    sys.path.insert(0, str(_INTEGRATIONS_DIR.parent))
+
+from integrations.nas_connector import NasConnector as _NasConnector
+
+_nas = _NasConnector()
+
+
+class NasConfigUpdate(BaseModel):
+    enabled: Optional[bool] = None
+    mount_path: Optional[str] = None
+    wing: Optional[str] = None
+    scope: Optional[str] = None
+
+
+class NasImportRequest(BaseModel):
+    path: str
+    wing: Optional[str] = None
+    scope: Optional[str] = None
+
+
+@app.get("/integrations")
+def get_integrations():
+    """List alle tilgængelige integrationer og deres aktiveringsstatus."""
+    nas_cfg = _nas.get_config()
+    return {
+        "integrations": [
+            {
+                "id": "nas",
+                "label": "Netværkslager (NAS/SMB/NFS)",
+                "enabled": _nas.is_enabled(),
+                "config": nas_cfg,
+                "status": "active" if _nas.is_enabled() else "disabled",
+            },
+            {"id": "gmail",     "label": "Gmail",     "enabled": False, "status": "coming_soon"},
+            {"id": "hotmail",   "label": "Hotmail",   "enabled": False, "status": "coming_soon"},
+            {"id": "protonmail","label": "Protonmail", "enabled": False, "status": "coming_soon"},
+        ]
+    }
+
+
+@app.put("/integrations/nas")
+def update_nas_config(body: NasConfigUpdate):
+    """Opdater NAS-integrationskonfiguration (enabled, mount_path, wing, scope)."""
+    patch = {k: v for k, v in body.model_dump().items() if v is not None}
+    try:
+        cfg = _nas.update_config(patch)
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    return {"ok": True, "config": cfg}
+
+
+@app.get("/integrations/nas/status")
+def nas_status():
+    """Returnér NAS mount-info og aktiveringsstatus."""
+    return {
+        "enabled": _nas.is_enabled(),
+        "config": _nas.get_config(),
+        "mount": _nas.mount_info(),
+    }
+
+
+@app.get("/integrations/nas/browse")
+def nas_browse(path: str = ""):
+    """
+    Browse en mappe på NAS. Auditlogges som READ.
+    Kræver at NAS-integration er aktiveret.
+    """
+    if not _nas.is_enabled():
+        raise HTTPException(403, "NAS-integration er ikke aktiveret")
+    try:
+        entries = _nas.list_directory(path)
+        return {"path": path, "entries": entries}
+    except PermissionError as e:
+        raise HTTPException(403, str(e))
+    except FileNotFoundError as e:
+        raise HTTPException(404, str(e))
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+
+
+@app.post("/integrations/nas/import")
+def nas_import(req: NasImportRequest, background_tasks: BackgroundTasks):
+    """
+    Importer én fil fra NAS til NOUS' ingest-pipeline.
+    Kopierer filen til /home/nous/incoming/<wing>/ — den eksisterende
+    ingest-pipeline håndterer embedding og Qdrant-upsert.
+    Auditlogges som WRITE.
+    """
+    if not _nas.is_enabled():
+        raise HTTPException(403, "NAS-integration er ikke aktiveret")
+    try:
+        result = _nas.stage_for_import(req.path, wing=req.wing, scope=req.scope)
+        return {"ok": True, "queued": result}
+    except PermissionError as e:
+        raise HTTPException(403, str(e))
+    except FileNotFoundError as e:
+        raise HTTPException(404, str(e))
+    except ValueError as e:
+        raise HTTPException(400, str(e))

@@ -1,0 +1,8 @@
+{
+  "nas": {
+    "enabled": false,
+    "mount_path": "",
+    "wing": "",
+    "scope": "PRIVATE"
+  }
+}
