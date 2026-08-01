@@ -4447,9 +4447,11 @@ if str(_INTEGRATIONS_DIR.parent) not in sys.path:
 
 from integrations.nas_connector import NasConnector as _NasConnector
 from integrations.gmail_connector import GmailConnector as _GmailConnector
+from integrations.hotmail_connector import HotmailConnector as _HotmailConnector
 
-_nas = _NasConnector()
-_gmail = _GmailConnector()
+_nas     = _NasConnector()
+_gmail   = _GmailConnector()
+_hotmail = _HotmailConnector()
 
 
 class NasConfigUpdate(BaseModel):
@@ -4487,7 +4489,13 @@ def get_integrations():
                 "config": gmail_cfg,
                 "status": "active" if gmail_enabled else "disabled",
             },
-            {"id": "hotmail",    "label": "Hotmail",    "enabled": False, "status": "coming_soon"},
+            {
+                "id":      "hotmail",
+                "label":   "Hotmail / Outlook",
+                "enabled": _hotmail.is_enabled(),
+                "config":  _hotmail.get_config(),
+                "status":  "active" if _hotmail.is_enabled() else "disabled",
+            },
             {"id": "protonmail", "label": "Protonmail", "enabled": False, "status": "coming_soon"},
         ]
     }
@@ -4702,4 +4710,191 @@ async def gmail_callback(code: str = None, state: str = None, error: str = None)
         pass
     return RedirectResponse(
         f"/?gmail_connected=true&gmail_email={urllib.parse.quote(email)}"
+    )
+
+
+# === Hotmail / Outlook integration ===
+
+class HotmailConfigUpdate(BaseModel):
+    enabled:      Optional[bool] = None
+    wing:         Optional[str]  = None
+    scope:        Optional[str]  = None
+    max_messages: Optional[int]  = None
+
+
+@app.put("/integrations/hotmail")
+def update_hotmail_config(body: HotmailConfigUpdate):
+    """Opdater Hotmail-integrationskonfiguration."""
+    patch = {k: v for k, v in body.model_dump().items() if v is not None}
+    try:
+        cfg = _hotmail.update_config(patch)
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    return {"ok": True, "config": cfg}
+
+
+@app.get("/integrations/hotmail/status")
+def hotmail_status():
+    """Returnér Hotmail auth-status og konfiguration."""
+    return _hotmail.status()
+
+
+@app.get("/integrations/hotmail/messages")
+def hotmail_messages(max_results: int = 20):
+    """Preview: list nye (ikke-processerede) emails fra Hotmail."""
+    if not _hotmail.is_enabled():
+        raise HTTPException(403, "Hotmail-integration er ikke aktiveret")
+    if not _hotmail.is_authenticated():
+        raise HTTPException(401, "Hotmail er ikke autentificeret — brug Cockpit wizard")
+    if not (1 <= max_results <= 200):
+        raise HTTPException(400, "max_results skal være 1–200")
+    try:
+        messages = _hotmail.fetch_messages(max_results=max_results)
+        return {"messages": messages, "count": len(messages)}
+    except Exception as e:
+        raise HTTPException(500, str(e))
+
+
+@app.post("/integrations/hotmail/sync")
+def hotmail_sync(background_tasks: BackgroundTasks):
+    """
+    Synkronisér nye emails fra Hotmail til NOUS ingest-pipeline.
+    Returnerer straks — sync kører i baggrunden.
+    """
+    if not _hotmail.is_enabled():
+        raise HTTPException(403, "Hotmail-integration er ikke aktiveret")
+    if not _hotmail.is_authenticated():
+        raise HTTPException(401, "Hotmail er ikke autentificeret — brug Cockpit wizard")
+
+    def _do_sync():
+        try:
+            _hotmail.sync()
+        except Exception:
+            pass
+
+    background_tasks.add_task(_do_sync)
+    return {"ok": True, "message": "Hotmail sync startet i baggrunden"}
+
+
+# ── Hotmail Setup Wizard endpoints ─────────────────────────────────────────
+_HOTMAIL_CREDS_FILE    = Path("/srv/nous/config/hotmail_credentials.json")
+_hotmail_oauth_states: dict = {}   # state → flow_dict (fra MSAL initiate_auth_code_flow)
+
+
+class HotmailSaveCredentials(BaseModel):
+    client_id:     str
+    client_secret: str
+
+
+@app.post("/integrations/hotmail/credentials")
+async def hotmail_save_credentials(body: HotmailSaveCredentials):
+    """Valider og gem Azure app-credentials (client_id + client_secret)."""
+    cid = body.client_id.strip()
+    sec = body.client_secret.strip()
+    if not cid or len(cid) < 10:
+        raise HTTPException(400, "Ugyldig client_id — det ser ikke ud som et Azure Application ID")
+    if not sec or len(sec) < 8:
+        raise HTTPException(400, "Ugyldig client_secret — værdien er for kort")
+    # Hurtig syntakstjek: Azure client_id er en GUID (8-4-4-4-12 hex)
+    import re as _re
+    if not _re.fullmatch(
+        r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}",
+        cid, _re.IGNORECASE,
+    ):
+        raise HTTPException(
+            400,
+            "client_id ser ikke ud som et gyldigt Azure Application (client) ID — "
+            "det skal have formatet xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+        )
+    payload = json.dumps({"client_id": cid, "client_secret": sec}, indent=2)
+    _HOTMAIL_CREDS_FILE.parent.mkdir(parents=True, exist_ok=True)
+    _HOTMAIL_CREDS_FILE.write_text(payload, encoding="utf-8")
+    _HOTMAIL_CREDS_FILE.chmod(0o600)
+    return {"ok": True, "client_id_prefix": cid[:8]}
+
+
+class HotmailAuthorizeRequest(BaseModel):
+    callback_url: str
+
+
+@app.post("/integrations/hotmail/authorize")
+async def hotmail_authorize(body: HotmailAuthorizeRequest):
+    """Start MSAL OAuth-flow — returner Microsoft-autoriserings-URL til frontend."""
+    if not _HOTMAIL_CREDS_FILE.exists():
+        raise HTTPException(400, "Credentials ikke gemt — udfyld trin 5 først")
+    try:
+        import msal
+        creds = json.loads(_HOTMAIL_CREDS_FILE.read_text(encoding="utf-8"))
+        app = msal.ConfidentialClientApplication(
+            creds["client_id"],
+            client_credential=creds["client_secret"],
+            authority="https://login.microsoftonline.com/consumers",
+        )
+        flow = app.initiate_auth_code_flow(
+            scopes=["Mail.Read", "User.Read", "offline_access"],
+            redirect_uri=body.callback_url,
+        )
+    except Exception as e:
+        raise HTTPException(400, f"Kunne ikke starte OAuth-flow: {e}")
+    state = flow.get("state", "")
+    _hotmail_oauth_states[state] = (flow, creds)
+    return {"auth_url": flow["auth_uri"]}
+
+
+@app.get("/integrations/hotmail/callback")
+async def hotmail_callback(
+    code:  str = None,
+    state: str = None,
+    error: str = None,
+    error_description: str = None,
+):
+    """OAuth-callback fra Microsoft — gemmer token og redirecter til Cockpit."""
+    import urllib.parse
+    import msal
+
+    if error:
+        msg = error_description or error
+        return RedirectResponse(f"/?hotmail_error={urllib.parse.quote(msg)}")
+    if not state or state not in _hotmail_oauth_states:
+        return RedirectResponse("/?hotmail_error=invalid_state")
+
+    flow, creds = _hotmail_oauth_states.pop(state)
+    try:
+        app = msal.ConfidentialClientApplication(
+            creds["client_id"],
+            client_credential=creds["client_secret"],
+            authority="https://login.microsoftonline.com/consumers",
+        )
+        result = app.acquire_token_by_auth_code_flow(flow, {"code": code, "state": state})
+    except Exception:
+        return RedirectResponse("/?hotmail_error=token_exchange_failed")
+
+    if "error" in result:
+        desc = result.get("error_description", result["error"])
+        return RedirectResponse(f"/?hotmail_error={urllib.parse.quote(desc)}")
+
+    # Gem token-cache
+    token_file = Path(_hotmail.get_config().get("token_file", "/srv/nous/config/hotmail_token.json"))
+    token_file.parent.mkdir(parents=True, exist_ok=True)
+    cache = app.token_cache
+    token_file.write_text(cache.serialize() if hasattr(cache, "serialize") else json.dumps(result), encoding="utf-8")
+    token_file.chmod(0o600)
+
+    # Hent email via Graph API
+    email = ""
+    try:
+        import urllib.request
+        token = result.get("access_token", "")
+        req = urllib.request.Request(
+            "https://graph.microsoft.com/v1.0/me",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            profile = json.loads(resp.read().decode("utf-8"))
+            email = profile.get("mail") or profile.get("userPrincipalName") or ""
+    except Exception:
+        pass
+
+    return RedirectResponse(
+        f"/?hotmail_connected=true&hotmail_email={urllib.parse.quote(email)}"
     )

@@ -921,9 +921,9 @@ body:not([data-mode="assistent"]) #ass-legacy-btn{display:none!important}
 .int-entry .ie-imp-btn:hover{background:var(--bb);border-color:var(--ac);color:var(--ac)}
 .int-browser-empty{font-family:monospace;font-size:9px;color:rgba(130,160,175,.3);padding:10px;text-align:center}
 /* ── GMAIL / OAUTH WIZARD ────────────────────────── */
-#gmail-wizard-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);backdrop-filter:blur(6px);z-index:210;align-items:center;justify-content:center}
-#gmail-wizard-ov.open{display:flex}
-#gmail-wizard-box{background:#010a14;border:1px solid rgba(0,212,255,.28);border-radius:6px;width:min(560px,96vw);max-height:88vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 0 48px rgba(0,212,255,.1)}
+#gmail-wizard-ov,#hotmail-wizard-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);backdrop-filter:blur(6px);z-index:210;align-items:center;justify-content:center}
+#gmail-wizard-ov.open,#hotmail-wizard-ov.open{display:flex}
+#gmail-wizard-box,#hotmail-wizard-box{background:#010a14;border:1px solid rgba(0,212,255,.28);border-radius:6px;width:min(560px,96vw);max-height:88vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 0 48px rgba(0,212,255,.1)}
 .gwiz-hdr{display:flex;align-items:center;padding:11px 16px;border-bottom:1px solid rgba(0,212,255,.1);flex-shrink:0}
 .gwiz-title{font-family:monospace;font-size:10px;letter-spacing:3px;color:rgba(0,212,255,.65);flex:1}
 .gwiz-close{background:transparent;border:none;color:rgba(160,180,200,.35);cursor:pointer;font-size:14px;line-height:1;padding:0;transition:.15s}
@@ -2057,11 +2057,46 @@ body:not([data-mode="assistent"]) #ass-legacy-btn{display:none!important}
         </div>
       </div>
 
-      <!-- Hotmail (kommer snart) -->
-      <div class="int-card coming-soon" id="int-card-hotmail">
+      <!-- Hotmail / Outlook -->
+      <div class="int-card" id="int-card-hotmail">
         <div class="int-header">
           <span class="int-label">Hotmail / Outlook</span>
-          <span class="int-badge soon">KOMMER SNART</span>
+          <span class="int-badge off" id="int-badge-hotmail">FRA</span>
+          <label class="tsw" id="int-tog-hotmail-wrap" title="Aktiver Hotmail-integration" style="display:none">
+            <input type="checkbox" id="int-tog-hotmail" onchange="intToggleHotmail(this.checked)">
+            <span class="tsl"></span>
+          </label>
+        </div>
+        <div class="int-body" id="int-body-hotmail">
+          <!-- Ikke autentificeret: opsætningsknap -->
+          <div id="int-hotmail-setup">
+            <div class="int-warn">&#9888; Hotmail kræver engangsgodkendelse via Microsoft (~5 min). Gøres kun én gang — derefter synkroniserer NOUS automatisk.</div>
+            <button class="int-save-btn" onclick="intHotmailOpenWizard()">FORBIND HOTMAIL →</button>
+          </div>
+          <!-- Autentificeret: konfiguration -->
+          <div id="int-hotmail-cfg" style="display:none">
+            <div class="int-gmail-auth">&#10003; <span class="gm-email" id="int-hotmail-email-lbl"></span></div>
+            <div class="int-field">
+              <label>WING</label>
+              <select class="int-sel" id="int-hotmail-wing"><option value="">– vælg –</option></select>
+            </div>
+            <div class="int-field">
+              <label>SCOPE</label>
+              <select class="int-sel" id="int-hotmail-scope">
+                <option value="PRIVATE">PRIVATE</option>
+                <option value="SECRET">SECRET</option>
+                <option value="SWARM">SWARM</option>
+                <option value="PUBLIC">PUBLIC</option>
+              </select>
+            </div>
+            <div class="int-field">
+              <label>MAX EMAILS</label>
+              <input type="number" class="int-inp" id="int-hotmail-max" min="1" max="1000" value="100" style="max-width:72px">
+            </div>
+            <button class="int-save-btn" onclick="intSaveHotmail()">GEM HOTMAIL-INDSTILLINGER</button>
+            <button class="int-save-btn" style="margin-top:4px;border-color:rgba(0,212,255,.18);color:rgba(0,212,255,.6)" onclick="intSyncHotmail()">&#x21BB; SYNK NU</button>
+            <div class="int-status" id="int-hotmail-status"></div>
+          </div>
         </div>
       </div>
 
@@ -2090,6 +2125,23 @@ body:not([data-mode="assistent"]) #ass-legacy-btn{display:none!important}
       <button class="gwiz-btn" id="gwiz-back-btn" onclick="intGmailWizBack()">&#x2190; TILBAGE</button>
       <span class="gwiz-st" id="gwiz-st"></span>
       <button class="gwiz-btn primary" id="gwiz-next-btn" onclick="intGmailWizNext()">NÆSTE &#x2192;</button>
+    </div>
+  </div>
+</div>
+
+<!-- HOTMAIL SETUP WIZARD -->
+<div id="hotmail-wizard-ov" onclick="intHotmailWizOvClick(event)">
+  <div id="hotmail-wizard-box">
+    <div class="gwiz-hdr">
+      <span class="gwiz-title">// HOTMAIL / OUTLOOK OPSÆTNING</span>
+      <button class="gwiz-close" onclick="intHotmailCloseWizard()">&#x2715;</button>
+    </div>
+    <div class="gwiz-steps" id="hwiz-steps"></div>
+    <div class="gwiz-body" id="hwiz-body"></div>
+    <div class="gwiz-nav">
+      <button class="gwiz-btn" id="hwiz-back-btn" onclick="intHotmailWizBack()">&#x2190; TILBAGE</button>
+      <span class="gwiz-st" id="hwiz-st"></span>
+      <button class="gwiz-btn primary" id="hwiz-next-btn" onclick="intHotmailWizNext()">NÆSTE &#x2192;</button>
     </div>
   </div>
 </div>
@@ -6388,6 +6440,7 @@ function loginAs(userKey) {
   loadUserLang(userKey);
   loadUserFeatures(userKey);
   _intGmailAutoOpen();
+  _intHotmailAutoOpen();
 }
 
 function logout() {
@@ -8396,13 +8449,17 @@ async function intInit() {
     const r = await fetch('/integrations');
     if (!r.ok) return;
     const data = await r.json();
-    const nas   = data.integrations.find(i => i.id === 'nas');
-    const gmail = data.integrations.find(i => i.id === 'gmail');
+    const nas     = data.integrations.find(i => i.id === 'nas');
+    const gmail   = data.integrations.find(i => i.id === 'gmail');
+    const hotmail = data.integrations.find(i => i.id === 'hotmail');
     if (nas)   _intApplyNasState(nas.enabled, nas.config);
     if (gmail) {
-      // Hent fuld gmail status inkl. authenticated
       const gs = await fetch('/integrations/gmail/status').then(r2 => r2.ok ? r2.json() : null).catch(() => null);
       _intApplyGmailState(gs || {enabled: gmail.enabled, authenticated: false, config: gmail.config});
+    }
+    if (hotmail) {
+      const hs = await fetch('/integrations/hotmail/status').then(r2 => r2.ok ? r2.json() : null).catch(() => null);
+      _intApplyHotmailState(hs || {enabled: hotmail.enabled, authenticated: false, config: hotmail.config});
     }
   } catch (_) {}
   _intPopulateWings();
@@ -8433,7 +8490,7 @@ async function _intPopulateWings() {
     if (!r.ok) return;
     const data = await r.json();
     const wings = data.wings || [];
-    ['int-nas-wing', 'int-gmail-wing'].forEach(selId => {
+    ['int-nas-wing', 'int-gmail-wing', 'int-hotmail-wing'].forEach(selId => {
       const sel = document.getElementById(selId);
       if (!sel) return;
       const cur = sel.value;
@@ -8953,6 +9010,367 @@ async function _intGmailAutoOpen() {
     setTimeout(() => {
       const stEl = document.getElementById('gwiz-auth-st');
       if (stEl) stEl.innerHTML = '<span style="font-family:monospace;font-size:9px;color:#ff4455">Fejl: ' + esc(params.get('gmail_error')) + ' — prøv igen</span>';
+    }, 200);
+  }
+}
+
+// ── HOTMAIL WIZARD ───────────────────────────────────────────────────────────
+let _hwizStep     = 1;
+const _HWIZ_TOTAL = 7;
+let _hwizCredsOk  = false;
+
+function intHotmailOpenWizard(startStep) {
+  _hwizStep    = startStep || 1;
+  _hwizCredsOk = false;
+  const ov = document.getElementById('hotmail-wizard-ov');
+  if (ov) ov.classList.add('open');
+  _hwizRender();
+}
+function intHotmailCloseWizard() {
+  const ov = document.getElementById('hotmail-wizard-ov');
+  if (ov) ov.classList.remove('open');
+}
+function intHotmailWizOvClick(e) {
+  if (e.target === document.getElementById('hotmail-wizard-ov')) intHotmailCloseWizard();
+}
+function intHotmailWizNext() {
+  if (_hwizStep === 5 && !_hwizCredsOk) { _hwizSt('Gem credentials først', 'err'); return; }
+  if (_hwizStep < _HWIZ_TOTAL) { _hwizStep++; _hwizRender(); }
+  else intHotmailCloseWizard();
+}
+function intHotmailWizBack() {
+  if (_hwizStep > 1) { _hwizStep--; _hwizRender(); }
+}
+
+function _hwizSt(msg, type) {
+  const el = document.getElementById('hwiz-st');
+  if (!el) return;
+  el.textContent = msg;
+  el.className   = 'gwiz-st' + (type ? ' ' + type : '');
+}
+
+function _hwizRender() {
+  const stepsEl = document.getElementById('hwiz-steps');
+  if (stepsEl) {
+    stepsEl.innerHTML = Array.from({length: _HWIZ_TOTAL}, (_, i) => {
+      const n = i + 1;
+      const cls = n < _hwizStep ? 'gwiz-dot done' : n === _hwizStep ? 'gwiz-dot act' : 'gwiz-dot';
+      const icon = n < _hwizStep ? '&#x2713;' : n;
+      return (i > 0 ? '<span class="gwiz-line"></span>' : '') + `<span class="${cls}">${icon}</span>`;
+    }).join('');
+  }
+  const backBtn = document.getElementById('hwiz-back-btn');
+  const nextBtn = document.getElementById('hwiz-next-btn');
+  if (backBtn) backBtn.style.visibility = _hwizStep > 1 ? '' : 'hidden';
+  if (nextBtn) {
+    nextBtn.textContent = _hwizStep === _HWIZ_TOTAL ? 'LUK ✕' : 'NÆSTE →';
+    nextBtn.className   = 'gwiz-btn' + (_hwizStep === _HWIZ_TOTAL ? ' success' : ' primary');
+    nextBtn.style.display = _hwizStep === 6 ? 'none' : '';
+  }
+  _hwizSt('');
+  const body = document.getElementById('hwiz-body');
+  if (body) body.innerHTML = _hwizStepHtml(_hwizStep);
+  if (_hwizStep === 4) {
+    const uri = window.location.origin + '/integrations/hotmail/callback';
+    const uriEl = document.getElementById('hwiz-uri');
+    if (uriEl) uriEl.textContent = uri;
+  }
+}
+
+function _hwizStepHtml(step) {
+  const cbUrl = window.location.origin + '/integrations/hotmail/callback';
+  switch (step) {
+    case 1: return `
+      <div class="gwiz-step-title">TRIN 1 — VELKOMMEN</div>
+      <div class="gwiz-text">For at forbinde Hotmail/Outlook opretter du gratis adgang via Microsofts Azure-portal. Det tager <strong>~5 minutter</strong> og skal kun gøres én gang.</div>
+      <div class="gwiz-text">Derefter synkroniserer NOUS automatisk nye emails til din valgte wing, så du kan søge og spørge til dit email-indhold.</div>
+      <div class="gwiz-note">&#9432; NOUS læser kun emails — ingen skrivning, ingen sletning, ingen afsendelse. Alt behandles lokalt på din Pi.</div>`;
+
+    case 2: return `
+      <div class="gwiz-step-title">TRIN 2 — OPRET AZURE APP-REGISTRERING</div>
+      <div class="gwiz-text">Åbn Azure-portalen og registrér en ny app:</div>
+      <a class="gwiz-link" href="https://portal.azure.com/#blade/Microsoft_AAD_RegisteredApps/ApplicationsListBlade" target="_blank" rel="noopener">&#x1F517; Åbn App registrations</a>
+      <div class="gwiz-note">
+        <strong>Hvad du gør:</strong><br>
+        1. Klik <strong>+ New registration</strong><br>
+        2. Giv appen et navn — fx <em>NOUS</em><br>
+        3. Under <strong>Supported account types</strong> vælg <em>Personal Microsoft accounts only</em><br>
+        4. Klik <strong>Register</strong><br>
+        5. Notér <strong>Application (client) ID</strong> — du bruger det i trin 5
+      </div>`;
+
+    case 3: return `
+      <div class="gwiz-step-title">TRIN 3 — TILFØJ API-TILLADELSER</div>
+      <div class="gwiz-text">Tilføj adgang til at læse dine emails:</div>
+      <div class="gwiz-note">
+        <strong>Hvad du gør (i din nye app):</strong><br>
+        1. Klik <strong>API permissions</strong> i venstre menu<br>
+        2. Klik <strong>+ Add a permission</strong><br>
+        3. Vælg <strong>Microsoft Graph</strong> → <strong>Delegated permissions</strong><br>
+        4. Søg efter og tilføj: <strong>Mail.Read</strong> og <strong>User.Read</strong><br>
+        5. Klik <strong>Add permissions</strong>
+      </div>
+      <div class="gwiz-note" style="border-color:rgba(255,180,60,.2);background:rgba(255,150,0,.04);color:rgba(255,180,60,.7)">
+        &#9888; <strong>Admin consent</strong> er ikke nødvendigt for personlige konti — spring det over.
+      </div>`;
+
+    case 4: return `
+      <div class="gwiz-step-title">TRIN 4 — REDIRECT URI + CLIENT SECRET</div>
+      <div class="gwiz-text">Registrér callback-adressen og opret en adgangsnøgle:</div>
+      <div class="gwiz-note">
+        <strong>Redirect URI:</strong><br>
+        1. Klik <strong>Authentication</strong> i venstre menu<br>
+        2. Klik <strong>+ Add a platform</strong> → <strong>Web</strong><br>
+        3. Indsæt denne adresse som Redirect URI:
+      </div>
+      <code class="gwiz-uri" id="hwiz-uri" onclick="navigator.clipboard?.writeText(this.textContent).then(()=>this.style.color='#fff')" title="Klik for at kopiere">${esc(cbUrl)}</code>
+      <div class="gwiz-note">
+        4. Klik <strong>Configure</strong><br><br>
+        <strong>Client secret:</strong><br>
+        5. Klik <strong>Certificates &amp; secrets</strong> i venstre menu<br>
+        6. Klik <strong>+ New client secret</strong> → giv den et navn og vælg udløbstid<br>
+        7. Klik <strong>Add</strong> — kopiér <strong>Value</strong> med det samme (vises kun én gang!)
+      </div>`;
+
+    case 5: return `
+      <div class="gwiz-step-title">TRIN 5 — INDTAST CREDENTIALS</div>
+      <div class="gwiz-text">Indsæt Application ID og client secret fra Azure:</div>
+      <div class="int-field" style="border-color:rgba(0,212,255,.15);margin-bottom:6px">
+        <label style="font-size:9px;letter-spacing:.5px;color:#809aaa;width:110px;flex-shrink:0">APPLICATION ID</label>
+        <input type="text" class="int-inp" id="hwiz-client-id"
+               placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+               style="font-family:monospace;font-size:10px">
+      </div>
+      <div class="int-field" style="border-color:rgba(0,212,255,.15);margin-bottom:10px">
+        <label style="font-size:9px;letter-spacing:.5px;color:#809aaa;width:110px;flex-shrink:0">CLIENT SECRET</label>
+        <input type="password" class="int-inp" id="hwiz-client-secret"
+               placeholder="indsæt secret value her"
+               style="font-family:monospace;font-size:10px">
+      </div>
+      <button class="gwiz-btn primary" style="width:100%;padding:7px" onclick="intHotmailSaveCreds()">
+        VALIDER OG GEM &#x2192;
+      </button>
+      <div id="hwiz-creds-st" style="margin-top:6px"></div>`;
+
+    case 6: return `
+      <div class="gwiz-step-title">TRIN 6 — AUTORISÉR HOTMAIL-ADGANG</div>
+      <div class="gwiz-text">Klik nedenfor — du videresendes til Microsoft for at godkende adgangen. Du vender automatisk tilbage til NOUS når det er gjort.</div>
+      <div class="gwiz-note">&#9432; Siden åbner Microsoft-login. Vælg den konto du vil forbinde og godkend "Læse mails". Du vender tilbage til NOUS herefter.</div>
+      <div style="margin-top:14px">
+        <button class="gwiz-btn primary" style="width:100%;padding:9px;font-size:10px;letter-spacing:2px" onclick="intHotmailAuthorize()">
+          FORBIND MIN KONTO &#x2192;
+        </button>
+      </div>
+      <div id="hwiz-auth-st" style="margin-top:8px"></div>`;
+
+    case 7: return `
+      <div class="gwiz-step-title">TRIN 7 — HOTMAIL FORBUNDET</div>
+      <div class="gwiz-email-badge" id="hwiz-email-badge">&#x2713; Forbundet</div>
+      <div class="gwiz-text" style="margin-top:10px">Vælg hvilken wing emails skal gemmes i:</div>
+      <div class="int-field" style="border-color:rgba(0,212,255,.1)">
+        <label style="font-size:9px;letter-spacing:.5px;color:#809aaa;width:80px;flex-shrink:0">WING</label>
+        <select class="int-sel" id="hwiz-wing"><option value="">– vælg –</option></select>
+      </div>
+      <div class="int-field" style="border-color:rgba(0,212,255,.1)">
+        <label style="font-size:9px;letter-spacing:.5px;color:#809aaa;width:80px;flex-shrink:0">SCOPE</label>
+        <select class="int-sel" id="hwiz-scope">
+          <option value="PRIVATE">PRIVATE</option>
+          <option value="SECRET">SECRET</option>
+          <option value="SWARM">SWARM</option>
+        </select>
+      </div>
+      <button class="int-save-btn" style="margin-top:10px" onclick="intHotmailWizSave()">GEM OG AKTIVÉR HOTMAIL</button>
+      <div id="hwiz-save-st" class="int-status" style="margin-top:5px"></div>`;
+
+    default: return '';
+  }
+}
+
+async function intHotmailSaveCreds() {
+  const cid = (document.getElementById('hwiz-client-id')?.value || '').trim();
+  const sec = (document.getElementById('hwiz-client-secret')?.value || '').trim();
+  const stEl = document.getElementById('hwiz-creds-st');
+  if (!cid || !sec) {
+    if (stEl) stEl.innerHTML = '<span style="font-family:monospace;font-size:9px;color:#ff4455">Udfyld begge felter</span>';
+    return;
+  }
+  if (stEl) stEl.innerHTML = '<span style="font-family:monospace;font-size:9px;color:rgba(0,212,255,.6)">Validerer…</span>';
+  try {
+    const r = await fetch('/integrations/hotmail/credentials', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({client_id: cid, client_secret: sec}),
+    });
+    const d = await r.json();
+    if (r.ok) {
+      _hwizCredsOk = true;
+      if (stEl) stEl.innerHTML = '<span style="font-family:monospace;font-size:9px;color:#00ff88">&#x2713; Gemt — klik Næste</span>';
+      _hwizSt('Klar — klik Næste', 'ok');
+    } else {
+      _hwizCredsOk = false;
+      if (stEl) stEl.innerHTML = '<span style="font-family:monospace;font-size:9px;color:#ff4455">&#x2717; ' + esc(d.detail || 'Ugyldig') + '</span>';
+      _hwizSt(d.detail || 'Ugyldig credentials', 'err');
+    }
+  } catch(e) {
+    _hwizCredsOk = false;
+    if (stEl) stEl.innerHTML = '<span style="font-family:monospace;font-size:9px;color:#ff4455">Netværksfejl: ' + esc(e.message) + '</span>';
+  }
+}
+
+async function intHotmailAuthorize() {
+  const stEl = document.getElementById('hwiz-auth-st');
+  if (stEl) stEl.innerHTML = '<span style="font-family:monospace;font-size:9px;color:rgba(0,212,255,.6)">Henter autoriserings-URL…</span>';
+  try {
+    const cbUrl = window.location.origin + '/integrations/hotmail/callback';
+    const r = await fetch('/integrations/hotmail/authorize', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({callback_url: cbUrl}),
+    });
+    const d = await r.json();
+    if (!r.ok) {
+      if (stEl) stEl.innerHTML = '<span style="font-family:monospace;font-size:9px;color:#ff4455">Fejl: ' + esc(d.detail || r.status) + '</span>';
+      return;
+    }
+    sessionStorage.setItem('hwiz_in_progress', '1');
+    window.location.href = d.auth_url;
+  } catch(e) {
+    if (stEl) stEl.innerHTML = '<span style="font-family:monospace;font-size:9px;color:#ff4455">Netværksfejl: ' + esc(e.message) + '</span>';
+  }
+}
+
+async function intHotmailWizSave() {
+  const wing  = document.getElementById('hwiz-wing')?.value  || '';
+  const scope = document.getElementById('hwiz-scope')?.value || 'PRIVATE';
+  const stEl  = document.getElementById('hwiz-save-st');
+  if (stEl) { stEl.textContent = 'Gemmer…'; stEl.className = 'int-status'; }
+  try {
+    const r = await fetch('/integrations/hotmail', {
+      method: 'PUT', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({enabled: true, wing, scope}),
+    });
+    const d = await r.json();
+    if (r.ok) {
+      if (stEl) { stEl.textContent = 'Hotmail aktiveret!'; stEl.className = 'int-status ok'; }
+      const hs = await fetch('/integrations/hotmail/status').then(r2 => r2.ok ? r2.json() : null).catch(()=>null);
+      if (hs) _intApplyHotmailState(hs);
+      await _intPopulateWings();
+      setTimeout(intHotmailCloseWizard, 1200);
+    } else {
+      if (stEl) { stEl.textContent = d.detail || 'Fejl ved gem'; stEl.className = 'int-status err'; }
+    }
+  } catch(e) {
+    if (stEl) { stEl.textContent = 'Netværksfejl'; stEl.className = 'int-status err'; }
+  }
+}
+
+function _intApplyHotmailState(status) {
+  const authenticated = !!status?.authenticated;
+  const enabled       = !!status?.enabled;
+  const cfg           = status?.config || {};
+
+  const badge  = document.getElementById('int-badge-hotmail');
+  const card   = document.getElementById('int-card-hotmail');
+  const body   = document.getElementById('int-body-hotmail');
+  const togWr  = document.getElementById('int-tog-hotmail-wrap');
+  const tog    = document.getElementById('int-tog-hotmail');
+  const setup  = document.getElementById('int-hotmail-setup');
+  const cfgDiv = document.getElementById('int-hotmail-cfg');
+
+  if (badge)  { badge.textContent = enabled ? 'TIL' : 'FRA'; badge.className = 'int-badge ' + (enabled ? 'on' : 'off'); }
+  if (card)   card.classList.toggle('enabled', enabled);
+  if (body)   body.classList.add('open');
+  if (togWr)  togWr.style.display = authenticated ? '' : 'none';
+  if (tog)    tog.checked = !!enabled;
+  if (setup)  setup.style.display = authenticated ? 'none' : 'block';
+  if (cfgDiv) cfgDiv.style.display = authenticated ? 'block' : 'none';
+
+  if (authenticated) {
+    const emailLbl = document.getElementById('int-hotmail-email-lbl');
+    if (emailLbl) emailLbl.textContent = cfg.email_address || 'forbundet';
+    const wingEl = document.getElementById('int-hotmail-wing');
+    const scopeEl = document.getElementById('int-hotmail-scope');
+    const maxEl = document.getElementById('int-hotmail-max');
+    if (wingEl && cfg.wing)        wingEl.value = cfg.wing;
+    if (scopeEl && cfg.scope)      scopeEl.value = cfg.scope;
+    if (maxEl && cfg.max_messages) maxEl.value = cfg.max_messages;
+  }
+}
+
+async function intToggleHotmail(enabled) {
+  const body = document.getElementById('int-body-hotmail');
+  if (body) body.classList.toggle('open', enabled);
+  try {
+    const r = await fetch('/integrations/hotmail', {
+      method: 'PUT', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({enabled}),
+    });
+    const d = await r.json();
+    if (r.ok) { _intApplyHotmailState({authenticated: true, enabled, config: d.config}); _intStatus('hotmail', enabled ? 'Aktiveret' : 'Deaktiveret', true); }
+    else       { _intStatus('hotmail', d.detail || 'Fejl', false); const t = document.getElementById('int-tog-hotmail'); if (t) t.checked = !enabled; }
+  } catch(e) { _intStatus('hotmail', 'Netværksfejl', false); }
+}
+
+async function intSaveHotmail() {
+  const wing  = document.getElementById('int-hotmail-wing')?.value  || '';
+  const scope = document.getElementById('int-hotmail-scope')?.value || 'PRIVATE';
+  const max   = parseInt(document.getElementById('int-hotmail-max')?.value || '100', 10);
+  _intStatus('hotmail', 'Gemmer…', null);
+  try {
+    const r = await fetch('/integrations/hotmail', {
+      method: 'PUT', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({wing, scope, max_messages: max}),
+    });
+    const d = await r.json();
+    if (r.ok) { _intStatus('hotmail', 'Gemt', true); }
+    else       { _intStatus('hotmail', d.detail || 'Fejl', false); }
+  } catch(e) { _intStatus('hotmail', 'Netværksfejl', false); }
+}
+
+async function intSyncHotmail() {
+  _intStatus('hotmail', 'Synkroniserer…', null);
+  try {
+    const r = await fetch('/integrations/hotmail/sync', {method:'POST'});
+    const d = await r.json();
+    if (r.ok) _intStatus('hotmail', d.message || 'Sync startet', true);
+    else       _intStatus('hotmail', d.detail || 'Fejl', false);
+  } catch(e) { _intStatus('hotmail', 'Netværksfejl', false); }
+}
+
+async function _intHotmailAutoOpen() {
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('hotmail_connected') === 'true') {
+    window.history.replaceState({}, '', window.location.pathname);
+    sessionStorage.removeItem('hwiz_in_progress');
+    const email = params.get('hotmail_email') || '';
+    openSet();
+    await new Promise(r => setTimeout(r, 400));
+    document.getElementById('int-card-hotmail')?.scrollIntoView({block:'start'});
+    intHotmailOpenWizard(7);
+    const badge = document.getElementById('hwiz-email-badge');
+    if (badge) badge.innerHTML = '&#x2713; Forbundet som <strong>' + esc(email) + '</strong>';
+    const wingsR = await fetch('/wings').catch(()=>null);
+    if (wingsR?.ok) {
+      const wd = await wingsR.json();
+      ['hwiz-wing', 'int-hotmail-wing'].forEach(id => {
+        const sel = document.getElementById(id);
+        if (!sel) return;
+        sel.innerHTML = '<option value="">– vælg –</option>';
+        (wd.wings || []).forEach(w => {
+          const o = document.createElement('option');
+          o.value = w.name; o.textContent = w.name + ' (' + w.scope + ')';
+          sel.appendChild(o);
+        });
+      });
+    }
+    const hs = await fetch('/integrations/hotmail/status').then(r => r.ok ? r.json() : null).catch(()=>null);
+    if (hs) _intApplyHotmailState(hs);
+  } else if (params.get('hotmail_error')) {
+    window.history.replaceState({}, '', window.location.pathname);
+    openSet();
+    await new Promise(r => setTimeout(r, 400));
+    intHotmailOpenWizard(6);
+    setTimeout(() => {
+      const stEl = document.getElementById('hwiz-auth-st');
+      if (stEl) stEl.innerHTML = '<span style="font-family:monospace;font-size:9px;color:#ff4455">Fejl: ' + esc(params.get('hotmail_error')) + ' — prøv igen</span>';
     }, 200);
   }
 }
