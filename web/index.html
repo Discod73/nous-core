@@ -591,6 +591,26 @@ body:not([data-mode="assistent"]) #ass-legacy-btn{display:none!important}
 .mm-cdd-opt:hover{background:rgba(0,212,255,.08)}
 .mm-cdd-opt.sel{background:rgba(0,212,255,.12)}
 .mm-cdd-opt-sub{font-size:8px;color:rgba(130,160,175,.45);flex-shrink:0}
+/* ── MM TABS ─────────────────────────────────────── */
+.mm-tab-row{display:flex;gap:2px;margin:8px 0 0;border-bottom:1px solid rgba(0,212,255,.12)}
+.mm-tab{padding:3px 12px;background:transparent;border:1px solid rgba(0,212,255,.15);border-bottom:none;color:rgba(130,160,175,.5);font-family:monospace;font-size:9px;letter-spacing:1.5px;border-radius:2px 2px 0 0;cursor:pointer;transition:.2s;text-transform:uppercase;margin-bottom:-1px}
+.mm-tab.act{background:rgba(0,5,10,.95);border-color:var(--ac);color:var(--ac)}
+.mm-tab:hover:not(.act){color:var(--ta)}
+.mm-tab-panel{display:none;padding-top:6px}.mm-tab-panel.act{display:block}
+/* ── MODEL ADMIN (MODELLER-tab) ──────────────────── */
+.ma-model-row{display:flex;align-items:center;gap:5px;padding:5px 0;border-bottom:1px solid rgba(20,40,50,.22);font-family:monospace;font-size:10px}
+.ma-model-name{flex:1;color:var(--ta);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.ma-role-tag{font-size:7px;padding:0 3px;border:1px solid rgba(0,212,255,.25);border-radius:2px;color:rgba(0,212,255,.45);flex-shrink:0;letter-spacing:.5px}
+.ma-model-size{color:rgba(130,160,175,.5);font-size:9px;width:42px;text-align:right;flex-shrink:0}
+.ma-model-date{color:rgba(130,160,175,.28);font-size:8px;width:54px;text-align:right;flex-shrink:0}
+.ma-del-btn{background:transparent;border:1px solid rgba(255,60,60,.2);color:rgba(255,80,80,.45);font-family:monospace;font-size:8px;padding:1px 5px;border-radius:2px;cursor:pointer;flex-shrink:0;transition:.15s;letter-spacing:.5px}
+.ma-del-btn:hover{border-color:#ff4455;color:#ff4455;background:rgba(255,68,85,.08)}
+.ma-disk-wrap{margin:4px 0 10px;font-family:monospace}
+.ma-disk-label{font-size:8px;color:rgba(130,160,175,.4);letter-spacing:.5px;margin-bottom:4px;display:flex;justify-content:space-between}
+.ma-disk-bar-bg{height:4px;background:rgba(0,212,255,.08);border-radius:2px;overflow:hidden}
+.ma-disk-bar-fill{height:100%;border-radius:2px;transition:width .5s}
+.ma-disk-stats{font-size:8px;color:rgba(130,160,175,.3);margin-top:3px}
+.ma-sub-hdr{font-family:monospace;font-size:9px;letter-spacing:2px;color:rgba(160,190,210,.5);margin:14px 0 7px;text-transform:uppercase}
 .wk-wing-row{display:flex;align-items:center;gap:5px;margin-bottom:8px}
 .wk-wing-sel{flex:1;background:var(--bb);border:1px solid var(--pb);color:var(--ac);font-family:monospace;font-size:10px;padding:4px 6px;border-radius:3px;outline:none}
 .wk-group{margin-bottom:10px}
@@ -900,6 +920,43 @@ body:not([data-mode="assistent"]) #ass-legacy-btn{display:none!important}
 .int-entry .ie-imp-btn{font-family:monospace;font-size:8px;padding:1px 5px;background:transparent;border:1px solid rgba(0,212,255,.3);color:rgba(0,212,255,.6);border-radius:2px;cursor:pointer;transition:.15s;white-space:nowrap;flex-shrink:0}
 .int-entry .ie-imp-btn:hover{background:var(--bb);border-color:var(--ac);color:var(--ac)}
 .int-browser-empty{font-family:monospace;font-size:9px;color:rgba(130,160,175,.3);padding:10px;text-align:center}
+/* ── GMAIL / OAUTH WIZARD ────────────────────────── */
+#gmail-wizard-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);backdrop-filter:blur(6px);z-index:210;align-items:center;justify-content:center}
+#gmail-wizard-ov.open{display:flex}
+#gmail-wizard-box{background:#010a14;border:1px solid rgba(0,212,255,.28);border-radius:6px;width:min(560px,96vw);max-height:88vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 0 48px rgba(0,212,255,.1)}
+.gwiz-hdr{display:flex;align-items:center;padding:11px 16px;border-bottom:1px solid rgba(0,212,255,.1);flex-shrink:0}
+.gwiz-title{font-family:monospace;font-size:10px;letter-spacing:3px;color:rgba(0,212,255,.65);flex:1}
+.gwiz-close{background:transparent;border:none;color:rgba(160,180,200,.35);cursor:pointer;font-size:14px;line-height:1;padding:0;transition:.15s}
+.gwiz-close:hover{color:var(--ac)}
+.gwiz-steps{display:flex;align-items:center;padding:10px 16px;border-bottom:1px solid rgba(0,212,255,.07);flex-shrink:0;gap:0}
+.gwiz-dot{width:20px;height:20px;border-radius:50%;background:rgba(0,212,255,.05);border:1px solid rgba(0,212,255,.15);display:flex;align-items:center;justify-content:center;font-family:monospace;font-size:8px;color:rgba(130,160,175,.35);flex-shrink:0;transition:.25s}
+.gwiz-dot.done{background:rgba(0,255,136,.1);border-color:rgba(0,255,136,.35);color:#00ff88}
+.gwiz-dot.act{background:rgba(0,212,255,.12);border-color:var(--ac);color:var(--ac)}
+.gwiz-line{flex:1;height:1px;background:rgba(0,212,255,.08);min-width:4px}
+.gwiz-body{flex:1;overflow-y:auto;padding:18px 20px;scrollbar-width:thin}
+.gwiz-step-title{font-family:monospace;font-size:9px;letter-spacing:2.5px;color:var(--ac);margin-bottom:10px;text-transform:uppercase;opacity:.8}
+.gwiz-text{font-size:11px;color:#a0b8c8;line-height:1.7;margin-bottom:8px}
+.gwiz-link{display:inline-flex;align-items:center;gap:5px;padding:6px 14px;background:rgba(0,212,255,.07);border:1px solid rgba(0,212,255,.28);border-radius:3px;color:var(--ac);font-family:monospace;font-size:9px;letter-spacing:1px;text-decoration:none;transition:.2s;cursor:pointer;margin:6px 0}
+.gwiz-link:hover{background:rgba(0,212,255,.14);box-shadow:0 0 8px rgba(0,212,255,.14)}
+.gwiz-note{background:rgba(0,212,255,.04);border:1px solid rgba(0,212,255,.1);border-radius:3px;padding:8px 10px;font-family:monospace;font-size:9px;color:rgba(130,160,175,.65);margin:6px 0;line-height:1.6}
+.gwiz-uri{font-family:monospace;font-size:10px;color:#00ff88;background:rgba(0,255,136,.05);border:1px solid rgba(0,255,136,.2);border-radius:3px;padding:5px 9px;margin:5px 0;word-break:break-all;cursor:pointer;transition:.2s;display:block;user-select:all}
+.gwiz-uri:hover{background:rgba(0,255,136,.1)}
+.gwiz-upload-zone{border:1px dashed rgba(0,212,255,.22);border-radius:4px;padding:20px 12px;text-align:center;cursor:pointer;transition:.2s;font-family:monospace;font-size:10px;color:rgba(130,160,175,.4);line-height:1.7;user-select:none;margin:8px 0}
+.gwiz-upload-zone:hover,.gwiz-upload-zone.drag{border-color:var(--ac);color:var(--ac);background:rgba(0,212,255,.04)}
+.gwiz-upload-zone.ok{border-color:#00ff88;color:#00ff88;background:rgba(0,255,136,.04)}
+.gwiz-upload-zone.err{border-color:#ff4455;color:#ff4455;background:rgba(255,68,85,.04)}
+.gwiz-email-badge{display:inline-flex;align-items:center;gap:6px;padding:7px 13px;background:rgba(0,255,136,.07);border:1px solid rgba(0,255,136,.28);border-radius:3px;font-family:monospace;font-size:11px;color:#00ff88;margin:8px 0}
+.gwiz-nav{display:flex;align-items:center;gap:8px;padding:10px 16px;border-top:1px solid rgba(0,212,255,.08);flex-shrink:0}
+.gwiz-btn{padding:5px 16px;background:rgba(0,212,255,.06);border:1px solid rgba(0,212,255,.25);color:var(--ac);font-family:monospace;font-size:9px;letter-spacing:1.5px;border-radius:3px;cursor:pointer;transition:.2s;text-transform:uppercase;white-space:nowrap}
+.gwiz-btn:hover{background:rgba(0,212,255,.13);box-shadow:0 0 8px rgba(0,212,255,.12)}
+.gwiz-btn:disabled{opacity:.3;cursor:default;box-shadow:none}
+.gwiz-btn.primary{background:rgba(0,212,255,.11);border-color:var(--ac)}
+.gwiz-btn.primary:hover{background:rgba(0,212,255,.2)}
+.gwiz-btn.success{background:rgba(0,255,136,.1);border-color:#00ff88;color:#00ff88}
+.gwiz-st{font-family:monospace;font-size:9px;flex:1;text-align:center;color:rgba(130,160,175,.45)}
+.gwiz-st.ok{color:#00ff88}.gwiz-st.err{color:#ff4455}.gwiz-st.spin{color:var(--ac)}
+.int-gmail-auth{display:flex;align-items:center;gap:5px;font-family:monospace;font-size:9px;color:rgba(130,160,175,.4);padding:3px 0}
+.int-gmail-auth .gm-email{color:#00ff88;font-size:10px}
 /* ── SWARM VIEW ─────────────────────────────────────────────────────── */
 #swarm-view{flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0;background:rgba(0,3,8,.4)}
 #swarm-tier{display:flex;align-items:center;justify-content:center;gap:0;padding:10px 16px 8px;border-bottom:1px solid rgba(0,212,255,.12);flex-shrink:0}
@@ -1666,98 +1723,120 @@ body:not([data-mode="assistent"]) #ass-legacy-btn{display:none!important}
     <div id="feat-tog-list"></div>
 
     <div id="model-manager-section">
-      <h3>MODEL MANAGER<span class="tip-q" data-tip="Vælg hvilken Ollama-model der bruges til dag-chat og til nat-kørsel. Dag-modellen loades automatisk i RAM. Klik GEM for at aktivere.">?</span></h3>
+      <h3>MODEL MANAGER<span class="tip-q" data-tip="Administrér Ollama-modeller. DAG/NAT: vælg aktive modeller. MODELLER: se installerede, download og slet.">?</span></h3>
       <div class="hw-legend">
         <span><span class="hw-dot" style="background:#22c55e"></span><span data-i18n="hw_legend_ok">Anbefalet</span></span>
         <span><span class="hw-dot" style="background:#eab308"></span><span data-i18n="hw_legend_slow">Langsom</span></span>
         <span><span class="hw-dot" style="background:#ef4444"></span><span data-i18n="hw_legend_big">For lidt hardware</span></span>
       </div>
-      <div class="mm-row">
-        <label data-i18n="mm_day">DAG</label>
-        <div class="mm-cdd" id="mm-day-cdd">
-          <div class="mm-cdd-val" onclick="mmCddToggle('day')">
-            <span class="hw-dot" id="mm-day-dot" style="opacity:0"></span>
-            <span class="mm-cdd-txt" id="mm-day-txt">– henter –</span>
-            <span class="mm-cdd-arrow">▾</span>
-          </div>
-          <div class="mm-cdd-list" id="mm-day-list"></div>
-        </div>
-        <select id="mm-day-sel" style="display:none"><option value="">– ingen –</option></select>
-        <button class="mm-btn" data-i18n="mm_save" onclick="mmSetRole('day')">GEM</button>
-        <button class="mm-btn" data-i18n="mm_run" onclick="mmLoadNow('day')" title="Load dag-model i RAM nu">KØR NU</button>
-      </div>
-      <div class="mm-params">
-        <div class="mm-param-row">
-          <label>TEMP</label>
-          <input type="range" class="mm-slider" id="mm-day-temp" min="0" max="2" step="0.1" value="0.7" oninput="mmSync('day','temp',this.value)">
-          <input type="number" class="mm-num" id="mm-day-temp-n" min="0" max="2" step="0.1" value="0.7" oninput="mmSync('day','temp',this.value,true)">
-        </div>
-        <div class="mm-param-row">
-          <label>CTX</label>
-          <input type="range" class="mm-slider" id="mm-day-ctx" min="512" max="32768" step="512" value="8192" oninput="mmSync('day','ctx',this.value)">
-          <input type="number" class="mm-num" id="mm-day-ctx-n" min="512" max="32768" step="512" value="8192" oninput="mmSync('day','ctx',this.value,true)">
-        </div>
-        <div class="mm-param-row">
-          <label>GPU LAG</label>
-          <input type="range" class="mm-slider" id="mm-day-gpu" min="0" max="100" step="1" value="99" oninput="mmSync('day','gpu',this.value)">
-          <input type="number" class="mm-num" id="mm-day-gpu-n" min="0" max="100" step="1" value="99" oninput="mmSync('day','gpu',this.value,true)">
-        </div>
-      </div>
-      <div class="mm-row">
-        <label data-i18n="mm_night">NAT</label>
-        <div class="mm-cdd" id="mm-night-cdd">
-          <div class="mm-cdd-val" onclick="mmCddToggle('night')">
-            <span class="hw-dot" id="mm-night-dot" style="opacity:0"></span>
-            <span class="mm-cdd-txt" id="mm-night-txt">– henter –</span>
-            <span class="mm-cdd-arrow">▾</span>
-          </div>
-          <div class="mm-cdd-list" id="mm-night-list"></div>
-        </div>
-        <select id="mm-night-sel" style="display:none"><option value="">– ingen –</option></select>
-        <button class="mm-btn" data-i18n="mm_save" onclick="mmSetRole('night')">GEM</button>
-        <button class="mm-btn" data-i18n="mm_run" onclick="mmLoadNow('night')" title="Load nat-model i RAM nu">KØR NU</button>
-      </div>
-      <div class="mm-params">
-        <div class="mm-param-row">
-          <label>TEMP</label>
-          <input type="range" class="mm-slider" id="mm-night-temp" min="0" max="2" step="0.1" value="0.7" oninput="mmSync('night','temp',this.value)">
-          <input type="number" class="mm-num" id="mm-night-temp-n" min="0" max="2" step="0.1" value="0.7" oninput="mmSync('night','temp',this.value,true)">
-        </div>
-        <div class="mm-param-row">
-          <label>CTX</label>
-          <input type="range" class="mm-slider" id="mm-night-ctx" min="512" max="32768" step="512" value="8192" oninput="mmSync('night','ctx',this.value)">
-          <input type="number" class="mm-num" id="mm-night-ctx-n" min="512" max="32768" step="512" value="8192" oninput="mmSync('night','ctx',this.value,true)">
-        </div>
-        <div class="mm-param-row">
-          <label>GPU LAG</label>
-          <input type="range" class="mm-slider" id="mm-night-gpu" min="0" max="100" step="1" value="99" oninput="mmSync('night','gpu',this.value)">
-          <input type="number" class="mm-num" id="mm-night-gpu-n" min="0" max="100" step="1" value="99" oninput="mmSync('night','gpu',this.value,true)">
-        </div>
-      </div>
-      <div class="mm-status" id="mm-status"></div>
 
-      <!-- SØGNING -->
-      <h3 style="font-family:monospace;font-size:9px;letter-spacing:2px;color:rgba(160,190,210,.5);margin:14px 0 7px;text-transform:uppercase">OLLAMA LIBRARY SØGNING<span class="tip-q" data-tip="Søger efter modeller på ollama.com/library via lokal SearXNG. Viser navn, tilgængelige størrelser og beskrivelse.">?</span></h3>
-      <div style="display:flex;gap:4px;margin-bottom:5px">
-        <input id="mm-search-q" type="text" class="mm-sel" data-i18n="mm_search_ph" placeholder="fx qwen, llama, mistral…"
-               style="flex:1;padding:4px 6px" onkeydown="if(event.key==='Enter')mmSearch()">
-        <button class="mm-btn" data-i18n="mm_search_btn" onclick="mmSearch()" id="mm-search-btn">SØG</button>
+      <!-- Tab-navigation -->
+      <div class="mm-tab-row">
+        <button class="mm-tab act" onclick="mmSwitchTab('dagnat',this)">DAG/NAT</button>
+        <button class="mm-tab" onclick="mmSwitchTab('modeller',this)">MODELLER</button>
       </div>
-      <div id="mm-search-results"><div class="mm-search-empty">Skriv en modeltype og tryk Enter</div></div>
 
-      <!-- UPLOAD GGUF -->
-      <h3 style="font-family:monospace;font-size:9px;letter-spacing:2px;color:rgba(160,190,210,.5);margin:14px 0 7px;text-transform:uppercase">UPLOAD GGUF<span class="tip-q" data-tip="Upload en lokal .gguf-fil. Den overføres til inference-noden og registreres i Ollama. Modellen dukker herefter op i dag/nat-dropdown.">?</span></h3>
-      <div class="mm-upload-zone" id="mm-upload-zone" data-i18n="mm_upload_txt"
-           onclick="document.getElementById('mm-gguf-hidden').click()"
-           ondragover="mmDragOver(event)" ondragleave="mmDragLeave(event)" ondrop="mmDrop(event)">
-        Træk en <strong>.gguf</strong>-fil hertil<br>
-        <span style="opacity:.5;font-size:9px">eller klik for at vælge fil</span>
-      </div>
-      <input type="file" id="mm-gguf-hidden" accept=".gguf" style="display:none" onchange="mmUploadFile(this.files[0])">
-      <div class="mm-prog-wrap" id="mm-prog-wrap">
-        <div class="mm-prog-bar"><div class="mm-prog-fill" id="mm-prog-fill"></div></div>
-        <div class="mm-prog-txt" id="mm-prog-txt"></div>
-      </div>
+      <!-- ─── Tab: DAG/NAT ─── -->
+      <div id="mm-tab-dagnat" class="mm-tab-panel act">
+        <div class="mm-row">
+          <label data-i18n="mm_day">DAG</label>
+          <div class="mm-cdd" id="mm-day-cdd">
+            <div class="mm-cdd-val" onclick="mmCddToggle('day')">
+              <span class="hw-dot" id="mm-day-dot" style="opacity:0"></span>
+              <span class="mm-cdd-txt" id="mm-day-txt">– henter –</span>
+              <span class="mm-cdd-arrow">▾</span>
+            </div>
+            <div class="mm-cdd-list" id="mm-day-list"></div>
+          </div>
+          <select id="mm-day-sel" style="display:none"><option value="">– ingen –</option></select>
+          <button class="mm-btn" data-i18n="mm_save" onclick="mmSetRole('day')">GEM</button>
+          <button class="mm-btn" data-i18n="mm_run" onclick="mmLoadNow('day')" title="Load dag-model i RAM nu">KØR NU</button>
+        </div>
+        <div class="mm-params">
+          <div class="mm-param-row">
+            <label>TEMP</label>
+            <input type="range" class="mm-slider" id="mm-day-temp" min="0" max="2" step="0.1" value="0.7" oninput="mmSync('day','temp',this.value)">
+            <input type="number" class="mm-num" id="mm-day-temp-n" min="0" max="2" step="0.1" value="0.7" oninput="mmSync('day','temp',this.value,true)">
+          </div>
+          <div class="mm-param-row">
+            <label>CTX</label>
+            <input type="range" class="mm-slider" id="mm-day-ctx" min="512" max="32768" step="512" value="8192" oninput="mmSync('day','ctx',this.value)">
+            <input type="number" class="mm-num" id="mm-day-ctx-n" min="512" max="32768" step="512" value="8192" oninput="mmSync('day','ctx',this.value,true)">
+          </div>
+          <div class="mm-param-row">
+            <label>GPU LAG</label>
+            <input type="range" class="mm-slider" id="mm-day-gpu" min="0" max="100" step="1" value="99" oninput="mmSync('day','gpu',this.value)">
+            <input type="number" class="mm-num" id="mm-day-gpu-n" min="0" max="100" step="1" value="99" oninput="mmSync('day','gpu',this.value,true)">
+          </div>
+        </div>
+        <div class="mm-row">
+          <label data-i18n="mm_night">NAT</label>
+          <div class="mm-cdd" id="mm-night-cdd">
+            <div class="mm-cdd-val" onclick="mmCddToggle('night')">
+              <span class="hw-dot" id="mm-night-dot" style="opacity:0"></span>
+              <span class="mm-cdd-txt" id="mm-night-txt">– henter –</span>
+              <span class="mm-cdd-arrow">▾</span>
+            </div>
+            <div class="mm-cdd-list" id="mm-night-list"></div>
+          </div>
+          <select id="mm-night-sel" style="display:none"><option value="">– ingen –</option></select>
+          <button class="mm-btn" data-i18n="mm_save" onclick="mmSetRole('night')">GEM</button>
+          <button class="mm-btn" data-i18n="mm_run" onclick="mmLoadNow('night')" title="Load nat-model i RAM nu">KØR NU</button>
+        </div>
+        <div class="mm-params">
+          <div class="mm-param-row">
+            <label>TEMP</label>
+            <input type="range" class="mm-slider" id="mm-night-temp" min="0" max="2" step="0.1" value="0.7" oninput="mmSync('night','temp',this.value)">
+            <input type="number" class="mm-num" id="mm-night-temp-n" min="0" max="2" step="0.1" value="0.7" oninput="mmSync('night','temp',this.value,true)">
+          </div>
+          <div class="mm-param-row">
+            <label>CTX</label>
+            <input type="range" class="mm-slider" id="mm-night-ctx" min="512" max="32768" step="512" value="8192" oninput="mmSync('night','ctx',this.value)">
+            <input type="number" class="mm-num" id="mm-night-ctx-n" min="512" max="32768" step="512" value="8192" oninput="mmSync('night','ctx',this.value,true)">
+          </div>
+          <div class="mm-param-row">
+            <label>GPU LAG</label>
+            <input type="range" class="mm-slider" id="mm-night-gpu" min="0" max="100" step="1" value="99" oninput="mmSync('night','gpu',this.value)">
+            <input type="number" class="mm-num" id="mm-night-gpu-n" min="0" max="100" step="1" value="99" oninput="mmSync('night','gpu',this.value,true)">
+          </div>
+        </div>
+        <div class="mm-status" id="mm-status"></div>
+      </div><!-- /mm-tab-dagnat -->
+
+      <!-- ─── Tab: MODELLER ─── -->
+      <div id="mm-tab-modeller" class="mm-tab-panel">
+        <!-- Disk-oversigt -->
+        <div id="ma-disk"></div>
+
+        <!-- Installerede modeller -->
+        <div class="ma-sub-hdr">INSTALLEREDE MODELLER</div>
+        <div id="ma-list"><div class="mm-search-empty">Henter…</div></div>
+
+        <!-- Download ny model (genbruger mmSearch / mmDownload) -->
+        <div class="ma-sub-hdr" style="margin-top:16px">DOWNLOAD NY MODEL<span class="tip-q" data-tip="Søger i Ollama Library via SearXNG. Hardware-badge vises per størrelses-tag. Tryk DOWNLOAD for at trække modellen ned via Ollama pull.">?</span></div>
+        <div style="display:flex;gap:4px;margin-bottom:5px">
+          <input id="mm-search-q" type="text" class="mm-sel" placeholder="fx qwen, llama, mistral…"
+                 style="flex:1;padding:4px 6px" onkeydown="if(event.key==='Enter')mmSearch()">
+          <button class="mm-btn" onclick="mmSearch()" id="mm-search-btn">SØG</button>
+        </div>
+        <div id="mm-search-results"><div class="mm-search-empty">Skriv en modeltype og tryk Enter</div></div>
+
+        <!-- Upload GGUF -->
+        <div class="ma-sub-hdr" style="margin-top:14px">UPLOAD GGUF<span class="tip-q" data-tip="Upload en lokal .gguf-fil. Den overføres til inference-noden og registreres i Ollama.">?</span></div>
+        <div class="mm-upload-zone" id="mm-upload-zone"
+             onclick="document.getElementById('mm-gguf-hidden').click()"
+             ondragover="mmDragOver(event)" ondragleave="mmDragLeave(event)" ondrop="mmDrop(event)">
+          Træk en <strong>.gguf</strong>-fil hertil<br>
+          <span style="opacity:.5;font-size:9px">eller klik for at vælge fil</span>
+        </div>
+        <input type="file" id="mm-gguf-hidden" accept=".gguf" style="display:none" onchange="mmUploadFile(this.files[0])">
+
+        <!-- Fælles fremgangslinje (download + upload) -->
+        <div class="mm-prog-wrap" id="mm-prog-wrap">
+          <div class="mm-prog-bar"><div class="mm-prog-fill" id="mm-prog-fill"></div></div>
+          <div class="mm-prog-txt" id="mm-prog-txt"></div>
+        </div>
+      </div><!-- /mm-tab-modeller -->
     </div>
 
     <h3 id="h3-lang">INTERFACESPROG</h3>
@@ -1935,11 +2014,46 @@ body:not([data-mode="assistent"]) #ass-legacy-btn{display:none!important}
         </div>
       </div>
 
-      <!-- Gmail (kommer snart) -->
-      <div class="int-card coming-soon" id="int-card-gmail">
+      <!-- Gmail -->
+      <div class="int-card" id="int-card-gmail">
         <div class="int-header">
           <span class="int-label">Gmail</span>
-          <span class="int-badge soon">KOMMER SNART</span>
+          <span class="int-badge off" id="int-badge-gmail">FRA</span>
+          <label class="tsw" id="int-tog-gmail-wrap" title="Aktiver Gmail-integration" style="display:none">
+            <input type="checkbox" id="int-tog-gmail" onchange="intToggleGmail(this.checked)">
+            <span class="tsl"></span>
+          </label>
+        </div>
+        <div class="int-body" id="int-body-gmail">
+          <!-- Ikke autentificeret: opsætningsknap -->
+          <div id="int-gmail-setup">
+            <div class="int-warn">&#9888; Gmail kræver engangsgodkendelse via Google (~5 min). Gøres kun én gang — derefter synkroniserer NOUS automatisk.</div>
+            <button class="int-save-btn" onclick="intGmailOpenWizard()">FORBIND GMAIL →</button>
+          </div>
+          <!-- Autentificeret: konfiguration -->
+          <div id="int-gmail-cfg" style="display:none">
+            <div class="int-gmail-auth">&#10003; <span class="gm-email" id="int-gmail-email-lbl"></span></div>
+            <div class="int-field">
+              <label>WING</label>
+              <select class="int-sel" id="int-gmail-wing"><option value="">– vælg –</option></select>
+            </div>
+            <div class="int-field">
+              <label>SCOPE</label>
+              <select class="int-sel" id="int-gmail-scope">
+                <option value="PRIVATE">PRIVATE</option>
+                <option value="SECRET">SECRET</option>
+                <option value="SWARM">SWARM</option>
+                <option value="PUBLIC">PUBLIC</option>
+              </select>
+            </div>
+            <div class="int-field">
+              <label>MAX EMAILS</label>
+              <input type="number" class="int-inp" id="int-gmail-max" min="1" max="1000" value="100" style="max-width:72px">
+            </div>
+            <button class="int-save-btn" onclick="intSaveGmail()">GEM GMAIL-INDSTILLINGER</button>
+            <button class="int-save-btn" style="margin-top:4px;border-color:rgba(0,212,255,.18);color:rgba(0,212,255,.6)" onclick="intSyncGmail()">&#x21BB; SYNK NU</button>
+            <div class="int-status" id="int-gmail-status"></div>
+          </div>
         </div>
       </div>
 
@@ -1960,6 +2074,23 @@ body:not([data-mode="assistent"]) #ass-legacy-btn{display:none!important}
       </div>
 
     </div><!-- #int-list -->
+  </div>
+</div>
+
+<!-- GMAIL SETUP WIZARD -->
+<div id="gmail-wizard-ov" onclick="intGmailWizOvClick(event)">
+  <div id="gmail-wizard-box">
+    <div class="gwiz-hdr">
+      <span class="gwiz-title">// GMAIL OPSÆTNING</span>
+      <button class="gwiz-close" onclick="intGmailCloseWizard()">&#x2715;</button>
+    </div>
+    <div class="gwiz-steps" id="gwiz-steps"></div>
+    <div class="gwiz-body" id="gwiz-body"></div>
+    <div class="gwiz-nav">
+      <button class="gwiz-btn" id="gwiz-back-btn" onclick="intGmailWizBack()">&#x2190; TILBAGE</button>
+      <span class="gwiz-st" id="gwiz-st"></span>
+      <button class="gwiz-btn primary" id="gwiz-next-btn" onclick="intGmailWizNext()">NÆSTE &#x2192;</button>
+    </div>
   </div>
 </div>
 
@@ -2511,6 +2642,104 @@ function mmProgShow(msg, type, pct) {
   fill.style.width   = `${pct}%`;
   txt.textContent    = msg;
   txt.className      = `mm-prog-txt${type ? ' '+type : ''}`;
+}
+
+// ── MM TAB SWITCH ────────────────────────────────────────────
+function mmSwitchTab(name, btn) {
+  document.querySelectorAll('.mm-tab').forEach(b => b.classList.remove('act'));
+  document.querySelectorAll('.mm-tab-panel').forEach(p => p.classList.remove('act'));
+  btn.classList.add('act');
+  const panel = document.getElementById(`mm-tab-${name}`);
+  if (panel) panel.classList.add('act');
+  if (name === 'modeller') maInit();
+}
+
+// ── MODEL ADMIN (MODELLER-tab) ────────────────────────────────
+let _maRoles = {};
+
+async function maInit() {
+  const listBox = document.getElementById('ma-list');
+  const diskBox = document.getElementById('ma-disk');
+  if (listBox) listBox.innerHTML = '<div class="mm-search-empty">Henter…</div>';
+
+  try {
+    const [listRes, rolesRes, hwRes] = await Promise.all([
+      fetch(`${API}/models/list`),
+      fetch(`${API}/models/roles`),
+      fetch(`${API}/system/hardware-profile`).catch(() => null),
+    ]);
+
+    if (!listRes.ok) throw new Error('Kunne ikke hente modeller');
+    const {models} = await listRes.json();
+    _mmModels = models;
+
+    if (rolesRes?.ok) _maRoles = await rolesRes.json();
+
+    if (hwRes?.ok) {
+      const hd   = await hwRes.json();
+      _hwRecs    = hd.model_recs   || [];
+      _vramAvail = hd.hardware?.vram_avail_gb || 0;
+      const disk = hd.hardware?.disk;
+      if (disk && diskBox && disk.total_gb) {
+        const used     = Math.max(0, disk.total_gb - disk.free_gb);
+        const pct      = Math.min(100, Math.round(used / disk.total_gb * 100));
+        const modGb    = models.reduce((s, m) => s + (m.size_gb || 0), 0);
+        const fillClr  = pct > 85 ? '#ef4444' : pct > 65 ? '#eab308' : '#22c55e';
+        diskBox.innerHTML = `<div class="ma-disk-wrap">
+          <div class="ma-disk-label"><span>DISK — ${esc(disk.path)}</span><span>${disk.free_gb} GB fri</span></div>
+          <div class="ma-disk-bar-bg"><div class="ma-disk-bar-fill" style="width:${pct}%;background:${fillClr}"></div></div>
+          <div class="ma-disk-stats">${used.toFixed(1)} GB brugt / ${disk.total_gb} GB total · modeller: ~${modGb.toFixed(1)} GB</div>
+        </div>`;
+      }
+    }
+
+    if (!models.length) {
+      if (listBox) listBox.innerHTML = '<div class="mm-search-empty">Ingen installerede modeller</div>';
+      return;
+    }
+
+    if (listBox) listBox.innerHTML = models.map(m => {
+      const rec   = _hwMatchRec(m.name, _hwRecs);
+      const color = rec ? _hwStatusColor(rec.status) : null;
+      const label = rec ? _hwStatusLabel(rec.status) : null;
+      const dot   = `<span class="hw-dot" style="background:${color||'transparent'};${color?'':'opacity:0;'}flex-shrink:0"${label ? ` title="${esc(label)}"` : ''}></span>`;
+      const isDay   = _maRoles.day   === m.name;
+      const isNight = _maRoles.night === m.name;
+      const roleStr = [isDay ? 'DAG' : '', isNight ? 'NAT' : ''].filter(Boolean).join('/');
+      const roleTag = roleStr ? `<span class="ma-role-tag">${roleStr}</span>` : '';
+      const date    = m.modified_at
+        ? new Date(m.modified_at).toLocaleDateString('da-DK', {day:'2-digit', month:'short'})
+        : '';
+      const isActive = isDay || isNight;
+      return `<div class="ma-model-row">
+        ${dot}
+        <span class="ma-model-name">${esc(m.name)}</span>
+        ${roleTag}
+        <span class="ma-model-size">${m.size_gb} GB</span>
+        ${date ? `<span class="ma-model-date">${esc(date)}</span>` : ''}
+        <button class="ma-del-btn" onclick="maDelete(${JSON.stringify(m.name)},${m.size_gb},${isActive})" title="Slet ${esc(m.name)}">SLET</button>
+      </div>`;
+    }).join('');
+
+  } catch(e) {
+    if (listBox) listBox.innerHTML = `<div class="mm-search-empty" style="color:#ff4455">Fejl: ${esc(e.message)}</div>`;
+  }
+}
+
+async function maDelete(name, sizeGb, isActive) {
+  let msg = `Slet ${name}?\nFrigør ~${sizeGb} GB.`;
+  if (isActive) msg += '\n\nADVARSEL: Modellen er aktiv som dag- eller natmodel!';
+  if (!confirm(msg)) return;
+  try {
+    const r = await fetch(`${API}/models/delete`, {
+      method: 'DELETE', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({name}),
+    });
+    if (!r.ok) throw new Error((await r.json()).detail || r.status);
+    await Promise.all([maInit(), mmInit()]);
+  } catch(e) {
+    alert(`Sletning fejlede: ${e.message}`);
+  }
 }
 
 // ── MM DOWNLOAD (ollama pull) ────────────────────────────────
@@ -6158,6 +6387,7 @@ function loginAs(userKey) {
   closeLoginOv();
   loadUserLang(userKey);
   loadUserFeatures(userKey);
+  _intGmailAutoOpen();
 }
 
 function logout() {
@@ -8166,9 +8396,14 @@ async function intInit() {
     const r = await fetch('/integrations');
     if (!r.ok) return;
     const data = await r.json();
-    const nas = data.integrations.find(i => i.id === 'nas');
-    if (!nas) return;
-    _intApplyNasState(nas.enabled, nas.config);
+    const nas   = data.integrations.find(i => i.id === 'nas');
+    const gmail = data.integrations.find(i => i.id === 'gmail');
+    if (nas)   _intApplyNasState(nas.enabled, nas.config);
+    if (gmail) {
+      // Hent fuld gmail status inkl. authenticated
+      const gs = await fetch('/integrations/gmail/status').then(r2 => r2.ok ? r2.json() : null).catch(() => null);
+      _intApplyGmailState(gs || {enabled: gmail.enabled, authenticated: false, config: gmail.config});
+    }
   } catch (_) {}
   _intPopulateWings();
 }
@@ -8197,16 +8432,19 @@ async function _intPopulateWings() {
     const r = await fetch('/wings');
     if (!r.ok) return;
     const data = await r.json();
-    const sel = document.getElementById('int-nas-wing');
-    if (!sel) return;
-    const cur = sel.value;
-    sel.innerHTML = '<option value="">– vælg –</option>';
-    (data.wings || []).forEach(w => {
-      const opt = document.createElement('option');
-      opt.value = w.name; opt.textContent = w.name + ' (' + w.scope + ')';
-      sel.appendChild(opt);
+    const wings = data.wings || [];
+    ['int-nas-wing', 'int-gmail-wing'].forEach(selId => {
+      const sel = document.getElementById(selId);
+      if (!sel) return;
+      const cur = sel.value;
+      sel.innerHTML = '<option value="">– vælg –</option>';
+      wings.forEach(w => {
+        const opt = document.createElement('option');
+        opt.value = w.name; opt.textContent = w.name + ' (' + w.scope + ')';
+        sel.appendChild(opt);
+      });
+      if (cur) sel.value = cur;
     });
-    if (cur) sel.value = cur;
   } catch (_) {}
 }
 
@@ -8349,6 +8587,373 @@ async function intNasImport(relPath, filename) {
     }
   } catch (e) {
     _intStatus('nas', 'Netværksfejl: ' + e.message, false);
+  }
+}
+
+// ── GMAIL INTEGRATION ────────────────────────────────────────────────────
+function _intApplyGmailState(status) {
+  const authenticated = !!status?.authenticated;
+  const enabled       = !!status?.enabled;
+  const cfg           = status?.config || {};
+  const email         = cfg.email_address || '';
+
+  const badge  = document.getElementById('int-badge-gmail');
+  const card   = document.getElementById('int-card-gmail');
+  const body   = document.getElementById('int-body-gmail');
+  const togWr  = document.getElementById('int-tog-gmail-wrap');
+  const tog    = document.getElementById('int-tog-gmail');
+  const setup  = document.getElementById('int-gmail-setup');
+  const cfgDiv = document.getElementById('int-gmail-cfg');
+
+  if (badge)  { badge.textContent = enabled ? 'TIL' : 'FRA'; badge.className = 'int-badge ' + (enabled ? 'on' : 'off'); }
+  if (card)   card.classList.toggle('enabled', enabled);
+  if (body)   body.classList.add('open');   // Gmail: altid åben (setup-knap eller config)
+  if (togWr)  togWr.style.display = authenticated ? '' : 'none';
+  if (tog)    tog.checked = !!enabled;
+
+  if (setup)  setup.style.display = authenticated ? 'none' : 'block';
+  if (cfgDiv) cfgDiv.style.display = authenticated ? 'block' : 'none';
+
+  if (authenticated) {
+    const emailLbl = document.getElementById('int-gmail-email-lbl');
+    if (emailLbl) emailLbl.textContent = email || 'forbundet';
+    const wingEl = document.getElementById('int-gmail-wing');
+    const scopeEl = document.getElementById('int-gmail-scope');
+    const maxEl = document.getElementById('int-gmail-max');
+    if (wingEl && cfg.wing)          wingEl.value = cfg.wing;
+    if (scopeEl && cfg.scope)        scopeEl.value = cfg.scope;
+    if (maxEl && cfg.max_messages)   maxEl.value = cfg.max_messages;
+  }
+}
+
+async function intToggleGmail(enabled) {
+  const body = document.getElementById('int-body-gmail');
+  if (body) body.classList.toggle('open', enabled);
+  try {
+    const r = await fetch('/integrations/gmail', {
+      method: 'PUT', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({enabled}),
+    });
+    const d = await r.json();
+    if (r.ok) { _intApplyGmailState({authenticated: true, enabled, config: d.config}); _intStatus('gmail', enabled ? 'Aktiveret' : 'Deaktiveret', true); }
+    else       { _intStatus('gmail', d.detail || 'Fejl', false); const t = document.getElementById('int-tog-gmail'); if (t) t.checked = !enabled; }
+  } catch(e) { _intStatus('gmail', 'Netværksfejl', false); }
+}
+
+async function intSaveGmail() {
+  const wing  = document.getElementById('int-gmail-wing')?.value  || '';
+  const scope = document.getElementById('int-gmail-scope')?.value || 'PRIVATE';
+  const max   = parseInt(document.getElementById('int-gmail-max')?.value || '100', 10);
+  _intStatus('gmail', 'Gemmer…', null);
+  try {
+    const r = await fetch('/integrations/gmail', {
+      method: 'PUT', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({wing, scope, max_messages: max}),
+    });
+    const d = await r.json();
+    if (r.ok) _intStatus('gmail', 'Gemt', true);
+    else       _intStatus('gmail', d.detail || 'Fejl', false);
+  } catch(e) { _intStatus('gmail', 'Netværksfejl', false); }
+}
+
+async function intSyncGmail() {
+  _intStatus('gmail', 'Synkroniserer…', null);
+  try {
+    const r = await fetch('/integrations/gmail/sync', {method:'POST'});
+    const d = await r.json();
+    if (r.ok) _intStatus('gmail', 'Sync startet i baggrunden', true);
+    else       _intStatus('gmail', d.detail || 'Fejl', false);
+  } catch(e) { _intStatus('gmail', 'Netværksfejl', false); }
+}
+
+// ── GMAIL WIZARD ──────────────────────────────────────────────────────────
+let _gwizStep     = 1;
+const _GWIZ_TOTAL = 7;
+let _gwizCredsOk  = false;
+
+function intGmailOpenWizard(startStep) {
+  _gwizStep    = startStep || 1;
+  _gwizCredsOk = false;
+  const ov = document.getElementById('gmail-wizard-ov');
+  if (ov) ov.classList.add('open');
+  _gwizRender();
+}
+function intGmailCloseWizard() {
+  const ov = document.getElementById('gmail-wizard-ov');
+  if (ov) ov.classList.remove('open');
+}
+function intGmailWizOvClick(e) {
+  if (e.target === document.getElementById('gmail-wizard-ov')) intGmailCloseWizard();
+}
+function intGmailWizNext() {
+  if (_gwizStep === 5 && !_gwizCredsOk) { _gwizSt('Upload credentials-filen først', 'err'); return; }
+  if (_gwizStep < _GWIZ_TOTAL) { _gwizStep++; _gwizRender(); }
+  else intGmailCloseWizard();
+}
+function intGmailWizBack() {
+  if (_gwizStep > 1) { _gwizStep--; _gwizRender(); }
+}
+
+function _gwizSt(msg, type) {
+  const el = document.getElementById('gwiz-st');
+  if (!el) return;
+  el.textContent = msg;
+  el.className   = 'gwiz-st' + (type ? ' ' + type : '');
+}
+
+function _gwizRender() {
+  // Step dots
+  const stepsEl = document.getElementById('gwiz-steps');
+  if (stepsEl) {
+    stepsEl.innerHTML = Array.from({length: _GWIZ_TOTAL}, (_, i) => {
+      const n = i + 1;
+      const cls = n < _gwizStep ? 'gwiz-dot done' : n === _gwizStep ? 'gwiz-dot act' : 'gwiz-dot';
+      const icon = n < _gwizStep ? '&#x2713;' : n;
+      return (i > 0 ? '<span class="gwiz-line"></span>' : '') + `<span class="${cls}">${icon}</span>`;
+    }).join('');
+  }
+  // Nav buttons
+  const backBtn = document.getElementById('gwiz-back-btn');
+  const nextBtn = document.getElementById('gwiz-next-btn');
+  if (backBtn) backBtn.style.visibility = _gwizStep > 1 ? '' : 'hidden';
+  if (nextBtn) {
+    nextBtn.textContent = _gwizStep === _GWIZ_TOTAL ? 'LUK ✕' : 'NÆSTE →';
+    nextBtn.className   = 'gwiz-btn' + (_gwizStep === _GWIZ_TOTAL ? ' success' : ' primary');
+    nextBtn.style.display = _gwizStep === 6 ? 'none' : '';
+  }
+  _gwizSt('');
+  // Body content
+  const body = document.getElementById('gwiz-body');
+  if (body) body.innerHTML = _gwizStepHtml(_gwizStep);
+  // Step-specific init
+  if (_gwizStep === 4) {
+    const uri = window.location.origin + '/integrations/gmail/callback';
+    const uriEl = document.getElementById('gwiz-uri');
+    if (uriEl) uriEl.textContent = uri;
+  }
+}
+
+function _gwizStepHtml(step) {
+  const cbUrl = window.location.origin + '/integrations/gmail/callback';
+  switch (step) {
+    case 1: return `
+      <div class="gwiz-step-title">TRIN 1 — VELKOMMEN</div>
+      <div class="gwiz-text">For at forbinde Gmail opretter du gratis Google-udvikleradgang. Det tager <strong>~5 minutter</strong> og skal kun gøres én gang.</div>
+      <div class="gwiz-text">Derefter synkroniserer NOUS automatisk nye emails til din valgte wing, så du kan søge og spørge til dit email-indhold.</div>
+      <div class="gwiz-note">&#9432; NOUS læser kun emails — ingen skrivning, ingen sletning, ingen afsendelse. Alt behandles lokalt på din Pi.</div>`;
+
+    case 2: return `
+      <div class="gwiz-step-title">TRIN 2 — OPRET GOOGLE CLOUD-PROJEKT</div>
+      <div class="gwiz-text">Åbn Google Cloud Console og opret et nyt projekt:</div>
+      <a class="gwiz-link" href="https://console.cloud.google.com/projectcreate" target="_blank" rel="noopener">&#x1F517; Åbn Google Cloud Console</a>
+      <div class="gwiz-note">
+        <strong>Hvad du gør:</strong><br>
+        1. Giv projektet et navn — fx <em>NOUS</em> eller <em>Min NOUS</em><br>
+        2. Klik <strong>Opret</strong> (Create)<br>
+        3. Vent et øjeblik — projektet oprettes
+      </div>
+      <div class="gwiz-text" style="margin-top:8px;color:rgba(130,160,175,.5);font-size:10px">Har du allerede et Google Cloud-projekt kan du genbruge det — spring trin 2 over og klik Næste.</div>`;
+
+    case 3: return `
+      <div class="gwiz-step-title">TRIN 3 — AKTIVÉR GMAIL API</div>
+      <div class="gwiz-text">Åbn Gmail API-siden og aktivér API'en:</div>
+      <a class="gwiz-link" href="https://console.cloud.google.com/apis/library/gmail.googleapis.com" target="_blank" rel="noopener">&#x1F517; Åbn Gmail API-siden</a>
+      <div class="gwiz-note">
+        <strong>Hvad du gør:</strong><br>
+        1. Kontrollér at det korrekte projekt er valgt øverst<br>
+        2. Klik den blå <strong>Aktivér</strong>-knap (Enable)<br>
+        3. Siden viser nu "API aktiveret" — du er færdig her
+      </div>
+      <div class="gwiz-note" style="border-color:rgba(255,180,60,.2);background:rgba(255,150,0,.04);color:rgba(255,180,60,.7)">
+        &#9888; Hvis du ser fejlen "403: Gmail API is not enabled" i et senere trin, kom tilbage hertil og aktivér API'en igen for det rigtige projekt.
+      </div>`;
+
+    case 4: return `
+      <div class="gwiz-step-title">TRIN 4 — OPRET OAUTH-LEGITIMATIONSOPLYSNINGER</div>
+      <div class="gwiz-text">Åbn credentials-siden og opret en ny OAuth 2.0-klient:</div>
+      <a class="gwiz-link" href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener">&#x1F517; Åbn Credentials-siden</a>
+      <div class="gwiz-note">
+        <strong>Hvad du gør:</strong><br>
+        1. Klik <strong>+ Opret legitimationsoplysninger</strong> → <strong>OAuth 2.0-klient-id</strong><br>
+        2. Hvis du ser "Konfigurér samtykkeskærm" — klik der og vælg <strong>Ekstern</strong>, udfyld appnavn og din email, gem<br>
+        3. Tilbage på credentials: Under <strong>Programtype</strong> vælg <strong>Webapplikation</strong><br>
+        4. Under <strong>Autoriserede omdirigerings-URI'er</strong> klik <strong>+ Tilføj URI</strong> og indsæt:<br>
+      </div>
+      <code class="gwiz-uri" id="gwiz-uri" onclick="navigator.clipboard?.writeText(this.textContent).then(()=>this.style.color='#fff')" title="Klik for at kopiere">${esc(cbUrl)}</code>
+      <div class="gwiz-note">
+        5. Klik <strong>Opret</strong><br>
+        6. En pop-up viser dine legitimationsoplysninger — klik <strong>Download JSON</strong><br>
+        7. Gem JSON-filen et sted du kan finde den (fx Overførsler)
+      </div>`;
+
+    case 5: return `
+      <div class="gwiz-step-title">TRIN 5 — UPLOAD CREDENTIALS</div>
+      <div class="gwiz-text">Upload den JSON-fil du downloadede i trin 4:</div>
+      <div class="gwiz-upload-zone" id="gwiz-upload-zone"
+           onclick="document.getElementById('gwiz-file-hidden').click()"
+           ondragover="event.preventDefault();this.classList.add('drag')"
+           ondragleave="this.classList.remove('drag')"
+           ondrop="event.preventDefault();this.classList.remove('drag');intGmailUploadCreds(event.dataTransfer.files[0])">
+        Træk <strong>credentials.json</strong> hertil<br>
+        <span style="opacity:.45;font-size:9px">eller klik for at vælge fil</span>
+      </div>
+      <input type="file" id="gwiz-file-hidden" accept=".json,application/json" style="display:none"
+             onchange="intGmailUploadCreds(this.files[0])">`;
+
+    case 6: return `
+      <div class="gwiz-step-title">TRIN 6 — AUTORISÉR GMAIL-ADGANG</div>
+      <div class="gwiz-text">Klik nedenfor — du videresendes til Google for at godkende adgangen. Du vender automatisk tilbage til NOUS når det er gjort.</div>
+      <div class="gwiz-note">&#9432; Siden åbner Google-login. Vælg den Gmail-konto du vil forbinde og godkend "Læse emails". Du vender tilbage til NOUS herefter.</div>
+      <div style="margin-top:14px">
+        <button class="gwiz-btn primary" style="width:100%;padding:9px;font-size:10px;letter-spacing:2px" onclick="intGmailAuthorize()">
+          FORBIND MIN KONTO &#x2192;
+        </button>
+      </div>
+      <div id="gwiz-auth-st" style="margin-top:8px"></div>`;
+
+    case 7: return `
+      <div class="gwiz-step-title">TRIN 7 — GMAIL FORBUNDET</div>
+      <div class="gwiz-email-badge" id="gwiz-email-badge">&#x2713; Forbundet</div>
+      <div class="gwiz-text" style="margin-top:10px">Vælg hvilken wing emails skal gemmes i:</div>
+      <div class="int-field" style="border-color:rgba(0,212,255,.1)">
+        <label style="font-size:9px;letter-spacing:.5px;color:#809aaa;width:80px;flex-shrink:0">WING</label>
+        <select class="int-sel" id="gwiz-wing"><option value="">– vælg –</option></select>
+      </div>
+      <div class="int-field" style="border-color:rgba(0,212,255,.1)">
+        <label style="font-size:9px;letter-spacing:.5px;color:#809aaa;width:80px;flex-shrink:0">SCOPE</label>
+        <select class="int-sel" id="gwiz-scope">
+          <option value="PRIVATE">PRIVATE</option>
+          <option value="SECRET">SECRET</option>
+          <option value="SWARM">SWARM</option>
+        </select>
+      </div>
+      <button class="int-save-btn" style="margin-top:10px" onclick="intGmailWizSave()">GEM OG AKTIVÉR GMAIL</button>
+      <div id="gwiz-save-st" class="int-status" style="margin-top:5px"></div>`;
+
+    default: return '';
+  }
+}
+
+async function intGmailUploadCreds(file) {
+  if (!file) return;
+  const zone = document.getElementById('gwiz-upload-zone');
+  if (zone) { zone.className = 'gwiz-upload-zone'; zone.innerHTML = 'Sender…'; }
+  _gwizSt('');
+  try {
+    const fd = new FormData();
+    fd.append('file', file);
+    const r = await fetch('/integrations/gmail/upload-credentials', {method:'POST', body: fd});
+    const d = await r.json();
+    if (r.ok) {
+      _gwizCredsOk = true;
+      if (zone) { zone.className = 'gwiz-upload-zone ok'; zone.innerHTML = '&#x2713; ' + esc(file.name) + '<br><span style="font-size:9px;opacity:.7">credentials uploadet og valideret</span>'; }
+      _gwizSt('Klar — klik Næste', 'ok');
+    } else {
+      _gwizCredsOk = false;
+      if (zone) { zone.className = 'gwiz-upload-zone err'; zone.innerHTML = '&#x2717; Ugyldig fil<br><span style="font-size:9px">' + esc(d.detail || '') + '</span>'; }
+      _gwizSt(d.detail || 'Ugyldig credentials-fil', 'err');
+    }
+  } catch(e) {
+    _gwizCredsOk = false;
+    if (zone) { zone.className = 'gwiz-upload-zone err'; zone.innerHTML = '&#x2717; Netværksfejl'; }
+    _gwizSt('Netværksfejl: ' + e.message, 'err');
+  }
+}
+
+async function intGmailAuthorize() {
+  const stEl = document.getElementById('gwiz-auth-st');
+  if (stEl) stEl.innerHTML = '<span style="font-family:monospace;font-size:9px;color:rgba(0,212,255,.6)">Henter autoriserings-URL…</span>';
+  try {
+    const cbUrl = window.location.origin + '/integrations/gmail/callback';
+    const r = await fetch('/integrations/gmail/authorize', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({callback_url: cbUrl}),
+    });
+    const d = await r.json();
+    if (!r.ok) {
+      if (stEl) stEl.innerHTML = '<span style="font-family:monospace;font-size:9px;color:#ff4455">Fejl: ' + esc(d.detail || r.status) + '</span>';
+      return;
+    }
+    // Gem wizard-state og naviger til Google OAuth
+    sessionStorage.setItem('gwiz_in_progress', '1');
+    window.location.href = d.auth_url;
+  } catch(e) {
+    if (stEl) stEl.innerHTML = '<span style="font-family:monospace;font-size:9px;color:#ff4455">Netværksfejl: ' + esc(e.message) + '</span>';
+  }
+}
+
+async function intGmailWizSave() {
+  const wing  = document.getElementById('gwiz-wing')?.value  || '';
+  const scope = document.getElementById('gwiz-scope')?.value || 'PRIVATE';
+  const stEl  = document.getElementById('gwiz-save-st');
+  if (stEl) { stEl.textContent = 'Gemmer…'; stEl.className = 'int-status'; }
+  try {
+    const r = await fetch('/integrations/gmail', {
+      method: 'PUT', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({enabled: true, wing, scope}),
+    });
+    const d = await r.json();
+    if (r.ok) {
+      if (stEl) { stEl.textContent = 'Gmail aktiveret!'; stEl.className = 'int-status ok'; }
+      // Opdatér int-kortet
+      const gs = await fetch('/integrations/gmail/status').then(r2 => r2.ok ? r2.json() : null).catch(()=>null);
+      if (gs) _intApplyGmailState(gs);
+      await _intPopulateWings();
+      setTimeout(intGmailCloseWizard, 1200);
+    } else {
+      if (stEl) { stEl.textContent = d.detail || 'Fejl ved gem'; stEl.className = 'int-status err'; }
+    }
+  } catch(e) {
+    if (stEl) { stEl.textContent = 'Netværksfejl'; stEl.className = 'int-status err'; }
+  }
+}
+
+// Tjek URL-params efter OAuth-callback (kaldes fra loginAs)
+async function _intGmailAutoOpen() {
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('gmail_connected') === 'true') {
+    // Ryd URL uden page reload
+    window.history.replaceState({}, '', window.location.pathname);
+    sessionStorage.removeItem('gwiz_in_progress');
+    const email = params.get('gmail_email') || '';
+    // Åbn settings og wizard på trin 7
+    openSet();
+    await new Promise(r => setTimeout(r, 400));
+    document.getElementById('model-manager-section')?.scrollIntoView({block:'start'});
+    // Scroll til Gmail-sektionen i settings
+    document.getElementById('int-card-gmail')?.scrollIntoView({block:'start'});
+    intGmailOpenWizard(7);
+    // Sæt email-badge
+    const badge = document.getElementById('gwiz-email-badge');
+    if (badge) badge.innerHTML = '&#x2713; Forbundet som <strong>' + esc(email) + '</strong>';
+    // Populér wing-dropdowns
+    const [wingsR] = await Promise.all([fetch('/wings')]);
+    if (wingsR.ok) {
+      const wd = await wingsR.json();
+      ['gwiz-wing', 'int-gmail-wing'].forEach(id => {
+        const sel = document.getElementById(id);
+        if (!sel) return;
+        sel.innerHTML = '<option value="">– vælg –</option>';
+        (wd.wings || []).forEach(w => {
+          const o = document.createElement('option');
+          o.value = w.name; o.textContent = w.name + ' (' + w.scope + ')';
+          sel.appendChild(o);
+        });
+      });
+    }
+    // Opdatér int-kortet med email
+    const gs = await fetch('/integrations/gmail/status').then(r => r.ok ? r.json() : null).catch(()=>null);
+    if (gs) _intApplyGmailState(gs);
+  } else if (params.get('gmail_error')) {
+    window.history.replaceState({}, '', window.location.pathname);
+    // Åbn settings og wizard på trin 6 med fejlbesked
+    openSet();
+    await new Promise(r => setTimeout(r, 400));
+    intGmailOpenWizard(6);
+    setTimeout(() => {
+      const stEl = document.getElementById('gwiz-auth-st');
+      if (stEl) stEl.innerHTML = '<span style="font-family:monospace;font-size:9px;color:#ff4455">Fejl: ' + esc(params.get('gmail_error')) + ' — prøv igen</span>';
+    }, 200);
   }
 }
 

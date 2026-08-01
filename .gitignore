@@ -35,6 +35,9 @@ config/scraper_jobs.json
 config/external_keys.json
 external_keys.json
 config/integrations.json
+config/gmail_credentials.json
+config/gmail_token.json
+config/gmail_state.json
 config/systemd/
 scripts/night_pipeline.py
 .env

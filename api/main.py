@@ -53,10 +53,10 @@ import gemma_manager
 from audit_log import log_event as _audit
 
 import httpx
-from fastapi import BackgroundTasks, FastAPI, HTTPException, Query, UploadFile, File
+from fastapi import BackgroundTasks, FastAPI, HTTPException, Query, Request, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from middleware import ScopeMiddleware
-from fastapi.responses import FileResponse, JSONResponse, Response, StreamingResponse
+from fastapi.responses import FileResponse, JSONResponse, RedirectResponse, Response, StreamingResponse
 from pydantic import BaseModel
 
 
@@ -1666,12 +1666,42 @@ async def list_models():
             r = await client.get(f"{OLLAMA_URL}/api/tags", timeout=10)
             r.raise_for_status()
         models = [
-            {"name": m.get("name", ""), "size_gb": round(m.get("size", 0) / 1e9, 1)}
+            {
+                "name":        m.get("name", ""),
+                "size_gb":     round(m.get("size", 0) / 1e9, 1),
+                "modified_at": m.get("modified_at"),
+            }
             for m in r.json().get("models", [])
         ]
         return {"models": models}
     except Exception as e:
         raise HTTPException(502, f"Ollama unavailable: {e}")
+
+
+class ModelDelete(BaseModel):
+    name: str
+
+
+@app.delete("/models/delete")
+async def delete_model(body: ModelDelete):
+    try:
+        async with httpx.AsyncClient() as client:
+            r = await client.request(
+                "DELETE", f"{OLLAMA_URL}/api/delete",
+                json={"name": body.name},
+                timeout=30,
+            )
+            if r.status_code == 404:
+                raise HTTPException(404, f"Model ikke fundet: {body.name}")
+            if r.status_code != 200:
+                r.raise_for_status()
+    except HTTPException:
+        raise
+    except httpx.HTTPStatusError as e:
+        raise HTTPException(502, f"Ollama fejl: {e}")
+    except Exception as e:
+        raise HTTPException(502, f"Kunne ikke slette model: {e}")
+    return {"ok": True, "deleted": body.name}
 
 
 @app.get("/models/roles")
@@ -4416,8 +4446,10 @@ if str(_INTEGRATIONS_DIR.parent) not in sys.path:
     sys.path.insert(0, str(_INTEGRATIONS_DIR.parent))
 
 from integrations.nas_connector import NasConnector as _NasConnector
+from integrations.gmail_connector import GmailConnector as _GmailConnector
 
 _nas = _NasConnector()
+_gmail = _GmailConnector()
 
 
 class NasConfigUpdate(BaseModel):
@@ -4437,6 +4469,8 @@ class NasImportRequest(BaseModel):
 def get_integrations():
     """List alle tilgængelige integrationer og deres aktiveringsstatus."""
     nas_cfg = _nas.get_config()
+    gmail_cfg = _gmail.get_config()
+    gmail_enabled = _gmail.is_enabled()
     return {
         "integrations": [
             {
@@ -4446,9 +4480,15 @@ def get_integrations():
                 "config": nas_cfg,
                 "status": "active" if _nas.is_enabled() else "disabled",
             },
-            {"id": "gmail",     "label": "Gmail",     "enabled": False, "status": "coming_soon"},
-            {"id": "hotmail",   "label": "Hotmail",   "enabled": False, "status": "coming_soon"},
-            {"id": "protonmail","label": "Protonmail", "enabled": False, "status": "coming_soon"},
+            {
+                "id": "gmail",
+                "label": "Gmail",
+                "enabled": gmail_enabled,
+                "config": gmail_cfg,
+                "status": "active" if gmail_enabled else "disabled",
+            },
+            {"id": "hotmail",    "label": "Hotmail",    "enabled": False, "status": "coming_soon"},
+            {"id": "protonmail", "label": "Protonmail", "enabled": False, "status": "coming_soon"},
         ]
     }
 
@@ -4512,3 +4552,154 @@ def nas_import(req: NasImportRequest, background_tasks: BackgroundTasks):
         raise HTTPException(404, str(e))
     except ValueError as e:
         raise HTTPException(400, str(e))
+
+
+# === Gmail integration ===
+
+class GmailConfigUpdate(BaseModel):
+    enabled: Optional[bool] = None
+    wing: Optional[str] = None
+    scope: Optional[str] = None
+    label_filter: Optional[str] = None
+    search_query: Optional[str] = None
+    max_messages: Optional[int] = None
+
+
+@app.put("/integrations/gmail")
+def update_gmail_config(body: GmailConfigUpdate):
+    """Opdater Gmail-integrationskonfiguration."""
+    patch = {k: v for k, v in body.model_dump().items() if v is not None}
+    try:
+        cfg = _gmail.update_config(patch)
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    return {"ok": True, "config": cfg}
+
+
+@app.get("/integrations/gmail/status")
+def gmail_status():
+    """Returnér Gmail auth-status og konfiguration."""
+    return _gmail.status()
+
+
+@app.get("/integrations/gmail/messages")
+def gmail_messages(max_results: int = 20):
+    """
+    Preview: list nye (ikke-processerede) emails fra Gmail.
+    Kræver at Gmail-integration er aktiveret og autentificeret.
+    """
+    if not _gmail.is_enabled():
+        raise HTTPException(403, "Gmail-integration er ikke aktiveret")
+    if not _gmail.is_authenticated():
+        raise HTTPException(401, "Gmail er ikke autentificeret — kør gmail_auth.py")
+    if not (1 <= max_results <= 200):
+        raise HTTPException(400, "max_results skal være 1–200")
+    try:
+        messages = _gmail.fetch_messages(max_results=max_results)
+        return {"messages": messages, "count": len(messages)}
+    except Exception as e:
+        raise HTTPException(500, str(e))
+
+
+@app.post("/integrations/gmail/sync")
+def gmail_sync(background_tasks: BackgroundTasks):
+    """
+    Synkronisér nye emails fra Gmail til NOUS ingest-pipeline.
+    Kræver at Gmail-integration er aktiveret og autentificeret.
+    Returnerer straks — sync kører i baggrunden.
+    """
+    if not _gmail.is_enabled():
+        raise HTTPException(403, "Gmail-integration er ikke aktiveret")
+    if not _gmail.is_authenticated():
+        raise HTTPException(401, "Gmail er ikke autentificeret — kør gmail_auth.py")
+
+    def _do_sync():
+        try:
+            _gmail.sync()
+        except Exception:
+            pass
+
+    background_tasks.add_task(_do_sync)
+    return {"ok": True, "message": "Gmail sync startet i baggrunden"}
+
+
+# ── Gmail Setup Wizard endpoints ────────────────────────────────────────────
+_GMAIL_CREDS_FILE = Path("/srv/nous/config/gmail_credentials.json")
+_GMAIL_SCOPES     = ["https://www.googleapis.com/auth/gmail.readonly"]
+_gmail_oauth_states: dict = {}   # state → Flow
+
+
+@app.post("/integrations/gmail/upload-credentials")
+async def gmail_upload_credentials(file: UploadFile = File(...)):
+    """Modtag og valider Google OAuth credentials JSON, gem til config/."""
+    content = await file.read()
+    try:
+        data = json.loads(content)
+    except json.JSONDecodeError:
+        raise HTTPException(400, "Ugyldig JSON — filen kan ikke læses")
+    cred_data = data.get("web") or data.get("installed")
+    if not cred_data or not cred_data.get("client_id") or not cred_data.get("client_secret"):
+        raise HTTPException(
+            400,
+            "Ikke en gyldig Google OAuth credentials-fil — mangler client_id eller client_secret. "
+            "Kontrollér at du har downloadet OAuth 2.0-klientoplysninger (ikke API-nøgle).",
+        )
+    _GMAIL_CREDS_FILE.parent.mkdir(parents=True, exist_ok=True)
+    _GMAIL_CREDS_FILE.write_bytes(content)
+    _GMAIL_CREDS_FILE.chmod(0o600)
+    cred_type = "web" if "web" in data else "installed"
+    return {"ok": True, "type": cred_type, "client_id_prefix": cred_data["client_id"][:20]}
+
+
+class GmailAuthorizeRequest(BaseModel):
+    callback_url: str
+
+
+@app.post("/integrations/gmail/authorize")
+async def gmail_authorize(body: GmailAuthorizeRequest):
+    """Start OAuth-flow — returner Google-autoriserings-URL til frontend."""
+    if not _GMAIL_CREDS_FILE.exists():
+        raise HTTPException(400, "Credentials-fil ikke fundet — upload den i trin 5 først")
+    try:
+        from google_auth_oauthlib.flow import Flow
+        flow = Flow.from_client_secrets_file(
+            str(_GMAIL_CREDS_FILE),
+            scopes=_GMAIL_SCOPES,
+            redirect_uri=body.callback_url,
+        )
+    except Exception as e:
+        raise HTTPException(400, f"Ugyldig credentials-fil: {e}")
+    auth_url, state = flow.authorization_url(prompt="consent", access_type="offline")
+    _gmail_oauth_states[state] = flow
+    return {"auth_url": auth_url}
+
+
+@app.get("/integrations/gmail/callback")
+async def gmail_callback(code: str = None, state: str = None, error: str = None):
+    """OAuth-callback fra Google — gemmer token og redirecter til Cockpit."""
+    import urllib.parse
+    if error:
+        return RedirectResponse(f"/?gmail_error={urllib.parse.quote(error)}")
+    if not state or state not in _gmail_oauth_states:
+        return RedirectResponse("/?gmail_error=invalid_state")
+    flow = _gmail_oauth_states.pop(state)
+    try:
+        flow.fetch_token(code=code)
+    except Exception:
+        return RedirectResponse("/?gmail_error=token_exchange_failed")
+    creds = flow.credentials
+    token_file = Path(_gmail.get_config().get("token_file", "/srv/nous/config/gmail_token.json"))
+    token_file.parent.mkdir(parents=True, exist_ok=True)
+    token_file.write_text(creds.to_json(), encoding="utf-8")
+    token_file.chmod(0o600)
+    email = ""
+    try:
+        from googleapiclient.discovery import build
+        service = build("gmail", "v1", credentials=creds, cache_discovery=False)
+        profile = service.users().getProfile(userId="me").execute()
+        email = profile.get("emailAddress", "")
+    except Exception:
+        pass
+    return RedirectResponse(
+        f"/?gmail_connected=true&gmail_email={urllib.parse.quote(email)}"
+    )
