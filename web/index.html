@@ -921,9 +921,9 @@ body:not([data-mode="assistent"]) #ass-legacy-btn{display:none!important}
 .int-entry .ie-imp-btn:hover{background:var(--bb);border-color:var(--ac);color:var(--ac)}
 .int-browser-empty{font-family:monospace;font-size:9px;color:rgba(130,160,175,.3);padding:10px;text-align:center}
 /* ── GMAIL / OAUTH WIZARD ────────────────────────── */
-#gmail-wizard-ov,#hotmail-wizard-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);backdrop-filter:blur(6px);z-index:210;align-items:center;justify-content:center}
-#gmail-wizard-ov.open,#hotmail-wizard-ov.open{display:flex}
-#gmail-wizard-box,#hotmail-wizard-box{background:#010a14;border:1px solid rgba(0,212,255,.28);border-radius:6px;width:min(560px,96vw);max-height:88vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 0 48px rgba(0,212,255,.1)}
+#gmail-wizard-ov,#hotmail-wizard-ov,#protonmail-wizard-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);backdrop-filter:blur(6px);z-index:210;align-items:center;justify-content:center}
+#gmail-wizard-ov.open,#hotmail-wizard-ov.open,#protonmail-wizard-ov.open{display:flex}
+#gmail-wizard-box,#hotmail-wizard-box,#protonmail-wizard-box{background:#010a14;border:1px solid rgba(0,212,255,.28);border-radius:6px;width:min(560px,96vw);max-height:88vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 0 48px rgba(0,212,255,.1)}
 .gwiz-hdr{display:flex;align-items:center;padding:11px 16px;border-bottom:1px solid rgba(0,212,255,.1);flex-shrink:0}
 .gwiz-title{font-family:monospace;font-size:10px;letter-spacing:3px;color:rgba(0,212,255,.65);flex:1}
 .gwiz-close{background:transparent;border:none;color:rgba(160,180,200,.35);cursor:pointer;font-size:14px;line-height:1;padding:0;transition:.15s}
@@ -2152,11 +2152,44 @@ body:not([data-mode="assistent"]) #ass-legacy-btn{display:none!important}
         </div>
       </div>
 
-      <!-- Protonmail (kommer snart) -->
-      <div class="int-card coming-soon" id="int-card-protonmail">
+      <!-- Protonmail Bridge -->
+      <div class="int-card" id="int-card-protonmail">
         <div class="int-header">
           <span class="int-label">Protonmail</span>
-          <span class="int-badge soon">KOMMER SNART</span>
+          <span class="int-badge off" id="int-badge-protonmail">FRA</span>
+          <label class="tsw" id="int-tog-protonmail-wrap" title="Aktiver Protonmail-integration" style="display:none">
+            <input type="checkbox" id="int-tog-protonmail" onchange="intToggleProtonmail(this.checked)">
+            <span class="tsl"></span>
+          </label>
+        </div>
+        <div class="int-body" id="int-body-protonmail">
+          <div id="int-protonmail-setup">
+            <div class="int-warn">&#9888; Protonmail kræver Bridge-opsætning via Docker (~5 min). Gøres kun én gang — NOUS logger ind via Bridge og synkroniserer emails til din valgte wing.</div>
+            <button class="int-save-btn" onclick="intProtonmailOpenWizard()">FORBIND PROTONMAIL →</button>
+          </div>
+          <div id="int-protonmail-cfg" style="display:none">
+            <div class="int-gmail-auth">&#10003; <span class="gm-email" id="int-protonmail-email-lbl"></span></div>
+            <div class="int-field">
+              <label>WING</label>
+              <select class="int-sel" id="int-protonmail-wing"><option value="">– vælg –</option></select>
+            </div>
+            <div class="int-field">
+              <label>SCOPE</label>
+              <select class="int-sel" id="int-protonmail-scope">
+                <option value="PRIVATE">PRIVATE</option>
+                <option value="SECRET">SECRET</option>
+                <option value="SWARM">SWARM</option>
+                <option value="PUBLIC">PUBLIC</option>
+              </select>
+            </div>
+            <div class="int-field">
+              <label>MAX EMAILS</label>
+              <input type="number" class="int-inp" id="int-protonmail-max" min="1" max="1000" value="100" style="max-width:72px">
+            </div>
+            <button class="int-save-btn" onclick="intSaveProtonmail()">GEM PROTONMAIL-INDSTILLINGER</button>
+            <button class="int-save-btn" style="margin-top:4px;border-color:rgba(0,212,255,.18);color:rgba(0,212,255,.6)" onclick="intSyncProtonmail()">&#x21BB; SYNK NU</button>
+            <div class="int-status" id="int-protonmail-status"></div>
+          </div>
         </div>
       </div>
 
@@ -2194,6 +2227,23 @@ body:not([data-mode="assistent"]) #ass-legacy-btn{display:none!important}
       <button class="gwiz-btn" id="hwiz-back-btn" onclick="intHotmailWizBack()">&#x2190; TILBAGE</button>
       <span class="gwiz-st" id="hwiz-st"></span>
       <button class="gwiz-btn primary" id="hwiz-next-btn" onclick="intHotmailWizNext()">NÆSTE &#x2192;</button>
+    </div>
+  </div>
+</div>
+
+<!-- PROTONMAIL SETUP WIZARD -->
+<div id="protonmail-wizard-ov" onclick="intProtonmailWizOvClick(event)">
+  <div id="protonmail-wizard-box">
+    <div class="gwiz-hdr">
+      <span class="gwiz-title">// PROTONMAIL BRIDGE OPSÆTNING</span>
+      <button class="gwiz-close" onclick="intProtonmailCloseWizard()">&#x2715;</button>
+    </div>
+    <div class="gwiz-steps" id="pmwiz-steps"></div>
+    <div class="gwiz-body" id="pmwiz-body"></div>
+    <div class="gwiz-nav">
+      <button class="gwiz-btn" id="pmwiz-back-btn" onclick="intProtonmailWizBack()">&#x2190; TILBAGE</button>
+      <span class="gwiz-st" id="pmwiz-st"></span>
+      <button class="gwiz-btn primary" id="pmwiz-next-btn" onclick="intProtonmailWizNext()">NÆSTE &#x2192;</button>
     </div>
   </div>
 </div>
@@ -8513,6 +8563,8 @@ async function intInit() {
       const gs = await fetch('/integrations/google/status').then(r2 => r2.ok ? r2.json() : null).catch(() => null);
       _intApplyGoogleState(gs || {authenticated: false, config: google.config});
     }
+    const ps = await fetch('/integrations/protonmail/status').then(r2 => r2.ok ? r2.json() : null).catch(() => null);
+    if (ps) _intApplyProtonmailState(ps);
   } catch (_) {}
   _intPopulateWings();
 }
@@ -8542,9 +8594,9 @@ async function _intPopulateWings() {
     if (!r.ok) return;
     const data = await r.json();
     const wings = data.wings || [];
-    ['int-nas-wing', 'int-hotmail-wing',
+    ['int-nas-wing', 'int-hotmail-wing', 'int-protonmail-wing',
    'int-google-gmail-wing', 'int-google-calendar-wing', 'int-google-drive-wing',
-   'gwiz-wing', 'hwiz-wing'].forEach(selId => {
+   'gwiz-wing', 'hwiz-wing', 'pmwiz-wing'].forEach(selId => {
       const sel = document.getElementById(selId);
       if (!sel) return;
       const cur = sel.value;
@@ -9581,6 +9633,452 @@ async function _intHotmailAutoOpen() {
       if (stEl) stEl.innerHTML = '<span style="font-family:monospace;font-size:9px;color:#ff4455">Fejl: ' + esc(params.get('hotmail_error')) + ' — prøv igen</span>';
     }, 200);
   }
+}
+
+// ── PROTONMAIL WIZARD ─────────────────────────────────────────────────────────
+let _pmwizStep      = 1;
+const _PMWIZ_TOTAL  = 6;
+let _pmwizChk1Ok    = false;
+let _pmwizChk2Ok    = false;
+let _pmwizSetupJobId     = null;
+let _pmwizSetupDone      = false;
+let _pmwizSetupPollTimer = null;
+let _pmwizLoginSid       = null;
+let _pmwizLoginStep      = 'form'; // 'form'|'2fa'|'fallback'|'done'
+
+function intProtonmailOpenWizard(startStep) {
+  _pmwizStep     = startStep || 1;
+  _pmwizChk1Ok   = false;
+  _pmwizChk2Ok   = false;
+  _pmwizSetupJobId  = null;
+  _pmwizSetupDone   = false;
+  _pmwizLoginSid    = null;
+  _pmwizLoginStep   = 'form';
+  if (_pmwizSetupPollTimer) { clearInterval(_pmwizSetupPollTimer); _pmwizSetupPollTimer = null; }
+  const ov = document.getElementById('protonmail-wizard-ov');
+  if (ov) ov.classList.add('open');
+  _pmwizRender();
+}
+function intProtonmailCloseWizard() {
+  if (_pmwizSetupPollTimer) { clearInterval(_pmwizSetupPollTimer); _pmwizSetupPollTimer = null; }
+  const ov = document.getElementById('protonmail-wizard-ov');
+  if (ov) ov.classList.remove('open');
+}
+function intProtonmailWizOvClick(e) {
+  if (e.target === document.getElementById('protonmail-wizard-ov')) intProtonmailCloseWizard();
+}
+function intProtonmailWizNext() {
+  if (_pmwizStep === 1 && !_pmwizChk1Ok) { _pmwizSt('Sæt flueben for at fortsætte', 'err'); return; }
+  if (_pmwizStep === 2 && !_pmwizChk2Ok) { _pmwizSt('Bekræft din Proton-plan for at fortsætte', 'err'); return; }
+  if (_pmwizStep === 3 && !_pmwizSetupDone) { _pmwizSt('Afvent at Docker-opsætningen er færdig', 'err'); return; }
+  if (_pmwizStep === 4 && _pmwizLoginStep !== 'done') { _pmwizSt('Log ind via Bridge-formularen', 'err'); return; }
+  if (_pmwizStep < _PMWIZ_TOTAL) { _pmwizStep++; _pmwizRender(); }
+  else intProtonmailCloseWizard();
+}
+function intProtonmailWizBack() {
+  if (_pmwizStep > 1) { _pmwizStep--; _pmwizRender(); }
+}
+function _pmwizSt(msg, type) {
+  const el = document.getElementById('pmwiz-st');
+  if (!el) return;
+  el.textContent = msg;
+  el.className = 'gwiz-st' + (type ? ' ' + type : '');
+}
+function _pmwizChk() {
+  _pmwizChk1Ok = !!(document.getElementById('pmwiz-chk1')?.checked);
+  const btn = document.getElementById('pmwiz-next-btn');
+  if (btn) btn.style.opacity = _pmwizChk1Ok ? '1' : '0.4';
+}
+function _pmwizChk2() {
+  _pmwizChk2Ok = !!(document.getElementById('pmwiz-chk2')?.checked);
+  const btn = document.getElementById('pmwiz-next-btn');
+  if (btn) btn.style.opacity = _pmwizChk2Ok ? '1' : '0.4';
+}
+function _pmwizRender() {
+  const stepsEl = document.getElementById('pmwiz-steps');
+  if (stepsEl) {
+    stepsEl.innerHTML = Array.from({length: _PMWIZ_TOTAL}, (_, i) => {
+      const n = i + 1;
+      const cls = n < _pmwizStep ? 'gwiz-dot done' : n === _pmwizStep ? 'gwiz-dot act' : 'gwiz-dot';
+      const icon = n < _pmwizStep ? '&#x2713;' : n;
+      return (i > 0 ? '<span class="gwiz-line"></span>' : '') + `<span class="${cls}">${icon}</span>`;
+    }).join('');
+  }
+  const backBtn = document.getElementById('pmwiz-back-btn');
+  const nextBtn = document.getElementById('pmwiz-next-btn');
+  if (backBtn) backBtn.style.visibility = _pmwizStep > 1 ? '' : 'hidden';
+  if (nextBtn) {
+    nextBtn.textContent = _pmwizStep === _PMWIZ_TOTAL ? 'LUK ✕' : 'NÆSTE →';
+    nextBtn.className = 'gwiz-btn' + (_pmwizStep === _PMWIZ_TOTAL ? ' success' : ' primary');
+    nextBtn.style.display = (_pmwizStep === 4 && _pmwizLoginStep !== 'done') ? 'none' : '';
+    nextBtn.style.opacity = '1';
+    if (_pmwizStep === 1) nextBtn.style.opacity = _pmwizChk1Ok ? '1' : '0.4';
+    if (_pmwizStep === 2) nextBtn.style.opacity = _pmwizChk2Ok ? '1' : '0.4';
+  }
+  _pmwizSt('');
+  const body = document.getElementById('pmwiz-body');
+  if (body) body.innerHTML = _pmwizStepHtml(_pmwizStep);
+  if (_pmwizStep === 5) _pmwizRunImapTest();
+  if (_pmwizStep === 6) _intPopulateWings();
+}
+function _pmwizStepHtml(step) {
+  switch (step) {
+    case 1: return `
+      <div class="gwiz-step-title">TRIN 1 — SIKKERHED</div>
+      <div class="gwiz-text">Protonmail forbindes via <strong>Proton Mail Bridge</strong> — et kryptografisk lag der kører i Docker på din Pi. Bridge oversætter Protons krypterede protokol til standard-IMAP som NOUS kan læse.</div>
+      <div class="gwiz-note">&#9432; NOUS gemmer <strong>aldrig</strong> dit Proton-login-password. Kun Bridge-genereret IMAP-token (et separat systemkodeord) gemmes i <code>config/protonmail_state.json</code> (chmod 600, gitignored).</div>
+      <div style="margin-top:12px">
+        <label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;font-family:monospace;font-size:9px;color:rgba(180,200,220,.75);line-height:1.5">
+          <input type="checkbox" id="pmwiz-chk1" onchange="_pmwizChk()" style="margin-top:2px;flex-shrink:0">
+          Jeg forstår at Bridge-IMAP-token (ikke mit Proton-kodeord) gemmes lokalt i en chmod-600-fil, og at mit login-kodeord kun transmitteres direkte til Bridge under login og aldrig logges eller persisteres af NOUS
+        </label>
+      </div>`;
+    case 2: return `
+      <div class="gwiz-step-title">TRIN 2 — PLAN-BEKRÆFTELSE</div>
+      <div class="gwiz-text">Proton Mail Bridge kræver en betalt Proton-plan. Sørg for at din konto er oprettet med den rette plan, ellers vil Bridge-login i trin 4 fejle.</div>
+      <div class="gwiz-note">&#9432; Bridge er inkluderet i: <strong>Proton Mail Plus</strong>, <strong>Proton Unlimited</strong>, <strong>Proton Visionary</strong> og <strong>Proton Business</strong>. Gratis Proton-konti har ikke Bridge-adgang.</div>
+      <div style="margin-top:12px">
+        <label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;font-family:monospace;font-size:9px;color:rgba(180,200,220,.75);line-height:1.5">
+          <input type="checkbox" id="pmwiz-chk2" onchange="_pmwizChk2()" style="margin-top:2px;flex-shrink:0">
+          Jeg bekræfter at min Proton-konto er oprettet med Proton Mail Plus, Unlimited, Visionary eller Business
+        </label>
+      </div>`;
+    case 3: return `
+      <div class="gwiz-step-title">TRIN 3 — DOCKER SETUP</div>
+      <div class="gwiz-text">NOUS downloader og starter Bridge-containeren. Første gang downloades image (~80 MB) — det tager 2-5 minutter afhængig af netværk.</div>
+      <div class="gwiz-note">&#9432; Container: <code>protonmail-bridge</code> &nbsp;|&nbsp; Image: <code>schklom/protonmail-bridge:latest-arm64</code> &nbsp;|&nbsp; Port: <code>127.0.0.1:1143</code></div>
+      <button class="gwiz-btn primary" id="pmwiz-setup-btn" style="width:100%;padding:7px;margin-top:8px" onclick="_pmwizStartSetup()">START DOCKER SETUP &#x25B6;</button>
+      <div id="pmwiz-setup-log" style="margin-top:8px;font-family:monospace;font-size:8px;color:rgba(0,212,255,.5);background:rgba(0,10,20,.6);border:1px solid rgba(0,212,255,.12);border-radius:3px;padding:8px;max-height:140px;overflow-y:auto;white-space:pre-wrap;display:none"></div>`;
+    case 4: return _pmwizLoginHtml();
+    case 5: return `
+      <div class="gwiz-step-title">TRIN 5 — IMAP-TEST</div>
+      <div class="gwiz-text">NOUS tester IMAP-forbindelsen til Bridge (127.0.0.1:1143)…</div>
+      <div id="pmwiz-imap-result" style="margin-top:10px;font-family:monospace;font-size:9px;color:rgba(0,212,255,.6)">Tester…</div>
+      <div id="pmwiz-imap-fallback" style="display:none;margin-top:10px">
+        <div class="gwiz-note" style="border-color:rgba(255,100,60,.2);color:rgba(255,140,80,.8)">&#9888; IMAP-test fejlede. Hvis du har logget ind via SSH, kan du indtaste Bridge IMAP-token manuelt:</div>
+        <div class="int-field" style="border-color:rgba(0,212,255,.15);margin-top:8px">
+          <label style="font-size:9px;color:#809aaa;width:80px;flex-shrink:0">EMAIL</label>
+          <input type="email" class="int-inp" id="pmwiz-fb-email" placeholder="din@proton.me">
+        </div>
+        <div class="int-field" style="border-color:rgba(0,212,255,.15)">
+          <label style="font-size:9px;color:#809aaa;width:80px;flex-shrink:0">BRIDGE TOKEN</label>
+          <input type="password" class="int-inp" id="pmwiz-fb-token" placeholder="Bridge IMAP-password (ikke Proton-kodeord)">
+        </div>
+        <button class="gwiz-btn primary" style="width:100%;padding:7px;margin-top:6px" onclick="_pmwizSaveFallbackCreds()">GEM MANUELT TOKEN &#x2192;</button>
+        <div id="pmwiz-fb-st" style="margin-top:4px;font-family:monospace;font-size:8px"></div>
+      </div>`;
+    case 6: return `
+      <div class="gwiz-step-title">TRIN 6 — AKTIVÉR PROTONMAIL</div>
+      <div class="gwiz-email-badge" id="pmwiz-email-badge">&#x2713; Bridge forbundet</div>
+      <div class="gwiz-text" style="margin-top:10px">Vælg hvilken wing emails skal gemmes i og aktivér integrationen:</div>
+      <div class="int-field" style="border-color:rgba(0,212,255,.1)">
+        <label style="font-size:9px;letter-spacing:.5px;color:#809aaa;width:80px;flex-shrink:0">WING</label>
+        <select class="int-sel" id="pmwiz-wing"><option value="">– vælg –</option></select>
+      </div>
+      <div class="int-field" style="border-color:rgba(0,212,255,.1)">
+        <label style="font-size:9px;letter-spacing:.5px;color:#809aaa;width:80px;flex-shrink:0">SCOPE</label>
+        <select class="int-sel" id="pmwiz-scope">
+          <option value="PRIVATE">PRIVATE</option>
+          <option value="SECRET">SECRET</option>
+          <option value="SWARM">SWARM</option>
+        </select>
+      </div>
+      <button class="int-save-btn" style="margin-top:10px" onclick="intProtonmailWizSave()">GEM OG AKTIVÉR PROTONMAIL</button>
+      <div id="pmwiz-save-st" class="int-status" style="margin-top:5px"></div>`;
+    default: return '';
+  }
+}
+function _pmwizLoginHtml() {
+  if (_pmwizLoginStep === 'done') return `
+    <div class="gwiz-step-title">TRIN 4 — BRIDGE LOGIN &#x2713;</div>
+    <div class="gwiz-email-badge">&#x2713; Logget ind via Bridge</div>
+    <div class="gwiz-text" style="margin-top:8px">Bridge IMAP-token er gemt. Klik Næste for at teste IMAP-forbindelsen.</div>`;
+  if (_pmwizLoginStep === '2fa') return `
+    <div class="gwiz-step-title">TRIN 4 — TO-FAKTOR KODE</div>
+    <div class="gwiz-text">Din konto har to-faktor aktiveret. Åbn din authenticator-app og indtast den 6-cifrede kode:</div>
+    <div class="int-field" style="border-color:rgba(0,212,255,.15);margin-top:8px">
+      <label style="font-size:9px;color:#809aaa;width:80px;flex-shrink:0">2FA-KODE</label>
+      <input type="text" class="int-inp" id="pmwiz-2fa-code" placeholder="123456" maxlength="6" style="font-family:monospace;font-size:14px;letter-spacing:4px;text-align:center" autofocus>
+    </div>
+    <button class="gwiz-btn primary" style="width:100%;padding:7px;margin-top:4px" onclick="_pmwizSubmit2FA()">BEKRÆFT 2FA &#x2192;</button>
+    <div id="pmwiz-login-st" style="margin-top:6px;font-family:monospace;font-size:8px"></div>
+    <div class="gwiz-note" style="margin-top:10px">&#9432; Koder er gyldige i 300 sekunder. Klik Tilbage og prøv igen hvis du ikke har din authenticator klar.</div>`;
+  if (_pmwizLoginStep === 'fallback') return `
+    <div class="gwiz-step-title">TRIN 4 — MANUEL BRIDGE LOGIN</div>
+    <div class="gwiz-note" style="border-color:rgba(255,160,60,.2);color:rgba(255,180,80,.8)">&#9888; Automatisk login fejlede. Log ind manuelt via SSH og hent Bridge IMAP-token:</div>
+    <div style="margin-top:8px;font-family:monospace;font-size:8px;color:rgba(0,212,255,.55);background:rgba(0,10,20,.7);border:1px solid rgba(0,212,255,.12);border-radius:3px;padding:8px;line-height:1.9">
+      ssh nous@&lt;pi-ip&gt;<br>
+      docker exec -it protonmail-bridge proton-bridge --cli<br>
+      <span style="color:rgba(160,180,190,.5)">&gt;&gt;&gt;</span> login<br>
+      <span style="color:rgba(160,180,190,.5)">&gt;&gt;&gt;</span> info<br>
+      <span style="color:rgba(120,140,150,.4)"># kopiér 'Password:' under IMAP Settings</span><br>
+      <span style="color:rgba(160,180,190,.5)">&gt;&gt;&gt;</span> exit
+    </div>
+    <div class="int-field" style="border-color:rgba(0,212,255,.15);margin-top:10px">
+      <label style="font-size:9px;color:#809aaa;width:80px;flex-shrink:0">EMAIL</label>
+      <input type="email" class="int-inp" id="pmwiz-fb-email2" placeholder="din@proton.me">
+    </div>
+    <div class="int-field" style="border-color:rgba(0,212,255,.15)">
+      <label style="font-size:9px;color:#809aaa;width:80px;flex-shrink:0">BRIDGE TOKEN</label>
+      <input type="password" class="int-inp" id="pmwiz-fb-token2" placeholder="Bridge IMAP-password (ikke Proton-kodeord)">
+    </div>
+    <button class="gwiz-btn primary" style="width:100%;padding:7px;margin-top:6px" onclick="_pmwizSaveFallbackCreds2()">GEM TOKEN OG FORTSÆT &#x2192;</button>
+    <div id="pmwiz-login-st" style="margin-top:4px;font-family:monospace;font-size:8px"></div>`;
+  return `
+    <div class="gwiz-step-title">TRIN 4 — BRIDGE LOGIN</div>
+    <div class="gwiz-text">Indtast dine Proton-loginoplysninger. NOUS logger ind i Bridge-containeren via automatiseret terminal — dit kodeord logges <strong>aldrig</strong>.</div>
+    <div class="gwiz-note">&#9432; Dit kodeord transmitteres direkte til Bridge-processen og fjernes fra hukommelsen straks efter. NOUS gemmer kun det Bridge-genererede IMAP-token.</div>
+    <div class="int-field" style="border-color:rgba(0,212,255,.15);margin-top:8px">
+      <label style="font-size:9px;color:#809aaa;width:80px;flex-shrink:0">PROTON EMAIL</label>
+      <input type="email" class="int-inp" id="pmwiz-login-email" placeholder="din@proton.me" autofocus>
+    </div>
+    <div class="int-field" style="border-color:rgba(0,212,255,.15)">
+      <label style="font-size:9px;color:#809aaa;width:80px;flex-shrink:0">KODEORD</label>
+      <input type="password" class="int-inp" id="pmwiz-login-pw" placeholder="dit Proton-kodeord" autocomplete="current-password">
+    </div>
+    <button class="gwiz-btn primary" style="width:100%;padding:7px;margin-top:6px" onclick="_pmwizSubmitLogin()">LOG IND VIA BRIDGE &#x2192;</button>
+    <div id="pmwiz-login-st" style="margin-top:6px;font-family:monospace;font-size:8px"></div>`;
+}
+
+async function _pmwizStartSetup() {
+  const btn = document.getElementById('pmwiz-setup-btn');
+  const log = document.getElementById('pmwiz-setup-log');
+  if (btn) { btn.disabled = true; btn.textContent = 'Opsætter…'; }
+  if (log) { log.style.display = ''; log.textContent = 'Starter setup…\n'; }
+  try {
+    const r = await fetch('/integrations/protonmail/setup/start', {method:'POST'});
+    const d = await r.json();
+    if (!r.ok) {
+      if (log) log.textContent += '✗ ' + (d.detail || 'Setup fejlede');
+      if (btn) { btn.disabled = false; btn.textContent = 'PRØV IGEN ▶'; }
+      return;
+    }
+    _pmwizSetupJobId = d.job_id;
+    _pmwizSetupPollTimer = setInterval(_pmwizPollSetup, 2000);
+  } catch(e) {
+    if (log) log.textContent += 'Netværksfejl: ' + e.message;
+    if (btn) { btn.disabled = false; btn.textContent = 'PRØV IGEN ▶'; }
+  }
+}
+async function _pmwizPollSetup() {
+  if (!_pmwizSetupJobId) return;
+  try {
+    const r = await fetch('/integrations/protonmail/setup/' + _pmwizSetupJobId);
+    if (!r.ok) return;
+    const d = await r.json();
+    const log = document.getElementById('pmwiz-setup-log');
+    if (log && d.lines) { log.textContent = d.lines.join('\n'); log.scrollTop = log.scrollHeight; }
+    if (d.status === 'done') {
+      clearInterval(_pmwizSetupPollTimer); _pmwizSetupPollTimer = null;
+      _pmwizSetupDone = true;
+      const btn = document.getElementById('pmwiz-setup-btn');
+      if (btn) { btn.textContent = '✓ Setup færdig'; btn.style.borderColor = 'rgba(0,255,136,.3)'; btn.style.color = '#00ff88'; }
+      _pmwizSt('Setup færdig — klik Næste', 'ok');
+    } else if (d.status === 'error') {
+      clearInterval(_pmwizSetupPollTimer); _pmwizSetupPollTimer = null;
+      _pmwizSt('Setup fejlede — se log ovenfor', 'err');
+      const btn = document.getElementById('pmwiz-setup-btn');
+      if (btn) { btn.disabled = false; btn.textContent = 'PRØV IGEN ▶'; }
+    }
+  } catch(_) {}
+}
+async function _pmwizSubmitLogin() {
+  const email = (document.getElementById('pmwiz-login-email')?.value || '').trim();
+  const pw    = (document.getElementById('pmwiz-login-pw')?.value   || '');
+  const stEl  = document.getElementById('pmwiz-login-st');
+  if (!email || !pw) { if (stEl) stEl.innerHTML = '<span style="color:#ff4455">Udfyld begge felter</span>'; return; }
+  if (stEl) stEl.innerHTML = '<span style="color:rgba(0,212,255,.6)">Logger ind via Bridge…</span>';
+  try {
+    const r = await fetch('/integrations/protonmail/login/start', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({email, password: pw}),
+    });
+    const d = await r.json();
+    if (!r.ok) { if (stEl) stEl.innerHTML = '<span style="color:#ff4455">✗ ' + esc(d.detail || 'Login fejlede') + '</span>'; return; }
+    if (d.status === 'authenticated') {
+      _pmwizLoginStep = 'done'; _pmwizRender();
+    } else if (d.status === '2fa_required') {
+      _pmwizLoginSid = d.session_id; _pmwizLoginStep = '2fa'; _pmwizRender();
+    } else {
+      _pmwizLoginStep = 'fallback'; _pmwizRender();
+    }
+  } catch(e) {
+    if (stEl) stEl.innerHTML = '<span style="color:#ff4455">Netværksfejl: ' + esc(e.message) + '</span>';
+  }
+}
+async function _pmwizSubmit2FA() {
+  const code = (document.getElementById('pmwiz-2fa-code')?.value || '').trim();
+  const stEl = document.getElementById('pmwiz-login-st');
+  if (!code) { if (stEl) stEl.innerHTML = '<span style="color:#ff4455">Indtast 2FA-kode</span>'; return; }
+  if (stEl) stEl.innerHTML = '<span style="color:rgba(0,212,255,.6)">Sender kode…</span>';
+  try {
+    const r = await fetch('/integrations/protonmail/login/2fa', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({session_id: _pmwizLoginSid, code}),
+    });
+    const d = await r.json();
+    if (r.ok && d.status === 'authenticated') { _pmwizLoginStep = 'done'; _pmwizRender(); }
+    else { if (stEl) stEl.innerHTML = '<span style="color:#ff4455">✗ ' + esc(d.detail || d.message || 'Forkert kode') + '</span>'; }
+  } catch(e) {
+    if (stEl) stEl.innerHTML = '<span style="color:#ff4455">Netværksfejl: ' + esc(e.message) + '</span>';
+  }
+}
+async function _pmwizSaveFallbackCreds2() {
+  const email = (document.getElementById('pmwiz-fb-email2')?.value || '').trim();
+  const token = (document.getElementById('pmwiz-fb-token2')?.value || '').trim();
+  const stEl  = document.getElementById('pmwiz-login-st');
+  if (!email || !token) { if (stEl) stEl.innerHTML = '<span style="color:#ff4455">Udfyld begge felter</span>'; return; }
+  if (stEl) stEl.innerHTML = '<span style="color:rgba(0,212,255,.6)">Gemmer…</span>';
+  try {
+    const r = await fetch('/integrations/protonmail/credentials', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({email, bridge_password: token}),
+    });
+    const d = await r.json();
+    if (r.ok) { _pmwizLoginStep = 'done'; _pmwizRender(); }
+    else { if (stEl) stEl.innerHTML = '<span style="color:#ff4455">✗ ' + esc(d.detail || 'Fejl') + '</span>'; }
+  } catch(e) {
+    if (stEl) stEl.innerHTML = '<span style="color:#ff4455">Netværksfejl: ' + esc(e.message) + '</span>';
+  }
+}
+async function _pmwizRunImapTest() {
+  const resEl = document.getElementById('pmwiz-imap-result');
+  const fbEl  = document.getElementById('pmwiz-imap-fallback');
+  const nextBtn = document.getElementById('pmwiz-next-btn');
+  try {
+    const r = await fetch('/integrations/protonmail/imap-test');
+    const d = await r.json();
+    if (d.ok) {
+      if (resEl) resEl.innerHTML = '<span style="color:#00ff88">&#x2713; IMAP-forbindelsen virker — Bridge er klar</span>';
+      if (fbEl)  fbEl.style.display  = 'none';
+      if (nextBtn) nextBtn.style.display = '';
+    } else {
+      if (resEl) resEl.innerHTML = '<span style="color:#ff9966">&#x26A0; IMAP-test fejlede: ' + esc(d.detail || 'ukendt fejl') + '</span>';
+      if (fbEl)  fbEl.style.display  = '';
+      if (nextBtn) nextBtn.style.display = '';
+    }
+  } catch(e) {
+    if (resEl) resEl.innerHTML = '<span style="color:#ff9966">&#x26A0; IMAP-test fejlede: ' + esc(e.message) + '</span>';
+    if (fbEl)  fbEl.style.display  = '';
+    if (nextBtn) nextBtn.style.display = '';
+  }
+}
+async function _pmwizSaveFallbackCreds() {
+  const email = (document.getElementById('pmwiz-fb-email')?.value || '').trim();
+  const token = (document.getElementById('pmwiz-fb-token')?.value || '').trim();
+  const stEl  = document.getElementById('pmwiz-fb-st');
+  if (!email || !token) { if (stEl) stEl.innerHTML = '<span style="color:#ff4455">Udfyld begge felter</span>'; return; }
+  if (stEl) stEl.innerHTML = '<span style="color:rgba(0,212,255,.6)">Gemmer…</span>';
+  try {
+    const r = await fetch('/integrations/protonmail/credentials', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({email, bridge_password: token}),
+    });
+    const d = await r.json();
+    if (r.ok) {
+      if (stEl) stEl.innerHTML = '<span style="color:#00ff88">&#x2713; Token gemt — klik Næste</span>';
+      const nextBtn = document.getElementById('pmwiz-next-btn');
+      if (nextBtn) nextBtn.style.display = '';
+    } else {
+      if (stEl) stEl.innerHTML = '<span style="color:#ff4455">✗ ' + esc(d.detail || 'Fejl') + '</span>';
+    }
+  } catch(e) {
+    if (stEl) stEl.innerHTML = '<span style="color:#ff4455">Netværksfejl: ' + esc(e.message) + '</span>';
+  }
+}
+async function intProtonmailWizSave() {
+  const wing  = document.getElementById('pmwiz-wing')?.value  || '';
+  const scope = document.getElementById('pmwiz-scope')?.value || 'PRIVATE';
+  const stEl  = document.getElementById('pmwiz-save-st');
+  if (stEl) { stEl.textContent = 'Gemmer…'; stEl.className = 'int-status'; }
+  try {
+    const r = await fetch('/integrations/protonmail', {
+      method:'PUT', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({enabled: true, wing, scope}),
+    });
+    const d = await r.json();
+    if (r.ok) {
+      if (stEl) { stEl.textContent = 'Protonmail aktiveret!'; stEl.className = 'int-status ok'; }
+      const ps = await fetch('/integrations/protonmail/status').then(r2 => r2.ok ? r2.json() : null).catch(()=>null);
+      if (ps) _intApplyProtonmailState(ps);
+      await _intPopulateWings();
+      setTimeout(intProtonmailCloseWizard, 1200);
+    } else {
+      if (stEl) { stEl.textContent = d.detail || 'Fejl ved gem'; stEl.className = 'int-status err'; }
+    }
+  } catch(e) {
+    if (stEl) { stEl.textContent = 'Netværksfejl'; stEl.className = 'int-status err'; }
+  }
+}
+
+// ── PROTONMAIL CARD FUNCTIONS ─────────────────────────────────────────────────
+function _intApplyProtonmailState(status) {
+  const badge    = document.getElementById('int-badge-protonmail');
+  const togWrap  = document.getElementById('int-tog-protonmail-wrap');
+  const tog      = document.getElementById('int-tog-protonmail');
+  const setup    = document.getElementById('int-protonmail-setup');
+  const cfgDiv   = document.getElementById('int-protonmail-cfg');
+  const emailLbl = document.getElementById('int-protonmail-email-lbl');
+  const card     = document.getElementById('int-card-protonmail');
+  const enabled  = !!status?.enabled;
+  const authed   = !!status?.authenticated;
+  if (badge)   { badge.textContent = enabled ? 'TIL' : (authed ? 'FORBUNDET' : 'FRA'); badge.className = 'int-badge ' + (enabled ? 'on' : (authed ? 'auth' : 'off')); }
+  if (card)    card.classList.toggle('enabled', enabled);
+  if (togWrap) togWrap.style.display = authed ? '' : 'none';
+  if (tog)     tog.checked = enabled;
+  if (setup)   setup.style.display = authed ? 'none' : '';
+  if (cfgDiv)  cfgDiv.style.display = authed ? '' : 'none';
+  if (authed && status?.email && emailLbl) emailLbl.textContent = status.email;
+  if (authed) {
+    const c = status?.config || {};
+    const wingEl  = document.getElementById('int-protonmail-wing');
+    const scopeEl = document.getElementById('int-protonmail-scope');
+    const maxEl   = document.getElementById('int-protonmail-max');
+    if (wingEl  && c.wing)         wingEl.value  = c.wing;
+    if (scopeEl && c.scope)        scopeEl.value = c.scope;
+    if (maxEl   && c.max_messages) maxEl.value   = c.max_messages;
+  }
+}
+async function intToggleProtonmail(enabled) {
+  try {
+    const r = await fetch('/integrations/protonmail', {
+      method:'PUT', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({enabled}),
+    });
+    const d = await r.json();
+    if (r.ok) { _intStatus('protonmail', enabled ? 'Aktiveret' : 'Deaktiveret', true); }
+    else       { _intStatus('protonmail', d.detail || 'Fejl', false); const t = document.getElementById('int-tog-protonmail'); if (t) t.checked = !enabled; }
+  } catch(e) { _intStatus('protonmail', 'Netværksfejl', false); }
+}
+async function intSaveProtonmail() {
+  const wingEl  = document.getElementById('int-protonmail-wing');
+  const scopeEl = document.getElementById('int-protonmail-scope');
+  const maxEl   = document.getElementById('int-protonmail-max');
+  const tog     = document.getElementById('int-tog-protonmail');
+  _intStatus('protonmail', 'Gemmer…', null);
+  try {
+    const r = await fetch('/integrations/protonmail', {
+      method:'PUT', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        enabled:      tog     ? tog.checked : false,
+        wing:         wingEl  ? wingEl.value  : '',
+        scope:        scopeEl ? scopeEl.value : 'PRIVATE',
+        max_messages: maxEl   ? parseInt(maxEl.value) || 100 : 100,
+      }),
+    });
+    const d = await r.json();
+    if (r.ok) _intStatus('protonmail', 'Gemt', true);
+    else       _intStatus('protonmail', d.detail || 'Fejl', false);
+  } catch(e) { _intStatus('protonmail', 'Netværksfejl', false); }
+}
+async function intSyncProtonmail() {
+  _intStatus('protonmail', 'Synkroniserer…', null);
+  try {
+    const r = await fetch('/integrations/protonmail/sync', {method:'POST'});
+    const d = await r.json();
+    if (r.ok) _intStatus('protonmail', `Synkroniseret: ${d.synced ?? 0} emails`, true);
+    else       _intStatus('protonmail', d.detail || 'Synk fejlede', false);
+  } catch(e) { _intStatus('protonmail', 'Netværksfejl', false); }
 }
 
 function _intStatus(id, msg, ok) {

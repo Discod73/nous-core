@@ -4445,15 +4445,17 @@ _INTEGRATIONS_DIR = Path("/srv/nous/integrations")
 if str(_INTEGRATIONS_DIR.parent) not in sys.path:
     sys.path.insert(0, str(_INTEGRATIONS_DIR.parent))
 
-from integrations.nas_connector import NasConnector as _NasConnector
-from integrations.gmail_connector import GmailConnector as _GmailConnector
-from integrations.hotmail_connector import HotmailConnector as _HotmailConnector
-from integrations.google_connector import GoogleConnector as _GoogleConnector
+from integrations.nas_connector        import NasConnector        as _NasConnector
+from integrations.gmail_connector      import GmailConnector      as _GmailConnector
+from integrations.hotmail_connector    import HotmailConnector    as _HotmailConnector
+from integrations.google_connector     import GoogleConnector      as _GoogleConnector
+from integrations.protonmail_connector import ProtonmailConnector  as _ProtonmailConnector
 
-_nas     = _NasConnector()
-_gmail   = _GmailConnector()
-_hotmail = _HotmailConnector()
-_google  = _GoogleConnector()
+_nas        = _NasConnector()
+_gmail      = _GmailConnector()
+_hotmail    = _HotmailConnector()
+_google     = _GoogleConnector()
+_protonmail = _ProtonmailConnector()
 
 
 class NasConfigUpdate(BaseModel):
@@ -4505,7 +4507,13 @@ def get_integrations():
                 "config":  _google.get_config(),
                 "status":  "active" if _google.is_any_enabled() else "disabled",
             },
-            {"id": "protonmail", "label": "Protonmail", "enabled": False, "status": "coming_soon"},
+            {
+                "id":      "protonmail",
+                "label":   "Protonmail",
+                "enabled": _protonmail.get_config().get("enabled", False),
+                "config":  _protonmail.get_config(),
+                "status":  "active" if _protonmail.get_config().get("enabled") else "disabled",
+            },
         ]
     }
 
@@ -5090,3 +5098,383 @@ async def google_callback(code: str = None, state: str = None, error: str = None
     return RedirectResponse(
         f"/?google_connected=true&google_email={urllib.parse.quote(email)}"
     )
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# === Protonmail Bridge =========================================================
+# ═══════════════════════════════════════════════════════════════════════════════
+
+import subprocess as _subprocess
+import threading  as _threading
+import pexpect    as _pexpect
+
+_pm_setup_jobs:    dict = {}   # job_id → {"status": "running"|"done"|"error", "lines": [...]}
+_pm_login_sessions: dict = {}  # session_id → {"proc": pexpect.spawn, "email": str, "expires": float}
+_pm_session_lock = _threading.Lock()
+
+_PM_CONTAINER = "protonmail-bridge"
+_PM_IMAGE     = "schklom/protonmail-bridge:latest-arm64"
+_PM_DATA_DIR  = "/home/nous/.protonmail-bridge"
+_PM_IMAP_PORT = 1143
+
+
+class ProtonmailConfigUpdate(BaseModel):
+    enabled:      Optional[bool] = None
+    wing:         Optional[str]  = None
+    scope:        Optional[str]  = None
+    max_messages: Optional[int]  = None
+
+
+class ProtonLoginStart(BaseModel):
+    email:    str
+    password: str
+
+
+class ProtonLogin2FA(BaseModel):
+    session_id: str
+    code:       str
+
+
+class ProtonSaveBridgeCreds(BaseModel):
+    email:          str
+    bridge_password: str  # Bridge-genereret token, IKKE Proton-kodeord
+
+
+def _pm_expire_sessions() -> None:
+    import time
+    with _pm_session_lock:
+        now  = time.time()
+        dead = [k for k, v in _pm_login_sessions.items() if v["expires"] < now]
+        for k in dead:
+            try:
+                _pm_login_sessions[k]["proc"].close(force=True)
+            except Exception:
+                pass
+            del _pm_login_sessions[k]
+
+
+def _pm_docker_setup(job_id: str) -> None:
+    """Baggrundstask: pull image, opret data-dir, start container."""
+    import time
+    jobs = _pm_setup_jobs[job_id]
+
+    def log(msg: str) -> None:
+        jobs["lines"].append(msg)
+
+    try:
+        # Opret data-dir
+        import os
+        os.makedirs(_PM_DATA_DIR, mode=0o700, exist_ok=True)
+        log(f"Data-mappe: {_PM_DATA_DIR} ✓")
+
+        # Tjek om container allerede eksisterer
+        r = _subprocess.run(
+            ["docker", "inspect", "--format={{.State.Running}}", _PM_CONTAINER],
+            capture_output=True, text=True,
+        )
+        if r.returncode == 0:
+            if "true" in r.stdout:
+                log(f"Container '{_PM_CONTAINER}' kører allerede ✓")
+                jobs["status"] = "done"
+                return
+            else:
+                log(f"Container '{_PM_CONTAINER}' eksisterer men er stoppet — starter...")
+                _subprocess.run(["docker", "start", _PM_CONTAINER], check=True)
+                log("Container genstartet ✓")
+                jobs["status"] = "done"
+                return
+
+        # Pull image
+        log(f"Henter image {_PM_IMAGE} (kan tage 2–4 min på Pi)...")
+        pull = _subprocess.Popen(
+            ["docker", "pull", _PM_IMAGE],
+            stdout=_subprocess.PIPE, stderr=_subprocess.STDOUT, text=True,
+        )
+        for line in pull.stdout:
+            line = line.strip()
+            if line:
+                log(line)
+        pull.wait()
+        if pull.returncode != 0:
+            raise RuntimeError("docker pull fejlede")
+        log("Image hentet ✓")
+
+        # Start container
+        log("Starter Bridge-container...")
+        _subprocess.run([
+            "docker", "run", "-d",
+            "--name", _PM_CONTAINER,
+            "--restart", "unless-stopped",
+            "-v", f"{_PM_DATA_DIR}:/root",
+            "-p", f"127.0.0.1:{_PM_IMAP_PORT}:1143",
+            "-p", "127.0.0.1:1025:1025",
+            _PM_IMAGE,
+        ], check=True)
+        log("Container startet ✓")
+        time.sleep(3)  # Giv Bridge tid til at initialisere
+        log("Bridge initialiserer... vent venligst")
+        time.sleep(5)
+        log("Klar til login ✓")
+        jobs["status"] = "done"
+
+    except Exception as e:
+        log(f"FEJL: {e}")
+        jobs["status"] = "error"
+
+
+def _pm_get_bridge_imap_password(proc, email_addr: str) -> str | None:
+    """Hent Bridge-genereret IMAP-password via 'info'-kommando."""
+    import re
+    try:
+        proc.sendline("info")
+        proc.expect(r">>>", timeout=15)
+        output = proc.before or ""
+        match = re.search(r"Password:\s+(\S+)", output)
+        if match:
+            return match.group(1)
+    except Exception:
+        pass
+    return None
+
+
+# ── Setup endpoints ────────────────────────────────────────────────────────────
+
+@app.post("/integrations/protonmail/setup/start")
+def protonmail_setup_start(background_tasks: BackgroundTasks):
+    """Start Docker image-pull og container-opstart (baggrundstask)."""
+    import uuid
+    job_id = str(uuid.uuid4())[:10]
+    _pm_setup_jobs[job_id] = {"status": "running", "lines": []}
+    background_tasks.add_task(_pm_docker_setup, job_id)
+    return {"job_id": job_id}
+
+
+@app.get("/integrations/protonmail/setup/{job_id}")
+def protonmail_setup_status(job_id: str):
+    """Poll setup-fremgang."""
+    job = _pm_setup_jobs.get(job_id)
+    if not job:
+        raise HTTPException(404, "Ukendt job_id")
+    return {"status": job["status"], "lines": job["lines"]}
+
+
+# ── Login endpoints (pexpect) ─────────────────────────────────────────────────
+
+@app.post("/integrations/protonmail/login/start")
+def protonmail_login_start(body: ProtonLoginStart):
+    """
+    Start interaktivt Bridge-login via pexpect.
+    Credentials videresendes direkte til Bridge-processen.
+    NOUS logger og gemmer ALDRIG email/password.
+    Returnerer enten {"status":"authenticated"} eller {"status":"2fa_required","session_id":"..."}.
+    """
+    import time
+    import uuid
+    _pm_expire_sessions()
+
+    fallback_cmd = (
+        f"docker exec -it {_PM_CONTAINER} proton-bridge --cli\n"
+        ">>> login\nUsername: <din@proton.me>\nPassword: ****"
+    )
+
+    try:
+        proc = _pexpect.spawn(
+            f"docker exec -it {_PM_CONTAINER} proton-bridge --cli",
+            timeout=45,
+            encoding="utf-8",
+            echo=False,
+        )
+        # Vent på Bridge CLI-prompt
+        idx = proc.expect([r">>>", _pexpect.EOF, _pexpect.TIMEOUT], timeout=30)
+        if idx != 0:
+            raise RuntimeError("Bridge svarede ikke med CLI-prompt — er containeren startet?")
+
+        proc.sendline("login")
+        idx = proc.expect([r"[Uu]sername", r"[Ee]mail", _pexpect.EOF, _pexpect.TIMEOUT], timeout=10)
+        if idx >= 2:
+            raise RuntimeError("Bridge bad ikke om brugernavn")
+        proc.sendline(body.email)
+
+        idx = proc.expect([r"[Pp]assword", _pexpect.EOF, _pexpect.TIMEOUT], timeout=10)
+        if idx >= 1:
+            raise RuntimeError("Bridge bad ikke om adgangskode")
+        proc.sendline(body.password)
+
+        # Vent: success, 2FA, eller fejl
+        idx = proc.expect(
+            [
+                r"[Ll]ogged in",           # 0 — success
+                r"[Tt]wo factor",          # 1 — 2FA krævet
+                r"[Mm]ailbox password",    # 2 — mailbox password (ældre konti)
+                r"[Ii]ncorrect",           # 3 — forkert kodeord
+                r"[Ee]rror",              # 4 — anden fejl
+                _pexpect.EOF,             # 5
+                _pexpect.TIMEOUT,         # 6
+            ],
+            timeout=30,
+        )
+
+        if idx == 0:  # Logged in — hent Bridge IMAP-password
+            proc.expect(r">>>", timeout=10)
+            bridge_pw = _pm_get_bridge_imap_password(proc, body.email)
+            proc.sendline("exit")
+            proc.close()
+            if bridge_pw:
+                _protonmail.save_bridge_credentials(body.email, bridge_pw)
+                return {"status": "authenticated", "email": body.email}
+            return JSONResponse(
+                {"detail": "Logget ind, men kunne ikke hente Bridge IMAP-password. Kør 'info' manuelt i Bridge CLI."},
+                status_code=502,
+            )
+
+        if idx == 1:  # 2FA krævet — gem session
+            sid = str(uuid.uuid4())[:14]
+            with _pm_session_lock:
+                _pm_login_sessions[sid] = {
+                    "proc":    proc,
+                    "email":   body.email,
+                    "expires": time.time() + 300,
+                }
+            return {"status": "2fa_required", "session_id": sid}
+
+        if idx == 2:  # Mailbox password (legacy)
+            proc.close()
+            return JSONResponse(
+                {"detail": "Din konto bruger 'mailbox password'. Indtast det som adgangskode — ikke dit login-password.", "fallback": fallback_cmd},
+                status_code=400,
+            )
+
+        proc.close()
+        return JSONResponse(
+            {"detail": "Forkert email eller adgangskode", "fallback": fallback_cmd},
+            status_code=401,
+        )
+
+    except _pexpect.TIMEOUT:
+        return JSONResponse(
+            {"detail": "Bridge svarede ikke inden for timeout — er containeren kørende?", "fallback": fallback_cmd},
+            status_code=503,
+        )
+    except Exception as e:
+        return JSONResponse(
+            {"detail": f"Login fejlede: {e}", "fallback": fallback_cmd},
+            status_code=500,
+        )
+
+
+@app.post("/integrations/protonmail/login/2fa")
+def protonmail_login_2fa(body: ProtonLogin2FA):
+    """Send 2FA-kode til eksisterende pexpect-session."""
+    import time
+    _pm_expire_sessions()
+
+    with _pm_session_lock:
+        session = _pm_login_sessions.get(body.session_id)
+    if not session:
+        raise HTTPException(410, "Session udløbet eller ukendt — start login forfra")
+
+    proc       = session["proc"]
+    email_addr = session["email"]
+    fallback   = f"docker exec -it {_PM_CONTAINER} proton-bridge --cli\n>>> login\n..."
+
+    try:
+        proc.sendline(body.code.strip())
+        idx = proc.expect(
+            [r"[Ll]ogged in", r"[Ii]ncorrect", r"[Ee]rror", _pexpect.EOF, _pexpect.TIMEOUT],
+            timeout=20,
+        )
+        if idx == 0:
+            proc.expect(r">>>", timeout=10)
+            bridge_pw = _pm_get_bridge_imap_password(proc, email_addr)
+            proc.sendline("exit")
+            proc.close()
+            with _pm_session_lock:
+                _pm_login_sessions.pop(body.session_id, None)
+            if bridge_pw:
+                _protonmail.save_bridge_credentials(email_addr, bridge_pw)
+                return {"status": "authenticated", "email": email_addr}
+            return JSONResponse(
+                {"detail": "2FA godkendt, men IMAP-password ikke fundet — kør 'info' i Bridge CLI manuelt"},
+                status_code=502,
+            )
+        proc.close()
+        with _pm_session_lock:
+            _pm_login_sessions.pop(body.session_id, None)
+        return JSONResponse(
+            {"detail": "Forkert 2FA-kode", "fallback": fallback},
+            status_code=401,
+        )
+    except (_pexpect.TIMEOUT, _pexpect.EOF):
+        with _pm_session_lock:
+            _pm_login_sessions.pop(body.session_id, None)
+        return JSONResponse(
+            {"detail": "Session udløbet under 2FA-verifikation", "fallback": fallback},
+            status_code=504,
+        )
+
+
+@app.post("/integrations/protonmail/credentials")
+def protonmail_save_manual_creds(body: ProtonSaveBridgeCreds):
+    """Gem Bridge IMAP-password manuelt (fallback efter SSH-login)."""
+    if not body.email or not body.bridge_password:
+        raise HTTPException(400, "Email og bridge_password påkrævet")
+    _protonmail.save_bridge_credentials(body.email, body.bridge_password)
+    return {"ok": True}
+
+
+# ── Status og drift endpoints ──────────────────────────────────────────────────
+
+@app.put("/integrations/protonmail")
+def update_protonmail_config(body: ProtonmailConfigUpdate):
+    patch = {k: v for k, v in body.model_dump().items() if v is not None}
+    cfg   = _protonmail.update_config(patch)
+    return {"ok": True, "config": cfg}
+
+
+@app.get("/integrations/protonmail/status")
+def protonmail_status():
+    return _protonmail.status()
+
+
+@app.get("/integrations/protonmail/imap-test")
+def protonmail_imap_test():
+    """Test om Bridge's IMAP-port svarer og login virker."""
+    import socket
+    host, port = "127.0.0.1", _PM_IMAP_PORT
+    try:
+        with socket.create_connection((host, port), timeout=5):
+            pass
+    except Exception as e:
+        return {"ok": False, "error": f"Port {port} svarer ikke: {e}"}
+    try:
+        import imaplib
+        state = _protonmail._load_state()
+        if not state.get("bridge_email"):
+            return {"ok": False, "error": "Ingen Bridge-konto gemt — udfør login først"}
+        imap = imaplib.IMAP4(host, port)
+        imap.login(state["bridge_email"], state["bridge_password"])
+        _, folders = imap.list()
+        imap.logout()
+        return {"ok": True, "email": state["bridge_email"], "folders": len(folders or [])}
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
+
+
+@app.get("/integrations/protonmail/messages")
+def protonmail_messages(max_results: int = 20):
+    if not _protonmail.is_authenticated():
+        raise HTTPException(401, "Protonmail er ikke autentificeret")
+    try:
+        return {"messages": _protonmail.fetch_messages(max_results=max_results)}
+    except Exception as e:
+        raise HTTPException(500, str(e))
+
+
+@app.post("/integrations/protonmail/sync")
+def protonmail_sync(background_tasks: BackgroundTasks):
+    if not _protonmail.is_authenticated():
+        raise HTTPException(401, "Protonmail er ikke autentificeret")
+    if not _protonmail.get_config().get("enabled"):
+        raise HTTPException(403, "Protonmail er ikke aktiveret")
+    background_tasks.add_task(lambda: _protonmail.sync())
+    return {"ok": True, "message": "Protonmail-sync startet i baggrunden"}
