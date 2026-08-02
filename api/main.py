@@ -4448,10 +4448,12 @@ if str(_INTEGRATIONS_DIR.parent) not in sys.path:
 from integrations.nas_connector import NasConnector as _NasConnector
 from integrations.gmail_connector import GmailConnector as _GmailConnector
 from integrations.hotmail_connector import HotmailConnector as _HotmailConnector
+from integrations.google_connector import GoogleConnector as _GoogleConnector
 
 _nas     = _NasConnector()
 _gmail   = _GmailConnector()
 _hotmail = _HotmailConnector()
+_google  = _GoogleConnector()
 
 
 class NasConfigUpdate(BaseModel):
@@ -4495,6 +4497,13 @@ def get_integrations():
                 "enabled": _hotmail.is_enabled(),
                 "config":  _hotmail.get_config(),
                 "status":  "active" if _hotmail.is_enabled() else "disabled",
+            },
+            {
+                "id":      "google",
+                "label":   "Google Services",
+                "enabled": _google.is_any_enabled(),
+                "config":  _google.get_config(),
+                "status":  "active" if _google.is_any_enabled() else "disabled",
             },
             {"id": "protonmail", "label": "Protonmail", "enabled": False, "status": "coming_soon"},
         ]
@@ -4897,4 +4906,187 @@ async def hotmail_callback(
 
     return RedirectResponse(
         f"/?hotmail_connected=true&hotmail_email={urllib.parse.quote(email)}"
+    )
+
+
+# === Google Services (Gmail + Calendar + Drive) ===
+
+class GoogleConfigUpdate(BaseModel):
+    gmail_enabled:       Optional[bool] = None
+    gmail_wing:          Optional[str]  = None
+    gmail_scope:         Optional[str]  = None
+    gmail_max_messages:  Optional[int]  = None
+    calendar_enabled:    Optional[bool] = None
+    calendar_wing:       Optional[str]  = None
+    calendar_scope:      Optional[str]  = None
+    calendar_days_ahead: Optional[int]  = None
+    drive_enabled:       Optional[bool] = None
+    drive_wing:          Optional[str]  = None
+    drive_scope:         Optional[str]  = None
+    drive_folder_id:     Optional[str]  = None
+
+
+@app.put("/integrations/google")
+def update_google_config(body: GoogleConfigUpdate):
+    patch = {k: v for k, v in body.model_dump().items() if v is not None}
+    try:
+        cfg = _google.update_config(patch)
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    return {"ok": True, "config": cfg}
+
+
+@app.get("/integrations/google/status")
+def google_status():
+    return _google.status()
+
+
+@app.get("/integrations/google/gmail/messages")
+def google_gmail_messages(max_results: int = 20):
+    if not _google.is_authenticated():
+        raise HTTPException(401, "Google er ikke autentificeret — brug Cockpit wizard")
+    if not (1 <= max_results <= 200):
+        raise HTTPException(400, "max_results skal være 1–200")
+    try:
+        return {"messages": _google.gmail_fetch_messages(max_results), "count": max_results}
+    except Exception as e:
+        raise HTTPException(500, str(e))
+
+
+@app.post("/integrations/google/gmail/sync")
+def google_gmail_sync(background_tasks: BackgroundTasks):
+    if not _google.is_authenticated():
+        raise HTTPException(401, "Google er ikke autentificeret")
+    if not _google.get_config().get("gmail_enabled"):
+        raise HTTPException(403, "Gmail er ikke aktiveret under Google Services")
+    background_tasks.add_task(lambda: _google.gmail_sync())
+    return {"ok": True, "message": "Gmail sync startet i baggrunden"}
+
+
+@app.get("/integrations/google/calendar/events")
+def google_calendar_events(days_ahead: int = 30):
+    if not _google.is_authenticated():
+        raise HTTPException(401, "Google er ikke autentificeret")
+    if not (1 <= days_ahead <= 365):
+        raise HTTPException(400, "days_ahead skal være 1–365")
+    try:
+        return {"events": _google.calendar_list_events(days_ahead)}
+    except Exception as e:
+        raise HTTPException(500, str(e))
+
+
+@app.post("/integrations/google/calendar/sync")
+def google_calendar_sync(background_tasks: BackgroundTasks):
+    if not _google.is_authenticated():
+        raise HTTPException(401, "Google er ikke autentificeret")
+    if not _google.get_config().get("calendar_enabled"):
+        raise HTTPException(403, "Kalender er ikke aktiveret under Google Services")
+    background_tasks.add_task(lambda: _google.calendar_sync())
+    return {"ok": True, "message": "Kalender sync startet i baggrunden"}
+
+
+@app.get("/integrations/google/drive/files")
+def google_drive_files(folder_id: str = "", query: str = ""):
+    if not _google.is_authenticated():
+        raise HTTPException(401, "Google er ikke autentificeret")
+    try:
+        return {"files": _google.drive_list_files(folder_id, query)}
+    except Exception as e:
+        raise HTTPException(500, str(e))
+
+
+@app.post("/integrations/google/drive/sync")
+def google_drive_sync(background_tasks: BackgroundTasks):
+    if not _google.is_authenticated():
+        raise HTTPException(401, "Google er ikke autentificeret")
+    if not _google.get_config().get("drive_enabled"):
+        raise HTTPException(403, "Drive er ikke aktiveret under Google Services")
+    background_tasks.add_task(lambda: _google.drive_sync())
+    return {"ok": True, "message": "Drive sync startet i baggrunden"}
+
+
+# ── Google OAuth wizard endpoints ───────────────────────────────────────────
+_GOOGLE_CREDS_FILE    = Path("/srv/nous/config/gmail_credentials.json")
+_GOOGLE_SCOPES        = [
+    "https://www.googleapis.com/auth/gmail.readonly",
+    "https://www.googleapis.com/auth/calendar.readonly",
+    "https://www.googleapis.com/auth/drive.readonly",
+]
+_google_oauth_states: dict = {}   # state → Flow
+
+
+@app.post("/integrations/google/upload-credentials")
+async def google_upload_credentials(file: UploadFile = File(...)):
+    """Modtag og valider Google OAuth credentials JSON (deles med Gmail wizard)."""
+    content = await file.read()
+    try:
+        data = json.loads(content)
+    except json.JSONDecodeError:
+        raise HTTPException(400, "Ugyldig JSON — filen kan ikke læses")
+    cred_data = data.get("web") or data.get("installed")
+    if not cred_data or not cred_data.get("client_id") or not cred_data.get("client_secret"):
+        raise HTTPException(
+            400,
+            "Ikke en gyldig Google OAuth credentials-fil — mangler client_id eller client_secret.",
+        )
+    _GOOGLE_CREDS_FILE.parent.mkdir(parents=True, exist_ok=True)
+    _GOOGLE_CREDS_FILE.write_bytes(content)
+    _GOOGLE_CREDS_FILE.chmod(0o600)
+    cred_type = "web" if "web" in data else "installed"
+    return {"ok": True, "type": cred_type, "client_id_prefix": cred_data["client_id"][:20]}
+
+
+class GoogleAuthorizeRequest(BaseModel):
+    callback_url: str
+
+
+@app.post("/integrations/google/authorize")
+async def google_authorize(body: GoogleAuthorizeRequest):
+    """Start Google OAuth-flow med alle tre scopes (Gmail + Calendar + Drive)."""
+    if not _GOOGLE_CREDS_FILE.exists():
+        raise HTTPException(400, "Credentials-fil ikke fundet — upload den i trin 5 først")
+    try:
+        from google_auth_oauthlib.flow import Flow
+        flow = Flow.from_client_secrets_file(
+            str(_GOOGLE_CREDS_FILE),
+            scopes=_GOOGLE_SCOPES,
+            redirect_uri=body.callback_url,
+        )
+    except Exception as e:
+        raise HTTPException(400, f"Ugyldig credentials-fil: {e}")
+    auth_url, state = flow.authorization_url(prompt="consent", access_type="offline")
+    _google_oauth_states[state] = flow
+    return {"auth_url": auth_url}
+
+
+@app.get("/integrations/google/callback")
+async def google_callback(code: str = None, state: str = None, error: str = None):
+    """OAuth-callback fra Google — gemmer token og redirecter til Cockpit."""
+    import urllib.parse
+    if error:
+        return RedirectResponse(f"/?google_error={urllib.parse.quote(error)}")
+    if not state or state not in _google_oauth_states:
+        return RedirectResponse("/?google_error=invalid_state")
+    flow = _google_oauth_states.pop(state)
+    try:
+        flow.fetch_token(code=code)
+    except Exception:
+        return RedirectResponse("/?google_error=token_exchange_failed")
+    creds = flow.credentials
+    token_file = Path(_google.get_config().get("token_file", "/srv/nous/config/google_token.json"))
+    token_file.parent.mkdir(parents=True, exist_ok=True)
+    token_file.write_text(creds.to_json(), encoding="utf-8")
+    token_file.chmod(0o600)
+    email = ""
+    try:
+        from googleapiclient.discovery import build
+        svc     = build("gmail", "v1", credentials=creds, cache_discovery=False)
+        profile = svc.users().getProfile(userId="me").execute()
+        email   = profile.get("emailAddress", "")
+        # Gem email i config
+        _google.update_config({"email_address": email})
+    except Exception:
+        pass
+    return RedirectResponse(
+        f"/?google_connected=true&google_email={urllib.parse.quote(email)}"
     )

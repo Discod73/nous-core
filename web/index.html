@@ -957,6 +957,7 @@ body:not([data-mode="assistent"]) #ass-legacy-btn{display:none!important}
 .gwiz-st.ok{color:#00ff88}.gwiz-st.err{color:#ff4455}.gwiz-st.spin{color:var(--ac)}
 .int-gmail-auth{display:flex;align-items:center;gap:5px;font-family:monospace;font-size:9px;color:rgba(130,160,175,.4);padding:3px 0}
 .int-gmail-auth .gm-email{color:#00ff88;font-size:10px}
+.int-google-svc-hdr{display:flex;align-items:center;gap:4px;padding:5px 0;border-top:1px solid rgba(0,212,255,.07);margin-top:4px}
 /* ── SWARM VIEW ─────────────────────────────────────────────────────── */
 #swarm-view{flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0;background:rgba(0,3,8,.4)}
 #swarm-tier{display:flex;align-items:center;justify-content:center;gap:0;padding:10px 16px 8px;border-bottom:1px solid rgba(0,212,255,.12);flex-shrink:0}
@@ -2014,45 +2015,96 @@ body:not([data-mode="assistent"]) #ass-legacy-btn{display:none!important}
         </div>
       </div>
 
-      <!-- Gmail -->
-      <div class="int-card" id="int-card-gmail">
+      <!-- Google Services -->
+      <div class="int-card" id="int-card-google">
         <div class="int-header">
-          <span class="int-label">Gmail</span>
-          <span class="int-badge off" id="int-badge-gmail">FRA</span>
-          <label class="tsw" id="int-tog-gmail-wrap" title="Aktiver Gmail-integration" style="display:none">
-            <input type="checkbox" id="int-tog-gmail" onchange="intToggleGmail(this.checked)">
-            <span class="tsl"></span>
-          </label>
+          <span class="int-label">Google Services</span>
+          <span class="int-badge off" id="int-badge-google">FRA</span>
         </div>
-        <div class="int-body" id="int-body-gmail">
-          <!-- Ikke autentificeret: opsætningsknap -->
-          <div id="int-gmail-setup">
-            <div class="int-warn">&#9888; Gmail kræver engangsgodkendelse via Google (~5 min). Gøres kun én gang — derefter synkroniserer NOUS automatisk.</div>
-            <button class="int-save-btn" onclick="intGmailOpenWizard()">FORBIND GMAIL →</button>
+        <div class="int-body" id="int-body-google">
+          <!-- Ikke autentificeret -->
+          <div id="int-google-setup">
+            <div class="int-warn">&#9888; Forbind én gang — giver adgang til Gmail, Kalender og Drive. Tager ~5 min og skal kun gøres én gang.</div>
+            <button class="int-save-btn" onclick="intGoogleOpenWizard()">FORBIND GOOGLE →</button>
           </div>
-          <!-- Autentificeret: konfiguration -->
-          <div id="int-gmail-cfg" style="display:none">
-            <div class="int-gmail-auth">&#10003; <span class="gm-email" id="int-gmail-email-lbl"></span></div>
-            <div class="int-field">
-              <label>WING</label>
-              <select class="int-sel" id="int-gmail-wing"><option value="">– vælg –</option></select>
+          <!-- Autentificeret -->
+          <div id="int-google-connected" style="display:none">
+            <div class="int-gmail-auth" style="margin-bottom:8px">
+              &#10003; <span class="gm-email" id="int-google-email-lbl"></span>
+              <button class="pin-sbtn" style="margin-left:8px;font-size:8px" onclick="intGoogleOpenWizard('extend')">UDVID ADGANG</button>
             </div>
-            <div class="int-field">
-              <label>SCOPE</label>
-              <select class="int-sel" id="int-gmail-scope">
-                <option value="PRIVATE">PRIVATE</option>
-                <option value="SECRET">SECRET</option>
-                <option value="SWARM">SWARM</option>
-                <option value="PUBLIC">PUBLIC</option>
-              </select>
+
+            <!-- Gmail sub-sektion -->
+            <div class="int-google-svc-hdr">
+              <span style="font-family:monospace;font-size:9px;letter-spacing:1.5px;color:rgba(0,212,255,.55)">GMAIL</span>
+              <label class="tsw" style="margin-left:auto">
+                <input type="checkbox" id="int-tog-google-gmail" onchange="intToggleGoogleSvc('gmail',this.checked)">
+                <span class="tsl"></span>
+              </label>
+              <span class="int-badge off" id="int-badge-google-gmail" style="margin-left:6px;font-size:7px">FRA</span>
             </div>
-            <div class="int-field">
-              <label>MAX EMAILS</label>
-              <input type="number" class="int-inp" id="int-gmail-max" min="1" max="1000" value="100" style="max-width:72px">
+            <div id="int-google-gmail-cfg" style="display:none;padding:4px 0 8px 0">
+              <div class="int-field"><label>WING</label>
+                <select class="int-sel" id="int-google-gmail-wing"><option value="">– vælg –</option></select></div>
+              <div class="int-field"><label>SCOPE</label>
+                <select class="int-sel" id="int-google-gmail-scope">
+                  <option value="PRIVATE">PRIVATE</option><option value="SECRET">SECRET</option>
+                  <option value="SWARM">SWARM</option><option value="PUBLIC">PUBLIC</option>
+                </select></div>
+              <div class="int-field"><label>MAX EMAILS</label>
+                <input type="number" class="int-inp" id="int-google-gmail-max" min="1" max="1000" value="100" style="max-width:72px"></div>
+              <button class="int-save-btn" onclick="intSaveGoogleSvc('gmail')">GEM</button>
+              <button class="int-save-btn" style="margin-left:4px;border-color:rgba(0,212,255,.18);color:rgba(0,212,255,.6)" onclick="intSyncGoogleSvc('gmail')">&#x21BB; SYNK</button>
+              <div class="int-status" id="int-google-gmail-status"></div>
             </div>
-            <button class="int-save-btn" onclick="intSaveGmail()">GEM GMAIL-INDSTILLINGER</button>
-            <button class="int-save-btn" style="margin-top:4px;border-color:rgba(0,212,255,.18);color:rgba(0,212,255,.6)" onclick="intSyncGmail()">&#x21BB; SYNK NU</button>
-            <div class="int-status" id="int-gmail-status"></div>
+
+            <!-- Kalender sub-sektion -->
+            <div class="int-google-svc-hdr">
+              <span style="font-family:monospace;font-size:9px;letter-spacing:1.5px;color:rgba(0,212,255,.55)">KALENDER</span>
+              <label class="tsw" style="margin-left:auto">
+                <input type="checkbox" id="int-tog-google-calendar" onchange="intToggleGoogleSvc('calendar',this.checked)">
+                <span class="tsl"></span>
+              </label>
+              <span class="int-badge off" id="int-badge-google-calendar" style="margin-left:6px;font-size:7px">FRA</span>
+            </div>
+            <div id="int-google-calendar-cfg" style="display:none;padding:4px 0 8px 0">
+              <div class="int-field"><label>WING</label>
+                <select class="int-sel" id="int-google-calendar-wing"><option value="">– vælg –</option></select></div>
+              <div class="int-field"><label>SCOPE</label>
+                <select class="int-sel" id="int-google-calendar-scope">
+                  <option value="PRIVATE">PRIVATE</option><option value="SECRET">SECRET</option>
+                  <option value="SWARM">SWARM</option>
+                </select></div>
+              <div class="int-field"><label>DAGE FREM</label>
+                <input type="number" class="int-inp" id="int-google-calendar-days" min="1" max="365" value="30" style="max-width:72px"></div>
+              <button class="int-save-btn" onclick="intSaveGoogleSvc('calendar')">GEM</button>
+              <button class="int-save-btn" style="margin-left:4px;border-color:rgba(0,212,255,.18);color:rgba(0,212,255,.6)" onclick="intSyncGoogleSvc('calendar')">&#x21BB; SYNK</button>
+              <div class="int-status" id="int-google-calendar-status"></div>
+            </div>
+
+            <!-- Drive + Docs sub-sektion -->
+            <div class="int-google-svc-hdr">
+              <span style="font-family:monospace;font-size:9px;letter-spacing:1.5px;color:rgba(0,212,255,.55)">DRIVE + DOCS</span>
+              <label class="tsw" style="margin-left:auto">
+                <input type="checkbox" id="int-tog-google-drive" onchange="intToggleGoogleSvc('drive',this.checked)">
+                <span class="tsl"></span>
+              </label>
+              <span class="int-badge off" id="int-badge-google-drive" style="margin-left:6px;font-size:7px">FRA</span>
+            </div>
+            <div id="int-google-drive-cfg" style="display:none;padding:4px 0 8px 0">
+              <div class="int-field"><label>WING</label>
+                <select class="int-sel" id="int-google-drive-wing"><option value="">– vælg –</option></select></div>
+              <div class="int-field"><label>SCOPE</label>
+                <select class="int-sel" id="int-google-drive-scope">
+                  <option value="PRIVATE">PRIVATE</option><option value="SECRET">SECRET</option>
+                  <option value="SWARM">SWARM</option>
+                </select></div>
+              <div class="int-field"><label>MAPPE-ID</label>
+                <input type="text" class="int-inp" id="int-google-drive-folder" placeholder="tom = hele Drive" style="max-width:200px;font-size:9px"></div>
+              <button class="int-save-btn" onclick="intSaveGoogleSvc('drive')">GEM</button>
+              <button class="int-save-btn" style="margin-left:4px;border-color:rgba(0,212,255,.18);color:rgba(0,212,255,.6)" onclick="intSyncGoogleSvc('drive')">&#x21BB; SYNK</button>
+              <div class="int-status" id="int-google-drive-status"></div>
+            </div>
           </div>
         </div>
       </div>
@@ -2112,11 +2164,11 @@ body:not([data-mode="assistent"]) #ass-legacy-btn{display:none!important}
   </div>
 </div>
 
-<!-- GMAIL SETUP WIZARD -->
+<!-- GOOGLE SETUP WIZARD -->
 <div id="gmail-wizard-ov" onclick="intGmailWizOvClick(event)">
   <div id="gmail-wizard-box">
     <div class="gwiz-hdr">
-      <span class="gwiz-title">// GMAIL OPSÆTNING</span>
+      <span class="gwiz-title" id="gwiz-title">// GOOGLE OPSÆTNING</span>
       <button class="gwiz-close" onclick="intGmailCloseWizard()">&#x2715;</button>
     </div>
     <div class="gwiz-steps" id="gwiz-steps"></div>
@@ -6439,7 +6491,7 @@ function loginAs(userKey) {
   closeLoginOv();
   loadUserLang(userKey);
   loadUserFeatures(userKey);
-  _intGmailAutoOpen();
+  _intGoogleAutoOpen();
   _intHotmailAutoOpen();
 }
 
@@ -8450,16 +8502,16 @@ async function intInit() {
     if (!r.ok) return;
     const data = await r.json();
     const nas     = data.integrations.find(i => i.id === 'nas');
-    const gmail   = data.integrations.find(i => i.id === 'gmail');
     const hotmail = data.integrations.find(i => i.id === 'hotmail');
-    if (nas)   _intApplyNasState(nas.enabled, nas.config);
-    if (gmail) {
-      const gs = await fetch('/integrations/gmail/status').then(r2 => r2.ok ? r2.json() : null).catch(() => null);
-      _intApplyGmailState(gs || {enabled: gmail.enabled, authenticated: false, config: gmail.config});
-    }
+    const google  = data.integrations.find(i => i.id === 'google');
+    if (nas)    _intApplyNasState(nas.enabled, nas.config);
     if (hotmail) {
       const hs = await fetch('/integrations/hotmail/status').then(r2 => r2.ok ? r2.json() : null).catch(() => null);
       _intApplyHotmailState(hs || {enabled: hotmail.enabled, authenticated: false, config: hotmail.config});
+    }
+    if (google) {
+      const gs = await fetch('/integrations/google/status').then(r2 => r2.ok ? r2.json() : null).catch(() => null);
+      _intApplyGoogleState(gs || {authenticated: false, config: google.config});
     }
   } catch (_) {}
   _intPopulateWings();
@@ -8490,7 +8542,9 @@ async function _intPopulateWings() {
     if (!r.ok) return;
     const data = await r.json();
     const wings = data.wings || [];
-    ['int-nas-wing', 'int-gmail-wing', 'int-hotmail-wing'].forEach(selId => {
+    ['int-nas-wing', 'int-hotmail-wing',
+   'int-google-gmail-wing', 'int-google-calendar-wing', 'int-google-drive-wing',
+   'gwiz-wing', 'hwiz-wing'].forEach(selId => {
       const sel = document.getElementById(selId);
       if (!sel) return;
       const cur = sel.value;
@@ -8723,14 +8777,29 @@ async function intSyncGmail() {
   } catch(e) { _intStatus('gmail', 'Netværksfejl', false); }
 }
 
-// ── GMAIL WIZARD ──────────────────────────────────────────────────────────
+// ── GOOGLE WIZARD ─────────────────────────────────────────────────────────
 let _gwizStep     = 1;
 const _GWIZ_TOTAL = 7;
 let _gwizCredsOk  = false;
+let _gwizMode     = 'full';   // 'full' | 'extend'
 
+function intGoogleOpenWizard(mode) {
+  _gwizMode    = mode || 'full';
+  _gwizStep    = _gwizMode === 'extend' ? 1 : 1;
+  _gwizCredsOk = _gwizMode === 'extend';  // credentials already exist in extend mode
+  const t = document.getElementById('gwiz-title');
+  if (t) t.textContent = _gwizMode === 'extend' ? '// GOOGLE — UDVID ADGANG' : '// GOOGLE OPSÆTNING';
+  const ov = document.getElementById('gmail-wizard-ov');
+  if (ov) ov.classList.add('open');
+  _gwizRender();
+}
+// backward compat alias
 function intGmailOpenWizard(startStep) {
+  _gwizMode    = 'full';
   _gwizStep    = startStep || 1;
   _gwizCredsOk = false;
+  const t = document.getElementById('gwiz-title');
+  if (t) t.textContent = '// GOOGLE OPSÆTNING';
   const ov = document.getElementById('gmail-wizard-ov');
   if (ov) ov.classList.add('open');
   _gwizRender();
@@ -8744,6 +8813,8 @@ function intGmailWizOvClick(e) {
 }
 function intGmailWizNext() {
   if (_gwizStep === 5 && !_gwizCredsOk) { _gwizSt('Upload credentials-filen først', 'err'); return; }
+  // Extend mode: step 1 → jump til step 6 (autoriser)
+  if (_gwizMode === 'extend' && _gwizStep === 1) { _gwizStep = 6; _gwizRender(); return; }
   if (_gwizStep < _GWIZ_TOTAL) { _gwizStep++; _gwizRender(); }
   else intGmailCloseWizard();
 }
@@ -8784,20 +8855,29 @@ function _gwizRender() {
   if (body) body.innerHTML = _gwizStepHtml(_gwizStep);
   // Step-specific init
   if (_gwizStep === 4) {
-    const uri = window.location.origin + '/integrations/gmail/callback';
+    const uri = window.location.origin + '/integrations/google/callback';
     const uriEl = document.getElementById('gwiz-uri');
     if (uriEl) uriEl.textContent = uri;
   }
 }
 
 function _gwizStepHtml(step) {
-  const cbUrl = window.location.origin + '/integrations/gmail/callback';
+  const cbUrl = window.location.origin + '/integrations/google/callback';
+  // Extend mode: step 1 er en kort forklaring
+  if (_gwizMode === 'extend' && step === 1) {
+    const email = document.getElementById('int-google-email-lbl')?.textContent || '';
+    return `
+      <div class="gwiz-step-title">UDVID GOOGLE-ADGANG</div>
+      <div class="gwiz-text">Du er allerede forbundet${email ? ' som <strong>' + esc(email) + '</strong>' : ''}.</div>
+      <div class="gwiz-text">Klik Næste for at godkende adgang til <strong>Kalender</strong> og <strong>Drive + Docs</strong> hos Google — du godkendte kun Gmail sidst.</div>
+      <div class="gwiz-note">&#9432; Google viser alle tre tilladelser (Gmail, Kalender, Drive) — godkend dem alle. NOUS læser kun.</div>`;
+  }
   switch (step) {
     case 1: return `
       <div class="gwiz-step-title">TRIN 1 — VELKOMMEN</div>
-      <div class="gwiz-text">For at forbinde Gmail opretter du gratis Google-udvikleradgang. Det tager <strong>~5 minutter</strong> og skal kun gøres én gang.</div>
-      <div class="gwiz-text">Derefter synkroniserer NOUS automatisk nye emails til din valgte wing, så du kan søge og spørge til dit email-indhold.</div>
-      <div class="gwiz-note">&#9432; NOUS læser kun emails — ingen skrivning, ingen sletning, ingen afsendelse. Alt behandles lokalt på din Pi.</div>`;
+      <div class="gwiz-text">For at forbinde Google opretter du gratis Google-udvikleradgang. Det tager <strong>~5 minutter</strong> og skal kun gøres én gang.</div>
+      <div class="gwiz-text">Du får adgang til: <strong>Gmail</strong> · <strong>Kalender</strong> · <strong>Drive + Docs</strong> — alle med din valgte aktivering per tjeneste.</div>
+      <div class="gwiz-note">&#9432; NOUS læser kun — ingen skrivning, ingen sletning, ingen afsendelse. Alt behandles lokalt på din Pi.</div>`;
 
     case 2: return `
       <div class="gwiz-step-title">TRIN 2 — OPRET GOOGLE CLOUD-PROJEKT</div>
@@ -8812,17 +8892,16 @@ function _gwizStepHtml(step) {
       <div class="gwiz-text" style="margin-top:8px;color:rgba(130,160,175,.5);font-size:10px">Har du allerede et Google Cloud-projekt kan du genbruge det — spring trin 2 over og klik Næste.</div>`;
 
     case 3: return `
-      <div class="gwiz-step-title">TRIN 3 — AKTIVÉR GMAIL API</div>
-      <div class="gwiz-text">Åbn Gmail API-siden og aktivér API'en:</div>
-      <a class="gwiz-link" href="https://console.cloud.google.com/apis/library/gmail.googleapis.com" target="_blank" rel="noopener">&#x1F517; Åbn Gmail API-siden</a>
+      <div class="gwiz-step-title">TRIN 3 — AKTIVÉR GOOGLE APIS</div>
+      <div class="gwiz-text">Aktivér tre APIs i dit projekt — klik hvert link og tryk <strong>Aktivér</strong>:</div>
+      <a class="gwiz-link" href="https://console.cloud.google.com/apis/library/gmail.googleapis.com" target="_blank" rel="noopener">&#x1F517; Gmail API</a>
+      <a class="gwiz-link" href="https://console.cloud.google.com/apis/library/calendar-json.googleapis.com" target="_blank" rel="noopener">&#x1F517; Google Calendar API</a>
+      <a class="gwiz-link" href="https://console.cloud.google.com/apis/library/drive.googleapis.com" target="_blank" rel="noopener">&#x1F517; Google Drive API</a>
       <div class="gwiz-note">
-        <strong>Hvad du gør:</strong><br>
+        <strong>Hvad du gør for hvert link:</strong><br>
         1. Kontrollér at det korrekte projekt er valgt øverst<br>
         2. Klik den blå <strong>Aktivér</strong>-knap (Enable)<br>
-        3. Siden viser nu "API aktiveret" — du er færdig her
-      </div>
-      <div class="gwiz-note" style="border-color:rgba(255,180,60,.2);background:rgba(255,150,0,.04);color:rgba(255,180,60,.7)">
-        &#9888; Hvis du ser fejlen "403: Gmail API is not enabled" i et senere trin, kom tilbage hertil og aktivér API'en igen for det rigtige projekt.
+        3. Google Docs er dækket af Drive API — intet separat Docs API nødvendigt
       </div>`;
 
     case 4: return `
@@ -8858,33 +8937,53 @@ function _gwizStepHtml(step) {
              onchange="intGmailUploadCreds(this.files[0])">`;
 
     case 6: return `
-      <div class="gwiz-step-title">TRIN 6 — AUTORISÉR GMAIL-ADGANG</div>
-      <div class="gwiz-text">Klik nedenfor — du videresendes til Google for at godkende adgangen. Du vender automatisk tilbage til NOUS når det er gjort.</div>
-      <div class="gwiz-note">&#9432; Siden åbner Google-login. Vælg den Gmail-konto du vil forbinde og godkend "Læse emails". Du vender tilbage til NOUS herefter.</div>
+      <div class="gwiz-step-title">TRIN 6 — AUTORISÉR GOOGLE-ADGANG</div>
+      <div class="gwiz-text">Klik nedenfor — du videresendes til Google for at godkende adgangen til Gmail, Kalender og Drive. Du vender automatisk tilbage til NOUS.</div>
+      <div class="gwiz-note">&#9432; Google viser en liste over tilladelser — godkend dem alle. Du kan deaktivere individuelle tjenester i NOUS bagefter.</div>
       <div style="margin-top:14px">
         <button class="gwiz-btn primary" style="width:100%;padding:9px;font-size:10px;letter-spacing:2px" onclick="intGmailAuthorize()">
-          FORBIND MIN KONTO &#x2192;
+          FORBIND MIN GOOGLE-KONTO &#x2192;
         </button>
       </div>
       <div id="gwiz-auth-st" style="margin-top:8px"></div>`;
 
     case 7: return `
-      <div class="gwiz-step-title">TRIN 7 — GMAIL FORBUNDET</div>
+      <div class="gwiz-step-title">TRIN 7 — GOOGLE FORBUNDET</div>
       <div class="gwiz-email-badge" id="gwiz-email-badge">&#x2713; Forbundet</div>
-      <div class="gwiz-text" style="margin-top:10px">Vælg hvilken wing emails skal gemmes i:</div>
-      <div class="int-field" style="border-color:rgba(0,212,255,.1)">
-        <label style="font-size:9px;letter-spacing:.5px;color:#809aaa;width:80px;flex-shrink:0">WING</label>
-        <select class="int-sel" id="gwiz-wing"><option value="">– vælg –</option></select>
+      <div class="gwiz-text" style="margin-top:10px">Aktivér de tjenester du vil bruge og vælg wing:</div>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-top:4px">
+        <div style="border:1px solid rgba(0,212,255,.1);border-radius:3px;padding:8px 10px">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
+            <span style="font-family:monospace;font-size:8px;letter-spacing:1.5px;color:rgba(0,212,255,.5)">GMAIL</span>
+            <label class="tsw" style="margin-left:auto;transform:scale(.75)"><input type="checkbox" id="gwiz-gmail-on" checked><span class="tsl"></span></label>
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <select class="int-sel" id="gwiz-wing" style="flex:1;min-width:100px"><option value="">– wing –</option></select>
+            <select class="int-sel" id="gwiz-scope" style="width:90px"><option value="PRIVATE">PRIVATE</option><option value="SECRET">SECRET</option><option value="SWARM">SWARM</option></select>
+          </div>
+        </div>
+        <div style="border:1px solid rgba(0,212,255,.1);border-radius:3px;padding:8px 10px">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
+            <span style="font-family:monospace;font-size:8px;letter-spacing:1.5px;color:rgba(0,212,255,.5)">KALENDER</span>
+            <label class="tsw" style="margin-left:auto;transform:scale(.75)"><input type="checkbox" id="gwiz-cal-on"><span class="tsl"></span></label>
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <select class="int-sel" id="gwiz-cal-wing" style="flex:1;min-width:100px"><option value="">– wing –</option></select>
+            <select class="int-sel" id="gwiz-cal-scope" style="width:90px"><option value="PRIVATE">PRIVATE</option><option value="SECRET">SECRET</option><option value="SWARM">SWARM</option></select>
+          </div>
+        </div>
+        <div style="border:1px solid rgba(0,212,255,.1);border-radius:3px;padding:8px 10px">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
+            <span style="font-family:monospace;font-size:8px;letter-spacing:1.5px;color:rgba(0,212,255,.5)">DRIVE + DOCS</span>
+            <label class="tsw" style="margin-left:auto;transform:scale(.75)"><input type="checkbox" id="gwiz-drv-on"><span class="tsl"></span></label>
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <select class="int-sel" id="gwiz-drv-wing" style="flex:1;min-width:100px"><option value="">– wing –</option></select>
+            <select class="int-sel" id="gwiz-drv-scope" style="width:90px"><option value="PRIVATE">PRIVATE</option><option value="SECRET">SECRET</option><option value="SWARM">SWARM</option></select>
+          </div>
+        </div>
       </div>
-      <div class="int-field" style="border-color:rgba(0,212,255,.1)">
-        <label style="font-size:9px;letter-spacing:.5px;color:#809aaa;width:80px;flex-shrink:0">SCOPE</label>
-        <select class="int-sel" id="gwiz-scope">
-          <option value="PRIVATE">PRIVATE</option>
-          <option value="SECRET">SECRET</option>
-          <option value="SWARM">SWARM</option>
-        </select>
-      </div>
-      <button class="int-save-btn" style="margin-top:10px" onclick="intGmailWizSave()">GEM OG AKTIVÉR GMAIL</button>
+      <button class="int-save-btn" style="margin-top:10px" onclick="intGoogleWizSave()">GEM OG AKTIVÉR</button>
       <div id="gwiz-save-st" class="int-status" style="margin-top:5px"></div>`;
 
     default: return '';
@@ -8899,7 +8998,7 @@ async function intGmailUploadCreds(file) {
   try {
     const fd = new FormData();
     fd.append('file', file);
-    const r = await fetch('/integrations/gmail/upload-credentials', {method:'POST', body: fd});
+    const r = await fetch('/integrations/google/upload-credentials', {method:'POST', body: fd});
     const d = await r.json();
     if (r.ok) {
       _gwizCredsOk = true;
@@ -8921,8 +9020,8 @@ async function intGmailAuthorize() {
   const stEl = document.getElementById('gwiz-auth-st');
   if (stEl) stEl.innerHTML = '<span style="font-family:monospace;font-size:9px;color:rgba(0,212,255,.6)">Henter autoriserings-URL…</span>';
   try {
-    const cbUrl = window.location.origin + '/integrations/gmail/callback';
-    const r = await fetch('/integrations/gmail/authorize', {
+    const cbUrl = window.location.origin + '/integrations/google/callback';
+    const r = await fetch('/integrations/google/authorize', {
       method: 'POST', headers: {'Content-Type':'application/json'},
       body: JSON.stringify({callback_url: cbUrl}),
     });
@@ -8939,22 +9038,32 @@ async function intGmailAuthorize() {
   }
 }
 
-async function intGmailWizSave() {
-  const wing  = document.getElementById('gwiz-wing')?.value  || '';
-  const scope = document.getElementById('gwiz-scope')?.value || 'PRIVATE';
-  const stEl  = document.getElementById('gwiz-save-st');
+async function intGoogleWizSave() {
+  const stEl = document.getElementById('gwiz-save-st');
   if (stEl) { stEl.textContent = 'Gemmer…'; stEl.className = 'int-status'; }
+  const gmailOn   = document.getElementById('gwiz-gmail-on')?.checked ?? true;
+  const calOn     = document.getElementById('gwiz-cal-on')?.checked ?? false;
+  const drvOn     = document.getElementById('gwiz-drv-on')?.checked ?? false;
+  const gmailWing = document.getElementById('gwiz-wing')?.value || '';
+  const calWing   = document.getElementById('gwiz-cal-wing')?.value || '';
+  const drvWing   = document.getElementById('gwiz-drv-wing')?.value || '';
   try {
-    const r = await fetch('/integrations/gmail', {
+    const r = await fetch('/integrations/google', {
       method: 'PUT', headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({enabled: true, wing, scope}),
+      body: JSON.stringify({
+        gmail_enabled: gmailOn, gmail_wing: gmailWing,
+        gmail_scope: document.getElementById('gwiz-scope')?.value || 'PRIVATE',
+        calendar_enabled: calOn, calendar_wing: calWing,
+        calendar_scope: document.getElementById('gwiz-cal-scope')?.value || 'PRIVATE',
+        drive_enabled: drvOn, drive_wing: drvWing,
+        drive_scope: document.getElementById('gwiz-drv-scope')?.value || 'PRIVATE',
+      }),
     });
     const d = await r.json();
     if (r.ok) {
-      if (stEl) { stEl.textContent = 'Gmail aktiveret!'; stEl.className = 'int-status ok'; }
-      // Opdatér int-kortet
-      const gs = await fetch('/integrations/gmail/status').then(r2 => r2.ok ? r2.json() : null).catch(()=>null);
-      if (gs) _intApplyGmailState(gs);
+      if (stEl) { stEl.textContent = 'Google Services aktiveret!'; stEl.className = 'int-status ok'; }
+      const gs = await fetch('/integrations/google/status').then(r2 => r2.ok ? r2.json() : null).catch(()=>null);
+      if (gs) _intApplyGoogleState(gs);
       await _intPopulateWings();
       setTimeout(intGmailCloseWizard, 1200);
     } else {
@@ -8964,55 +9073,154 @@ async function intGmailWizSave() {
     if (stEl) { stEl.textContent = 'Netværksfejl'; stEl.className = 'int-status err'; }
   }
 }
+// Backward compat (gammelt kald fra step 7 i ældre kode — nu ikke brugt men beholdes)
+async function intGmailWizSave() { await intGoogleWizSave(); }
 
-// Tjek URL-params efter OAuth-callback (kaldes fra loginAs)
-async function _intGmailAutoOpen() {
+// ── Google kort-logik ──────────────────────────────────────────────────────
+
+function _intApplyGoogleState(status) {
+  const auth = !!status?.authenticated;
+  const cfg  = status?.config || {};
+  const gmailOn    = !!cfg.gmail_enabled;
+  const calOn      = !!cfg.calendar_enabled;
+  const drvOn      = !!cfg.drive_enabled;
+  const anyOn      = gmailOn || calOn || drvOn;
+
+  const badge  = document.getElementById('int-badge-google');
+  const card   = document.getElementById('int-card-google');
+  const body   = document.getElementById('int-body-google');
+  const setup  = document.getElementById('int-google-setup');
+  const conn   = document.getElementById('int-google-connected');
+  const emailL = document.getElementById('int-google-email-lbl');
+
+  if (badge) { badge.textContent = anyOn ? 'TIL' : 'FRA'; badge.className = 'int-badge ' + (anyOn ? 'on' : 'off'); }
+  if (card)  card.classList.toggle('enabled', anyOn);
+  if (body)  body.classList.add('open');
+  if (setup) setup.style.display = auth ? 'none' : 'block';
+  if (conn)  conn.style.display  = auth ? 'block' : 'none';
+  if (emailL) emailL.textContent = cfg.email_address || status?.email || 'forbundet';
+
+  // Per-service badges/config
+  _intGoogleSvcApply('gmail',    gmailOn, cfg.gmail_wing,    cfg.gmail_scope,    cfg.gmail_max_messages);
+  _intGoogleSvcApply('calendar', calOn,   cfg.calendar_wing, cfg.calendar_scope, cfg.calendar_days_ahead);
+  _intGoogleSvcApply('drive',    drvOn,   cfg.drive_wing,    cfg.drive_scope,    null);
+  if (auth && cfg.drive_folder_id) {
+    const el = document.getElementById('int-google-drive-folder');
+    if (el) el.value = cfg.drive_folder_id;
+  }
+}
+
+function _intGoogleSvcApply(svc, enabled, wing, scope, extra) {
+  const tog    = document.getElementById(`int-tog-google-${svc}`);
+  const badge  = document.getElementById(`int-badge-google-${svc}`);
+  const cfgDiv = document.getElementById(`int-google-${svc}-cfg`);
+  if (tog)    tog.checked = !!enabled;
+  if (badge)  { badge.textContent = enabled ? 'TIL' : 'FRA'; badge.className = 'int-badge ' + (enabled ? 'on' : 'off') + ' ' + (enabled ? '' : ''); }
+  if (cfgDiv) cfgDiv.style.display = enabled ? 'block' : 'none';
+  const suffix = svc === 'gmail' ? '' : `-${svc}`;
+  const wingEl  = document.getElementById(`int-google${suffix === '' ? '-gmail' : suffix}-wing`);
+  const scopeEl = document.getElementById(`int-google${suffix === '' ? '-gmail' : suffix}-scope`);
+  if (wingEl && wing)  wingEl.value = wing;
+  if (scopeEl && scope) scopeEl.value = scope;
+  if (extra != null) {
+    const extraEl = document.getElementById(svc === 'gmail' ? 'int-google-gmail-max' : `int-google-${svc}-days`);
+    if (extraEl) extraEl.value = extra;
+  }
+}
+
+async function intToggleGoogleSvc(svc, enabled) {
+  const cfgDiv = document.getElementById(`int-google-${svc}-cfg`);
+  if (cfgDiv) cfgDiv.style.display = enabled ? 'block' : 'none';
+  const badge = document.getElementById(`int-badge-google-${svc}`);
+  if (badge) { badge.textContent = enabled ? 'TIL' : 'FRA'; badge.className = 'int-badge ' + (enabled ? 'on' : 'off'); }
+  const patch = {};
+  patch[`${svc}_enabled`] = enabled;
+  try {
+    await fetch('/integrations/google', {
+      method: 'PUT', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(patch),
+    });
+    const gs = await fetch('/integrations/google/status').then(r => r.ok ? r.json() : null).catch(()=>null);
+    if (gs) _intApplyGoogleState(gs);
+  } catch(e) { _intStatus(`google-${svc}`, 'Netværksfejl', false); }
+}
+
+async function intSaveGoogleSvc(svc) {
+  _intStatus(`google-${svc}`, 'Gemmer…', null);
+  const patch = {};
+  if (svc === 'gmail') {
+    patch.gmail_wing = document.getElementById('int-google-gmail-wing')?.value || '';
+    patch.gmail_scope = document.getElementById('int-google-gmail-scope')?.value || 'PRIVATE';
+    patch.gmail_max_messages = parseInt(document.getElementById('int-google-gmail-max')?.value || '100', 10);
+  } else if (svc === 'calendar') {
+    patch.calendar_wing = document.getElementById('int-google-calendar-wing')?.value || '';
+    patch.calendar_scope = document.getElementById('int-google-calendar-scope')?.value || 'PRIVATE';
+    patch.calendar_days_ahead = parseInt(document.getElementById('int-google-calendar-days')?.value || '30', 10);
+  } else if (svc === 'drive') {
+    patch.drive_wing = document.getElementById('int-google-drive-wing')?.value || '';
+    patch.drive_scope = document.getElementById('int-google-drive-scope')?.value || 'PRIVATE';
+    patch.drive_folder_id = document.getElementById('int-google-drive-folder')?.value || '';
+  }
+  try {
+    const r = await fetch('/integrations/google', {
+      method: 'PUT', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(patch),
+    });
+    const d = await r.json();
+    if (r.ok) _intStatus(`google-${svc}`, 'Gemt', true);
+    else       _intStatus(`google-${svc}`, d.detail || 'Fejl', false);
+  } catch(e) { _intStatus(`google-${svc}`, 'Netværksfejl', false); }
+}
+
+async function intSyncGoogleSvc(svc) {
+  _intStatus(`google-${svc}`, 'Synkroniserer…', null);
+  const endpoint = svc === 'gmail' ? 'gmail' : svc === 'calendar' ? 'calendar' : 'drive';
+  try {
+    const r = await fetch(`/integrations/google/${endpoint}/sync`, {method:'POST'});
+    const d = await r.json();
+    if (r.ok) _intStatus(`google-${svc}`, d.message || 'Sync startet', true);
+    else       _intStatus(`google-${svc}`, d.detail || 'Fejl', false);
+  } catch(e) { _intStatus(`google-${svc}`, 'Netværksfejl', false); }
+}
+
+// ── Google auto-open efter OAuth-callback ──────────────────────────────────
+
+async function _intGoogleAutoOpen() {
   const params = new URLSearchParams(window.location.search);
-  if (params.get('gmail_connected') === 'true') {
-    // Ryd URL uden page reload
+  if (params.get('google_connected') === 'true') {
     window.history.replaceState({}, '', window.location.pathname);
     sessionStorage.removeItem('gwiz_in_progress');
-    const email = params.get('gmail_email') || '';
-    // Åbn settings og wizard på trin 7
+    const email = params.get('google_email') || '';
     openSet();
     await new Promise(r => setTimeout(r, 400));
-    document.getElementById('model-manager-section')?.scrollIntoView({block:'start'});
-    // Scroll til Gmail-sektionen i settings
-    document.getElementById('int-card-gmail')?.scrollIntoView({block:'start'});
-    intGmailOpenWizard(7);
-    // Sæt email-badge
+    document.getElementById('int-card-google')?.scrollIntoView({block:'start'});
+    _gwizMode = 'full';
+    const t = document.getElementById('gwiz-title');
+    if (t) t.textContent = '// GOOGLE OPSÆTNING';
+    const ov = document.getElementById('gmail-wizard-ov');
+    if (ov) ov.classList.add('open');
+    _gwizStep = 7; _gwizRender();
     const badge = document.getElementById('gwiz-email-badge');
     if (badge) badge.innerHTML = '&#x2713; Forbundet som <strong>' + esc(email) + '</strong>';
-    // Populér wing-dropdowns
-    const [wingsR] = await Promise.all([fetch('/wings')]);
-    if (wingsR.ok) {
-      const wd = await wingsR.json();
-      ['gwiz-wing', 'int-gmail-wing'].forEach(id => {
-        const sel = document.getElementById(id);
-        if (!sel) return;
-        sel.innerHTML = '<option value="">– vælg –</option>';
-        (wd.wings || []).forEach(w => {
-          const o = document.createElement('option');
-          o.value = w.name; o.textContent = w.name + ' (' + w.scope + ')';
-          sel.appendChild(o);
-        });
-      });
-    }
-    // Opdatér int-kortet med email
-    const gs = await fetch('/integrations/gmail/status').then(r => r.ok ? r.json() : null).catch(()=>null);
-    if (gs) _intApplyGmailState(gs);
-  } else if (params.get('gmail_error')) {
+    await _intPopulateWings();
+    const gs = await fetch('/integrations/google/status').then(r => r.ok ? r.json() : null).catch(()=>null);
+    if (gs) _intApplyGoogleState(gs);
+  } else if (params.get('google_error')) {
     window.history.replaceState({}, '', window.location.pathname);
-    // Åbn settings og wizard på trin 6 med fejlbesked
     openSet();
     await new Promise(r => setTimeout(r, 400));
-    intGmailOpenWizard(6);
+    _gwizMode = 'full';
+    const ov = document.getElementById('gmail-wizard-ov');
+    if (ov) ov.classList.add('open');
+    _gwizStep = 6; _gwizRender();
     setTimeout(() => {
       const stEl = document.getElementById('gwiz-auth-st');
-      if (stEl) stEl.innerHTML = '<span style="font-family:monospace;font-size:9px;color:#ff4455">Fejl: ' + esc(params.get('gmail_error')) + ' — prøv igen</span>';
+      if (stEl) stEl.innerHTML = '<span style="font-family:monospace;font-size:9px;color:#ff4455">Fejl: ' + esc(params.get('google_error')) + ' — prøv igen</span>';
     }, 200);
   }
 }
+// Backward compat alias (gammel gmail_connected URL-param fra ældre token)
+async function _intGmailAutoOpen() { await _intGoogleAutoOpen(); }
 
 // ── HOTMAIL WIZARD ───────────────────────────────────────────────────────────
 let _hwizStep     = 1;

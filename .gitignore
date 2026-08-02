@@ -41,6 +41,8 @@ config/gmail_state.json
 config/hotmail_credentials.json
 config/hotmail_token.json
 config/hotmail_state.json
+config/google_token.json
+config/google_state.json
 config/systemd/
 scripts/night_pipeline.py
 .env
