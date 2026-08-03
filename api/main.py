@@ -5478,3 +5478,166 @@ def protonmail_sync(background_tasks: BackgroundTasks):
         raise HTTPException(403, "Protonmail er ikke aktiveret")
     background_tasks.add_task(lambda: _protonmail.sync())
     return {"ok": True, "message": "Protonmail-sync startet i baggrunden"}
+
+
+# ── BROWSER AGENT PROXY ───────────────────────────────────────────────────────
+# Proxyer kommandoer til browser-containeren og håndterer confirmation-queue.
+# Browser-containeren har KUN adgang til: internet + dette callback-endpoint.
+# Qdrant, Kuzu, audit-filsystem og andre NOUS-services er utilgængelige fra containeren.
+#
+# Konfiguration (.env):
+#   NOUS_BROWSER_AGENT_URL   URL til browser-containeren (default: http://localhost:8030)
+#   NOUS_BROWSER_ENABLED     true/false (default: false — eksplicit opt-in)
+
+_BROWSER_AGENT_URL     = os.environ.get("NOUS_BROWSER_AGENT_URL", "http://localhost:8030")
+_BROWSER_ENABLED       = os.environ.get("NOUS_BROWSER_ENABLED", "false").lower() == "true"
+
+# In-memory state (ikke Qdrant — browser-data er kortlivede og sensitive)
+_browser_pending:   dict = {}   # action_id → {level, reason, url, method, body_sample, ts}
+_browser_audit_log: list = []   # [{ts, event_type, url, method, confirmed}, ...]
+_BROWSER_AUDIT_MAX  = 500       # ring-buffer størrelse
+
+
+def _browser_guard() -> None:
+    if not _BROWSER_ENABLED:
+        raise HTTPException(503, "Browser-integration er ikke aktiveret. Sæt NOUS_BROWSER_ENABLED=true i .env")
+
+
+async def _browser_call(method: str, path: str, **kwargs) -> dict:
+    """Forwarder et kald til browser-containeren."""
+    _browser_guard()
+    try:
+        async with httpx.AsyncClient(timeout=35) as client:
+            fn  = getattr(client, method)
+            r   = await fn(f"{_BROWSER_AGENT_URL}{path}", **kwargs)
+            return r.json()
+    except httpx.ConnectError:
+        raise HTTPException(503, "Browser-containeren er ikke tilgængelig. Start den med: docker compose -f docker-compose.browser.yml up -d")
+    except Exception as e:
+        raise HTTPException(500, str(e))
+
+
+# ── Browser session endpoints ─────────────────────────────────────────────────
+@app.post("/browser/session/start")
+async def browser_session_start():
+    _browser_guard()
+    result = await _browser_call("post", "/session/start", json={})
+    _audit("WRITE", wing="browser", scope="PRIVATE", user=None, summary="Browser session started")
+    return result
+
+
+@app.post("/browser/session/stop")
+async def browser_session_stop(body: dict):
+    _browser_guard()
+    sid = body.get("session_id", "")
+    result = await _browser_call("post", "/session/stop", json={"session_id": sid})
+    _audit("WRITE", wing="browser", scope="PRIVATE", user=None, summary=f"Browser session stopped: {sid[:8]}")
+    return result
+
+
+@app.get("/browser/session/status")
+async def browser_session_status():
+    _browser_guard()
+    return await _browser_call("get", "/session/status")
+
+
+# ── Browser command endpoints ─────────────────────────────────────────────────
+@app.post("/browser/navigate")
+async def browser_navigate(body: dict):
+    _browser_guard()
+    url = body.get("url", "")
+    sid = body.get("session_id", "")
+    result = await _browser_call("post", "/navigate", json={"session_id": sid, "url": url})
+    _audit("READ", wing="browser", scope="PRIVATE", user=None, summary=f"Navigate: {url[:80]}")
+    return result
+
+
+@app.post("/browser/click")
+async def browser_click(body: dict):
+    _browser_guard()
+    return await _browser_call("post", "/click", json=body)
+
+
+@app.post("/browser/fill")
+async def browser_fill(body: dict):
+    _browser_guard()
+    return await _browser_call("post", "/fill", json=body)
+
+
+@app.get("/browser/screenshot")
+async def browser_screenshot(session_id: str):
+    _browser_guard()
+    return await _browser_call("get", f"/screenshot?session_id={session_id}")
+
+
+# ── Confirmation queue (browser container callbacks here) ─────────────────────
+@app.post("/browser/pending")
+async def browser_receive_pending(body: dict):
+    """Browser-containeren POST'er hertil når en WRITE-handling kræver bekræftelse."""
+    action_id = body.get("action_id", str(uuid.uuid4()))
+    _browser_pending[action_id] = {
+        "action_id":   action_id,
+        "level":       body.get("level", "WRITE"),
+        "reason":      body.get("reason", ""),
+        "url":         body.get("url", ""),
+        "method":      body.get("method", ""),
+        "body_sample": body.get("body_sample", ""),
+        "ts":          _time.time(),
+    }
+    return {"ok": True}
+
+
+@app.get("/browser/pending")
+async def browser_list_pending():
+    return {"pending": list(_browser_pending.values())}
+
+
+@app.post("/browser/confirm/{action_id}")
+async def browser_confirm(action_id: str):
+    """Bruger godkender en ventende WRITE-handling."""
+    if action_id not in _browser_pending:
+        raise HTTPException(404, "Ingen ventende handling med dette id")
+    item = _browser_pending.pop(action_id)
+    _audit("WRITE", wing="browser", scope="PRIVATE", user=None,
+           summary=f"Browser WRITE confirmed: {item['method']} {item['url'][:60]}")
+    result = await _browser_call("post", f"/confirm/{action_id}")
+    return result
+
+
+@app.post("/browser/reject/{action_id}")
+async def browser_reject(action_id: str):
+    """Bruger afviser en ventende WRITE-handling."""
+    if action_id not in _browser_pending:
+        raise HTTPException(404, "Ingen ventende handling med dette id")
+    item = _browser_pending.pop(action_id)
+    _audit("READ", wing="browser", scope="PRIVATE", user=None,
+           summary=f"Browser WRITE rejected: {item['method']} {item['url'][:60]}")
+    result = await _browser_call("post", f"/reject/{action_id}")
+    return result
+
+
+# ── Audit log (callback fra browser-container) ────────────────────────────────
+@app.post("/browser/audit")
+async def browser_receive_audit(body: dict):
+    """Browser-containeren sender audit-events hertil."""
+    entry = {
+        "ts":         _time.time(),
+        "event_type": body.get("event_type", ""),
+        "url":        body.get("url", ""),
+        "method":     body.get("method", ""),
+        "reason":     body.get("reason", ""),
+        "confirmed":  body.get("confirmed"),
+    }
+    _browser_audit_log.append(entry)
+    if len(_browser_audit_log) > _BROWSER_AUDIT_MAX:
+        _browser_audit_log.pop(0)
+    scope = "PRIVATE"
+    event_type = "WRITE" if entry["event_type"] == "WRITE" else "READ"
+    _audit(event_type, wing="browser", scope=scope, user=None,
+           summary=f"Browser {entry['method']} {entry['url'][:60]} confirmed={entry['confirmed']}")
+    return {"ok": True}
+
+
+@app.get("/browser/log")
+async def browser_get_log(limit: int = 50):
+    return {"log": _browser_audit_log[-limit:]}

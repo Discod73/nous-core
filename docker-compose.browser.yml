@@ -1,0 +1,32 @@
+services:
+  nous-browser:
+    build:
+      context: ./browser
+      dockerfile: Dockerfile
+    container_name: nous-browser-agent
+    restart: unless-stopped
+    # Isolation model: host-network (Docker bridge NAT er ikke functional under Pi's nftables-opsætning).
+    # Qdrant-isolation opnås via nftables OUTPUT-regler der blokerer uid=0 (root/container)
+    # fra at nå port 6333/6334/7333/7334 på loopback. NOUS API (uid=1000/nous) er ikke berørt.
+    # Se /srv/nous/firewall.sh — "Browser-container isolation"-sektionen.
+    network_mode: host
+    environment:
+      # Med host-networking er localhost = Pi's loopback direkte
+      - NOUS_BROWSER_AGENT_URL=http://localhost:8030
+      - BROWSER_NOUS_API_URL=${BROWSER_NOUS_API_URL:-http://localhost:8000}
+      - BROWSER_SERVER_PORT=8030
+      - BROWSER_HEADLESS=true
+      - BROWSER_SESSION_TIMEOUT=${BROWSER_SESSION_TIMEOUT:-1800}
+      - BROWSER_SESSION_KEY=${BROWSER_SESSION_KEY:-}
+      - BROWSER_NAV_TIMEOUT=30000
+      - BROWSER_CONFIRM_WAIT=120
+    security_opt:
+      - no-new-privileges:true
+    read_only: false
+    tmpfs:
+      - /tmp
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "2"
