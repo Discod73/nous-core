@@ -5641,3 +5641,129 @@ async def browser_receive_audit(body: dict):
 @app.get("/browser/log")
 async def browser_get_log(limit: int = 50):
     return {"log": _browser_audit_log[-limit:]}
+
+
+# ── Browser container management ──────────────────────────────────────────────
+_br_container_jobs: dict = {}
+_BR_CONTAINER = "nous-browser-agent"
+_BR_IMAGE     = "nous-browser-agent:latest"
+
+
+def _br_docker_start(job_id: str) -> None:
+    import time as _t, os as _os2
+    job = _br_container_jobs[job_id]
+
+    def log(msg: str) -> None:
+        job["lines"].append(msg)
+
+    try:
+        r = _subprocess.run(
+            ["docker", "inspect", "--format={{.State.Status}}", _BR_CONTAINER],
+            capture_output=True, text=True,
+        )
+        if r.returncode == 0 and r.stdout.strip() == "running":
+            log(f"Container '{_BR_CONTAINER}' kører allerede ✓")
+            job["status"] = "done"; return
+
+        if r.returncode == 0:
+            log("Fjerner stoppet container...")
+            _subprocess.run(["docker", "rm", "-f", _BR_CONTAINER], capture_output=True)
+
+        img = _subprocess.run(
+            ["docker", "image", "inspect", _BR_IMAGE],
+            capture_output=True, text=True,
+        )
+        if img.returncode != 0:
+            log(f"Bygger image {_BR_IMAGE} (kan tage 2-4 min første gang)...")
+            build = _subprocess.Popen(
+                ["docker", "build", "--network=host", "-t", _BR_IMAGE, "/srv/nous/browser"],
+                stdout=_subprocess.PIPE, stderr=_subprocess.STDOUT, text=True,
+            )
+            for line in build.stdout:
+                line = line.strip()
+                if line and not line.startswith("#"):
+                    log(line)
+            build.wait()
+            if build.returncode != 0:
+                raise RuntimeError("docker build fejlede")
+            log("Image bygget ✓")
+        else:
+            log(f"Image {_BR_IMAGE} fundet ✓")
+
+        log("Starter container med --network=host...")
+        env_args = ["-e", f"BROWSER_SESSION_TIMEOUT={_os2.environ.get('BROWSER_SESSION_TIMEOUT', '1800')}"]
+        if _os2.environ.get("BROWSER_SESSION_KEY"):
+            env_args += ["-e", f"BROWSER_SESSION_KEY={_os2.environ['BROWSER_SESSION_KEY']}"]
+
+        _subprocess.run([
+            "docker", "run", "-d",
+            "--name", _BR_CONTAINER,
+            "--network", "host",
+            "--restart", "unless-stopped",
+        ] + env_args + [_BR_IMAGE], check=True)
+        log("Container startet ✓")
+
+        log("Venter på health-check...")
+        for _ in range(15):
+            _t.sleep(1)
+            try:
+                import urllib.request as _ur
+                _ur.urlopen("http://localhost:8030/health", timeout=2)
+                log("Health-check OK ✓")
+                job["status"] = "done"; return
+            except Exception:
+                pass
+        raise RuntimeError("Health-check timeout — container startede ikke inden 15s")
+
+    except Exception as e:
+        log(f"FEJL: {e}")
+        job["status"] = "error"
+
+
+@app.get("/browser/container/status")
+async def browser_container_status():
+    """Check om browser-container kører og er sund (ingen guard — bruges under wizard-opsætning)."""
+    r = _subprocess.run(
+        ["docker", "inspect", "--format={{.State.Status}}", _BR_CONTAINER],
+        capture_output=True, text=True,
+    )
+    running = r.returncode == 0 and r.stdout.strip() == "running"
+    healthy = False
+    if running:
+        try:
+            import urllib.request as _ur
+            _ur.urlopen("http://localhost:8030/health", timeout=2)
+            healthy = True
+        except Exception:
+            pass
+    return {
+        "running": running,
+        "healthy": healthy,
+        "status":  r.stdout.strip() if r.returncode == 0 else "not_found",
+    }
+
+
+@app.post("/browser/container/start")
+async def browser_container_start(background_tasks: BackgroundTasks):
+    """Start browser-container som baggrundstask."""
+    job_id = str(uuid.uuid4())[:10]
+    _br_container_jobs[job_id] = {"status": "running", "lines": []}
+    background_tasks.add_task(_br_docker_start, job_id)
+    return {"job_id": job_id}
+
+
+@app.get("/browser/container/start/{job_id}")
+async def browser_container_start_poll(job_id: str):
+    """Poll container-start fremgang."""
+    job = _br_container_jobs.get(job_id)
+    if not job:
+        raise HTTPException(404, "Ukendt job_id")
+    return {"status": job["status"], "lines": job["lines"]}
+
+
+@app.post("/browser/enable")
+async def browser_enable_endpoint():
+    """Aktivér browser-integration i kørende process (persisterer ikke på tværs af genstarter — sæt NOUS_BROWSER_ENABLED=true i .env)."""
+    global _BROWSER_ENABLED
+    _BROWSER_ENABLED = True
+    return {"ok": True, "enabled": True}

@@ -921,9 +921,33 @@ body:not([data-mode="assistent"]) #ass-legacy-btn{display:none!important}
 .int-entry .ie-imp-btn:hover{background:var(--bb);border-color:var(--ac);color:var(--ac)}
 .int-browser-empty{font-family:monospace;font-size:9px;color:rgba(130,160,175,.3);padding:10px;text-align:center}
 /* ── GMAIL / OAUTH WIZARD ────────────────────────── */
-#gmail-wizard-ov,#hotmail-wizard-ov,#protonmail-wizard-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);backdrop-filter:blur(6px);z-index:210;align-items:center;justify-content:center}
-#gmail-wizard-ov.open,#hotmail-wizard-ov.open,#protonmail-wizard-ov.open{display:flex}
-#gmail-wizard-box,#hotmail-wizard-box,#protonmail-wizard-box{background:#010a14;border:1px solid rgba(0,212,255,.28);border-radius:6px;width:min(560px,96vw);max-height:88vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 0 48px rgba(0,212,255,.1)}
+#gmail-wizard-ov,#hotmail-wizard-ov,#protonmail-wizard-ov,#browser-wizard-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);backdrop-filter:blur(6px);z-index:210;align-items:center;justify-content:center}
+#gmail-wizard-ov.open,#hotmail-wizard-ov.open,#protonmail-wizard-ov.open,#browser-wizard-ov.open{display:flex}
+#gmail-wizard-box,#hotmail-wizard-box,#protonmail-wizard-box,#browser-wizard-box{background:#010a14;border:1px solid rgba(0,212,255,.28);border-radius:6px;width:min(560px,96vw);max-height:88vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 0 48px rgba(0,212,255,.1)}
+#br-gate-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.96);backdrop-filter:blur(8px);z-index:400;align-items:center;justify-content:center}
+#br-gate-ov.open{display:flex}
+#br-gate-box{background:#010a14;border:2px solid rgba(255,180,0,.5);border-radius:8px;width:min(520px,96vw);padding:0;overflow:hidden;box-shadow:0 0 60px rgba(255,140,0,.15)}
+.br-gate-hdr{background:rgba(255,140,0,.08);border-bottom:1px solid rgba(255,180,0,.2);padding:12px 18px;display:flex;align-items:center;gap:10px}
+.br-gate-warn-icon{font-size:18px;flex-shrink:0}
+.br-gate-hdr-txt{font-family:monospace;font-size:10px;letter-spacing:2px;color:rgba(255,180,0,.9);font-weight:600}
+.br-gate-body{padding:16px 20px}
+.br-gate-intro{font-family:monospace;font-size:9px;color:rgba(160,185,200,.7);margin-bottom:12px;line-height:1.7}
+.br-gate-detail{border:1px solid rgba(0,212,255,.12);border-radius:4px;background:rgba(0,10,20,.6);padding:10px 14px;margin-bottom:14px}
+.br-gate-row{display:flex;align-items:flex-start;gap:10px;margin-bottom:6px}
+.br-gate-row:last-child{margin-bottom:0}
+.br-gate-lbl{font-family:monospace;font-size:8px;letter-spacing:1px;color:rgba(0,212,255,.4);width:52px;flex-shrink:0;padding-top:1px}
+.br-gate-val{font-family:monospace;font-size:9px;color:rgba(200,220,235,.8);word-break:break-all;line-height:1.5}
+.br-gate-method-badge{display:inline-block;font-family:monospace;font-size:8px;letter-spacing:1px;padding:1px 7px;border-radius:2px;background:rgba(255,100,60,.15);border:1px solid rgba(255,100,60,.3);color:rgba(255,120,80,.9)}
+.br-gate-btns{display:flex;gap:10px;padding:0 20px 18px}
+.br-gate-reject{flex:1;padding:10px;font-family:monospace;font-size:10px;letter-spacing:1.5px;background:rgba(255,60,60,.08);border:1px solid rgba(255,60,60,.35);color:rgba(255,80,80,.9);border-radius:4px;cursor:pointer;transition:.2s}
+.br-gate-reject:hover{background:rgba(255,60,60,.18);border-color:rgba(255,60,60,.6);box-shadow:0 0 12px rgba(255,60,60,.15)}
+.br-gate-approve{flex:1;padding:10px;font-family:monospace;font-size:10px;letter-spacing:1.5px;background:rgba(0,255,136,.08);border:1px solid rgba(0,255,136,.35);color:rgba(0,255,136,.9);border-radius:4px;cursor:pointer;transition:.2s}
+.br-gate-approve:hover{background:rgba(0,255,136,.15);border-color:rgba(0,255,136,.6);box-shadow:0 0 12px rgba(0,255,136,.15)}
+.br-gate-st{font-family:monospace;font-size:8px;text-align:center;padding:0 20px 10px;min-height:14px}
+.br-sess-box{border:1px solid rgba(0,212,255,.12);border-radius:3px;padding:8px 10px;background:rgba(0,10,20,.4)}
+.br-sess-active-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:#00ff88;margin-right:5px;box-shadow:0 0 6px rgba(0,255,136,.5);vertical-align:middle}
+.br-screenshot-box{margin-top:10px;border:1px solid rgba(0,212,255,.15);border-radius:3px;overflow:hidden;max-height:200px;display:flex;align-items:center;justify-content:center;background:rgba(0,5,12,.5)}
+.br-screenshot-box img{max-width:100%;max-height:200px;object-fit:contain}
 .gwiz-hdr{display:flex;align-items:center;padding:11px 16px;border-bottom:1px solid rgba(0,212,255,.1);flex-shrink:0}
 .gwiz-title{font-family:monospace;font-size:10px;letter-spacing:3px;color:rgba(0,212,255,.65);flex:1}
 .gwiz-close{background:transparent;border:none;color:rgba(160,180,200,.35);cursor:pointer;font-size:14px;line-height:1;padding:0;transition:.15s}
@@ -2193,6 +2217,51 @@ body:not([data-mode="assistent"]) #ass-legacy-btn{display:none!important}
         </div>
       </div>
 
+      <div class="int-card" id="int-card-browser">
+        <div class="int-header">
+          <span class="int-label">Browser Agent</span>
+          <span class="int-badge off" id="int-badge-browser">FRA</span>
+          <label class="tsw" id="int-tog-browser-wrap" title="Aktiver Browser Agent" style="display:none">
+            <input type="checkbox" id="int-tog-browser" onchange="intToggleBrowser(this.checked)">
+            <span class="tsl"></span>
+          </label>
+        </div>
+        <div class="int-body" id="int-body-browser">
+          <div id="int-browser-setup">
+            <div class="int-warn">&#9888; Browser Agent lader NOUS navigere, klikke og udfylde formularer — med obligatorisk godkendelse ved alle irreversible handlinger (submit, køb, slet). Kræver Docker.</div>
+            <button class="int-save-btn" onclick="intBrowserOpenWizard()">OPSÆT BROWSER AGENT &#x2192;</button>
+          </div>
+          <div id="int-browser-cfg" style="display:none">
+            <div class="br-sess-box" id="br-sess-idle-box">
+              <div style="font-family:monospace;font-size:8px;color:rgba(120,150,165,.5);margin-bottom:6px;letter-spacing:.5px">SESSION</div>
+              <div style="font-family:monospace;font-size:9px;color:rgba(130,155,170,.5)" id="br-no-sess-lbl">Ingen aktiv session</div>
+              <button class="int-save-btn" style="margin-top:8px;padding:3px 10px;font-size:9px" id="br-start-sess-btn" onclick="_brStartSession()">START SESSION &#x25B6;</button>
+            </div>
+            <div id="br-sess-active-panel" style="display:none">
+              <div class="br-sess-box">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+                  <span style="font-family:monospace;font-size:8px;color:rgba(120,150,165,.5);letter-spacing:.5px">SESSION</span>
+                  <span style="font-family:monospace;font-size:8px" id="br-timeout-lbl"></span>
+                </div>
+                <div style="display:flex;gap:5px;align-items:center;margin-bottom:7px">
+                  <span class="br-sess-active-dot"></span>
+                  <span id="br-curr-url" style="font-family:monospace;font-size:8px;color:rgba(0,212,255,.5);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">—</span>
+                </div>
+                <div style="display:flex;gap:4px;align-items:center">
+                  <input type="text" class="int-inp" id="br-nav-url" placeholder="https://..." style="font-size:9px;flex:1">
+                  <button class="int-save-btn" style="margin:0;padding:2px 8px;font-size:9px;flex-shrink:0" onclick="_brNavigate()">GÅ</button>
+                </div>
+                <div style="display:flex;gap:6px;margin-top:6px">
+                  <button class="int-save-btn" style="flex:1;padding:3px;font-size:8px;border-color:rgba(136,68,255,.25);color:rgba(136,68,255,.7)" onclick="_brTestGate()">TEST GATE</button>
+                  <button class="int-save-btn" style="flex:1;padding:3px;font-size:8px;border-color:rgba(255,60,60,.2);color:rgba(255,80,80,.6)" onclick="_brStopSession()">STOP SESSION</button>
+                </div>
+              </div>
+            </div>
+            <div class="int-status" id="int-browser-status" style="margin-top:5px"></div>
+          </div>
+        </div>
+      </div>
+
     </div><!-- #int-list -->
   </div>
 </div>
@@ -2245,6 +2314,59 @@ body:not([data-mode="assistent"]) #ass-legacy-btn{display:none!important}
       <span class="gwiz-st" id="pmwiz-st"></span>
       <button class="gwiz-btn primary" id="pmwiz-next-btn" onclick="intProtonmailWizNext()">NÆSTE &#x2192;</button>
     </div>
+  </div>
+</div>
+
+<!-- BROWSER AGENT SETUP WIZARD -->
+<div id="browser-wizard-ov" onclick="intBrowserWizOvClick(event)">
+  <div id="browser-wizard-box">
+    <div class="gwiz-hdr">
+      <span class="gwiz-title">// BROWSER AGENT OPSÆTNING</span>
+      <button class="gwiz-close" onclick="intBrowserCloseWizard()">&#x2715;</button>
+    </div>
+    <div class="gwiz-steps" id="brwiz-steps"></div>
+    <div class="gwiz-body" id="brwiz-body"></div>
+    <div class="gwiz-nav">
+      <button class="gwiz-btn" id="brwiz-back-btn" onclick="intBrowserWizBack()">&#x2190; TILBAGE</button>
+      <span class="gwiz-st" id="brwiz-st"></span>
+      <button class="gwiz-btn primary" id="brwiz-next-btn" onclick="intBrowserWizNext()">NÆSTE &#x2192;</button>
+    </div>
+  </div>
+</div>
+
+<!-- BROWSER GATE OVERLAY — vises når irreversibel handling afventer godkendelse -->
+<div id="br-gate-ov">
+  <div id="br-gate-box">
+    <div class="br-gate-hdr">
+      <span class="br-gate-warn-icon">&#x26A0;</span>
+      <span class="br-gate-hdr-txt">HANDLING KRÆVER DIN GODKENDELSE</span>
+    </div>
+    <div class="br-gate-body">
+      <div class="br-gate-intro">NOUS er ved at udføre en <strong>irreversibel handling</strong> på dine vegne. Gennemgå detaljerne herunder og godkend eller afvis.</div>
+      <div class="br-gate-detail">
+        <div class="br-gate-row">
+          <span class="br-gate-lbl">HANDLING</span>
+          <span class="br-gate-val"><span class="br-gate-method-badge" id="br-gate-method">—</span></span>
+        </div>
+        <div class="br-gate-row">
+          <span class="br-gate-lbl">URL</span>
+          <span class="br-gate-val" id="br-gate-url">—</span>
+        </div>
+        <div class="br-gate-row" id="br-gate-data-row" style="display:none">
+          <span class="br-gate-lbl">DATA</span>
+          <span class="br-gate-val" id="br-gate-data" style="font-size:8px;color:rgba(160,185,200,.55)">—</span>
+        </div>
+        <div class="br-gate-row">
+          <span class="br-gate-lbl">ÅRSAG</span>
+          <span class="br-gate-val" id="br-gate-reason" style="color:rgba(255,180,80,.7)">—</span>
+        </div>
+      </div>
+    </div>
+    <div class="br-gate-btns">
+      <button class="br-gate-reject" onclick="_brGateReject()">&#x2715; AFVIS</button>
+      <button class="br-gate-approve" onclick="_brGateApprove()">&#x2713; GODKEND</button>
+    </div>
+    <div class="br-gate-st" id="br-gate-st"></div>
   </div>
 </div>
 
@@ -8596,7 +8718,7 @@ async function _intPopulateWings() {
     const wings = data.wings || [];
     ['int-nas-wing', 'int-hotmail-wing', 'int-protonmail-wing',
    'int-google-gmail-wing', 'int-google-calendar-wing', 'int-google-drive-wing',
-   'gwiz-wing', 'hwiz-wing', 'pmwiz-wing'].forEach(selId => {
+   'gwiz-wing', 'hwiz-wing', 'pmwiz-wing', 'brwiz-wing'].forEach(selId => {
       const sel = document.getElementById(selId);
       if (!sel) return;
       const cur = sel.value;
@@ -10095,6 +10217,441 @@ function _fmtBytes(b) {
 }
 
 function _esc(s) { return String(s).replace(/['"<>&]/g, c => ({'\'':'&#39;','"':'&quot;','<':'&lt;','>':'&gt;','&':'&amp;'}[c])); }
+
+// ── BROWSER AGENT WIZARD ──────────────────────────────────────────────────────
+let _brwizStep         = 1;
+const _BRWIZ_TOTAL     = 4;
+let _brwizChkOk        = false;
+let _brwizContainerJobId  = null;
+let _brwizContainerDone   = false;
+let _brwizContainerTimer  = null;
+let _brwizTestSessionId   = null;
+let _brwizTestDone        = false;
+
+function intBrowserOpenWizard() {
+  _brwizStep             = 1;
+  _brwizChkOk            = false;
+  _brwizContainerJobId   = null;
+  _brwizContainerDone    = false;
+  _brwizTestSessionId    = null;
+  _brwizTestDone         = false;
+  if (_brwizContainerTimer) { clearInterval(_brwizContainerTimer); _brwizContainerTimer = null; }
+  document.getElementById('browser-wizard-ov').classList.add('open');
+  _brwizRender();
+}
+function intBrowserCloseWizard() {
+  document.getElementById('browser-wizard-ov').classList.remove('open');
+  if (_brwizContainerTimer) { clearInterval(_brwizContainerTimer); _brwizContainerTimer = null; }
+}
+function intBrowserWizOvClick(e) { if (e.target === e.currentTarget) intBrowserCloseWizard(); }
+function intBrowserWizNext() {
+  if (_brwizStep === 1 && !_brwizChkOk) { _brwizSt('Sæt flueben for at fortsætte', 'err'); return; }
+  if (_brwizStep === 2 && !_brwizContainerDone) { _brwizSt('Afvent at containeren er startet', 'err'); return; }
+  if (_brwizStep < _BRWIZ_TOTAL) { _brwizStep++; _brwizRender(); }
+  else { intBrowserCloseWizard(); }
+}
+function intBrowserWizBack() { if (_brwizStep > 1) { _brwizStep--; _brwizRender(); } }
+function _brwizSt(msg, type) {
+  const el = document.getElementById('brwiz-st');
+  if (!el) return;
+  el.textContent = msg;
+  el.style.color = type === 'err' ? '#ff4455' : type === 'ok' ? '#00ff88' : 'rgba(0,212,255,.6)';
+}
+function _brwizChk() {
+  _brwizChkOk = !!(document.getElementById('brwiz-chk1')?.checked);
+  const btn = document.getElementById('brwiz-next-btn');
+  if (btn) btn.style.opacity = _brwizChkOk ? '1' : '0.4';
+}
+function _brwizRender() {
+  const stepsEl = document.getElementById('brwiz-steps');
+  if (stepsEl) {
+    stepsEl.innerHTML = Array.from({length: _BRWIZ_TOTAL}, (_, i) => {
+      const n = i + 1;
+      const cls = n < _brwizStep ? 'gwiz-dot done' : n === _brwizStep ? 'gwiz-dot act' : 'gwiz-dot';
+      const icon = n < _brwizStep ? '&#x2713;' : n;
+      return `<span class="${cls}">${icon}</span>${n < _BRWIZ_TOTAL ? '<span class="gwiz-line"></span>' : ''}`;
+    }).join('');
+  }
+  const backBtn = document.getElementById('brwiz-back-btn');
+  const nextBtn = document.getElementById('brwiz-next-btn');
+  if (backBtn) backBtn.style.visibility = _brwizStep > 1 ? '' : 'hidden';
+  if (nextBtn) {
+    nextBtn.textContent = _brwizStep === _BRWIZ_TOTAL ? 'LUK ✕' : 'NÆSTE →';
+    nextBtn.className = 'gwiz-btn' + (_brwizStep === _BRWIZ_TOTAL ? ' success' : ' primary');
+  }
+  if (nextBtn && _brwizStep === 1) nextBtn.style.opacity = _brwizChkOk ? '1' : '0.4';
+  else if (nextBtn) nextBtn.style.opacity = '1';
+  _brwizSt('');
+  const body = document.getElementById('brwiz-body');
+  if (body) body.innerHTML = _brwizStepHtml(_brwizStep);
+  if (_brwizStep === 4) _intPopulateWings();
+}
+function _brwizStepHtml(step) {
+  switch (step) {
+    case 1: return `
+      <div class="gwiz-step-title">TRIN 1 — SIKKERHED OG SAMTYKKE</div>
+      <div class="gwiz-text">Browser Agent giver NOUS mulighed for at styre en rigtig browser på dine vegne: navigere til sider, udfylde formularer, klikke på knapper.</div>
+      <div class="gwiz-note">&#9432; <strong>Bekræft-gate:</strong> Alle irreversible handlinger (formularer, submit, køb, slet, post) <strong>pauser automatisk</strong> og venter på din godkendelse, hver gang, uden undtagelse. Ingen handling sendes uden du trykker <em>Godkend</em>.</div>
+      <div class="gwiz-note" style="margin-top:6px">&#9432; <strong>Session-lagring:</strong> Sessioner er midlertidige som standard — login-cookies gemmes ikke. Krypteret persistens er valgfri (sæt <code>BROWSER_SESSION_KEY</code> i .env).</div>
+      <div class="gwiz-note" style="margin-top:6px">&#9432; <strong>Isolation:</strong> Containeren er afskåret fra NOUS-interne services (Qdrant, databaser) via nftables uid-regler.</div>
+      <div style="margin-top:14px">
+        <label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;font-family:monospace;font-size:9px;color:rgba(180,200,220,.75);line-height:1.6">
+          <input type="checkbox" id="brwiz-chk1" onchange="_brwizChk()" style="margin-top:2px;flex-shrink:0">
+          Jeg forstår at NOUS kan styre en browser på mine vegne, og at alle irreversible handlinger kræver min eksplicitte godkendelse via gate-dialogen inden de udføres
+        </label>
+      </div>`;
+    case 2: return `
+      <div class="gwiz-step-title">TRIN 2 — START DOCKER CONTAINER</div>
+      <div class="gwiz-text">NOUS starter browser-agenten i en Docker-container med Playwright (Chromium). Hvis image ikke er bygget endnu tager det 2–5 minutter.</div>
+      <div class="gwiz-note">&#9432; Container: <code>nous-browser-agent</code> &nbsp;|&nbsp; Port: <code>localhost:8030</code> &nbsp;|&nbsp; Netværk: <code>--network=host</code> (nftables isolerer fra Qdrant)</div>
+      <button class="gwiz-btn primary" id="brwiz-start-btn" style="width:100%;padding:7px;margin-top:10px" onclick="_brwizStartContainer()">START CONTAINER &#x25B6;</button>
+      <div id="brwiz-container-log" style="margin-top:8px;font-family:monospace;font-size:8px;color:rgba(0,212,255,.5);background:rgba(0,10,20,.6);border:1px solid rgba(0,212,255,.12);border-radius:3px;padding:8px;max-height:150px;overflow-y:auto;white-space:pre-wrap;display:none"></div>`;
+    case 3: return `
+      <div class="gwiz-step-title">TRIN 3 — TEST SESSION (VALGFRI)</div>
+      <div class="gwiz-text">Verificer at browser-agenten virker ved at åbne en test-session og navigere til en offentlig testside.</div>
+      <div id="brwiz-test-area">
+        <button class="gwiz-btn primary" id="brwiz-test-btn" style="width:100%;padding:7px;margin-top:6px" onclick="_brwizRunTest()">KØR TEST &#x25B6;</button>
+        <div id="brwiz-test-log" style="margin-top:8px;font-family:monospace;font-size:8px;color:rgba(0,212,255,.5);background:rgba(0,10,20,.6);border:1px solid rgba(0,212,255,.12);border-radius:3px;padding:8px;display:none"></div>
+        <div class="br-screenshot-box" id="brwiz-screenshot-box" style="display:none"><img id="brwiz-screenshot-img" src="" alt="screenshot"></div>
+      </div>
+      <div class="gwiz-note" style="margin-top:10px">&#9432; Spring dette trin over ved at klikke Næste — du kan altid køre en test fra Browser Agent-kortet bagefter.</div>`;
+    case 4: return `
+      <div class="gwiz-step-title">TRIN 4 — AKTIVÉR BROWSER AGENT</div>
+      <div class="gwiz-email-badge">&#x2713; Container klar og verificeret</div>
+      <div class="gwiz-text" style="margin-top:10px">Browser Agent er aktiv i denne session. Sæt <code>NOUS_BROWSER_ENABLED=true</code> i <code>.env</code> for at aktivere automatisk ved genstart.</div>
+      <div class="int-field" style="border-color:rgba(0,212,255,.1);margin-top:12px">
+        <label style="font-size:9px;letter-spacing:.5px;color:#809aaa;width:80px;flex-shrink:0">WING</label>
+        <select class="int-sel" id="brwiz-wing"><option value="">– vælg (valgfri) –</option></select>
+      </div>
+      <div class="int-field" style="border-color:rgba(0,212,255,.1)">
+        <label style="font-size:9px;letter-spacing:.5px;color:#809aaa;width:80px;flex-shrink:0">SCOPE</label>
+        <select class="int-sel" id="brwiz-scope">
+          <option value="PRIVATE">PRIVATE</option>
+          <option value="SECRET">SECRET</option>
+        </select>
+      </div>
+      <button class="int-save-btn" style="margin-top:12px;width:100%;padding:7px" onclick="_brwizSave()">GEM OG AKTIVÉR BROWSER AGENT</button>
+      <div id="brwiz-save-st" class="int-status" style="margin-top:5px"></div>`;
+    default: return '';
+  }
+}
+
+async function _brwizStartContainer() {
+  const btn = document.getElementById('brwiz-start-btn');
+  const log = document.getElementById('brwiz-container-log');
+  if (btn) { btn.disabled = true; btn.textContent = 'Starter…'; }
+  if (log) { log.style.display = ''; log.textContent = 'Initialiserer…\n'; }
+  try {
+    const r = await fetch('/browser/container/start', {method:'POST'});
+    const d = await r.json();
+    if (!r.ok) {
+      if (log) log.textContent += '✗ ' + (d.detail || 'Fejlede');
+      if (btn) { btn.disabled = false; btn.textContent = 'PRØV IGEN ▶'; }
+      return;
+    }
+    _brwizContainerJobId = d.job_id;
+    _brwizContainerTimer = setInterval(_brwizPollContainer, 1500);
+  } catch(e) {
+    if (log) log.textContent += 'Netværksfejl: ' + e.message;
+    if (btn) { btn.disabled = false; btn.textContent = 'PRØV IGEN ▶'; }
+  }
+}
+async function _brwizPollContainer() {
+  if (!_brwizContainerJobId) return;
+  try {
+    const r = await fetch('/browser/container/start/' + _brwizContainerJobId);
+    if (!r.ok) return;
+    const d = await r.json();
+    const log = document.getElementById('brwiz-container-log');
+    if (log && d.lines) { log.textContent = d.lines.join('\n'); log.scrollTop = log.scrollHeight; }
+    if (d.status === 'done') {
+      clearInterval(_brwizContainerTimer); _brwizContainerTimer = null;
+      _brwizContainerDone = true;
+      const btn = document.getElementById('brwiz-start-btn');
+      if (btn) { btn.textContent = '✓ Container klar'; btn.style.borderColor = 'rgba(0,255,136,.3)'; btn.style.color = '#00ff88'; }
+      _brwizSt('Container klar — klik Næste', 'ok');
+      await fetch('/browser/enable', {method:'POST'});
+    } else if (d.status === 'error') {
+      clearInterval(_brwizContainerTimer); _brwizContainerTimer = null;
+      _brwizSt('Containeren fejlede — se log', 'err');
+      const btn = document.getElementById('brwiz-start-btn');
+      if (btn) { btn.disabled = false; btn.textContent = 'PRØV IGEN ▶'; }
+    }
+  } catch(_) {}
+}
+
+async function _brwizRunTest() {
+  const btn = document.getElementById('brwiz-test-btn');
+  const log = document.getElementById('brwiz-test-log');
+  const ssBox = document.getElementById('brwiz-screenshot-box');
+  const ssImg = document.getElementById('brwiz-screenshot-img');
+  if (btn) { btn.disabled = true; btn.textContent = 'Tester…'; }
+  if (log) { log.style.display = ''; log.textContent = 'Starter session…\n'; }
+  try {
+    const s1 = await fetch('/browser/session/start', {method:'POST', headers:{'Content-Type':'application/json'}, body:'{}'});
+    if (!s1.ok) { if(log) log.textContent += '✗ Session start fejlede'; if(btn){btn.disabled=false;btn.textContent='PRØV IGEN ▶';} return; }
+    const sd = await s1.json();
+    _brwizTestSessionId = sd.session_id;
+    if (log) log.textContent += `✓ Session: ${_brwizTestSessionId.slice(0,8)}…\n`;
+
+    if (log) log.textContent += 'Navigerer til httpbin.org/get…\n';
+    const nav = await fetch('/browser/navigate', {method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({session_id: _brwizTestSessionId, url: 'https://httpbin.org/get'})});
+    const nd = await nav.json();
+    if (log) log.textContent += nav.ok ? `✓ HTTP ${nd.http_status} — side indlæst ✓\n` : '✗ Navigation fejlede\n';
+
+    if (nav.ok) {
+      if (log) log.textContent += 'Tager screenshot…\n';
+      const sc = await fetch(`/browser/screenshot?session_id=${_brwizTestSessionId}`);
+      if (sc.ok) {
+        const scd = await sc.json();
+        if (scd.screenshot && ssBox && ssImg) {
+          ssImg.src = 'data:image/png;base64,' + scd.screenshot;
+          ssBox.style.display = '';
+          if (log) log.textContent += '✓ Screenshot OK\n';
+        }
+      }
+    }
+
+    await fetch('/browser/session/stop', {method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({session_id: _brwizTestSessionId})});
+    _brwizTestSessionId = null;
+    _brwizTestDone = true;
+    if (btn) { btn.textContent = '✓ Test bestået'; btn.style.borderColor = 'rgba(0,255,136,.3)'; btn.style.color = '#00ff88'; }
+    if (log) log.textContent += '✓ Session lukket — klik Næste\n';
+    _brwizSt('Test bestået', 'ok');
+  } catch(e) {
+    if (log) log.textContent += 'Fejl: ' + e.message;
+    if (btn) { btn.disabled = false; btn.textContent = 'PRØV IGEN ▶'; }
+  }
+}
+
+async function _brwizSave() {
+  const stEl = document.getElementById('brwiz-save-st');
+  try {
+    const r = await fetch('/browser/enable', {method:'POST'});
+    if (!r.ok) { if(stEl){stEl.textContent='Aktivering fejlede';stEl.className='int-status err';} return; }
+    if (stEl) { stEl.textContent = '✓ Aktiveret'; stEl.className = 'int-status ok'; }
+    _intApplyBrowserState({enabled: true});
+    setTimeout(intBrowserCloseWizard, 1200);
+  } catch(e) {
+    if (stEl) { stEl.textContent = 'Netværksfejl'; stEl.className = 'int-status err'; }
+  }
+}
+
+function _intApplyBrowserState(state) {
+  const badge   = document.getElementById('int-badge-browser');
+  const togWrap = document.getElementById('int-tog-browser-wrap');
+  const tog     = document.getElementById('int-tog-browser');
+  const setup   = document.getElementById('int-browser-setup');
+  const cfg     = document.getElementById('int-browser-cfg');
+  const card    = document.getElementById('int-card-browser');
+  const enabled = !!state?.enabled;
+  if (badge)   { badge.textContent = enabled ? 'TIL' : 'FRA'; badge.className = 'int-badge ' + (enabled ? 'on' : 'off'); }
+  if (card)    card.classList.toggle('enabled', enabled);
+  if (setup)   setup.style.display = enabled ? 'none' : '';
+  if (cfg)     cfg.style.display   = enabled ? '' : 'none';
+  if (togWrap) togWrap.style.display = enabled ? '' : 'none';
+  if (tog)     tog.checked = enabled;
+  if (enabled && !_brPollTimer) _brStartGatePoll();
+}
+
+async function intToggleBrowser(enabled) {
+  try {
+    if (enabled) await fetch('/browser/enable', {method:'POST'});
+    _intApplyBrowserState({enabled});
+  } catch(_) {}
+}
+
+// ── BROWSER LIVE SESSION ──────────────────────────────────────────────────────
+let _brSessionId    = null;
+let _brPollTimer    = null;
+let _brTimeoutEnd   = null;
+let _brPendingId    = null;
+const _BR_TIMEOUT_S = 1800;
+
+function _brStartGatePoll() {
+  if (_brPollTimer) return;
+  _brPollTimer = setInterval(_brPollPending, 2000);
+}
+function _brStopGatePoll() {
+  if (_brPollTimer) { clearInterval(_brPollTimer); _brPollTimer = null; }
+}
+
+async function _brStartSession() {
+  const btn = document.getElementById('br-start-sess-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Starter…'; }
+  try {
+    const r = await fetch('/browser/session/start', {method:'POST', headers:{'Content-Type':'application/json'}, body:'{}'});
+    if (!r.ok) {
+      const d = await r.json();
+      _brSessStatus('Fejl: ' + (d.detail || 'ukendt'), false);
+      if (btn) { btn.disabled = false; btn.textContent = 'START SESSION ▶'; }
+      return;
+    }
+    const d = await r.json();
+    _brSessionId  = d.session_id;
+    _brTimeoutEnd = Date.now() + _BR_TIMEOUT_S * 1000;
+    _brUpdateSessionUI(true);
+    _brStartGatePoll();
+    if (btn) { btn.disabled = false; btn.textContent = 'START SESSION ▶'; }
+  } catch(e) {
+    _brSessStatus('Netværksfejl', false);
+    if (btn) { btn.disabled = false; btn.textContent = 'START SESSION ▶'; }
+  }
+}
+
+async function _brStopSession() {
+  if (!_brSessionId) return;
+  try {
+    await fetch('/browser/session/stop', {method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({session_id: _brSessionId})});
+  } catch(_) {}
+  _brSessionId = null;
+  _brTimeoutEnd = null;
+  _brPendingId  = null;
+  _brUpdateSessionUI(false);
+  _brGateClose();
+  _brStopGatePoll();
+}
+
+function _brUpdateSessionUI(active) {
+  const idle   = document.getElementById('br-sess-idle-box');
+  const panel  = document.getElementById('br-sess-active-panel');
+  if (idle)  idle.style.display  = active ? 'none' : '';
+  if (panel) panel.style.display = active ? '' : 'none';
+  if (!active) {
+    const lbl = document.getElementById('br-curr-url');
+    if (lbl) lbl.textContent = '—';
+    const to = document.getElementById('br-timeout-lbl');
+    if (to)  to.textContent = '';
+  }
+  if (active) _brTickTimeout();
+}
+
+function _brTickTimeout() {
+  if (!_brTimeoutEnd || !_brSessionId) return;
+  const rem = Math.max(0, Math.round((_brTimeoutEnd - Date.now()) / 1000));
+  const m = Math.floor(rem / 60), s = rem % 60;
+  const lbl = document.getElementById('br-timeout-lbl');
+  if (lbl) {
+    lbl.textContent = `timeout ${m}m${s.toString().padStart(2,'0')}s`;
+    lbl.style.color = rem < 120 ? 'rgba(255,120,60,.6)' : 'rgba(120,150,165,.35)';
+  }
+  if (rem > 0) setTimeout(_brTickTimeout, 5000);
+}
+
+async function _brNavigate() {
+  if (!_brSessionId) return;
+  const urlEl = document.getElementById('br-nav-url');
+  const url   = (urlEl?.value || '').trim();
+  if (!url) return;
+  _brSessStatus('Navigerer…', null);
+  try {
+    const r = await fetch('/browser/navigate', {method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({session_id: _brSessionId, url})});
+    const d = await r.json();
+    if (r.ok) {
+      const lbl = document.getElementById('br-curr-url');
+      if (lbl) lbl.textContent = url;
+      _brSessStatus(`✓ HTTP ${d.http_status}`, true);
+    } else {
+      _brSessStatus('Fejl: ' + (d.detail || 'navigation fejlede'), false);
+    }
+  } catch(e) { _brSessStatus('Netværksfejl', false); }
+}
+
+async function _brTestGate() {
+  if (!_brSessionId) return;
+  _brSessStatus('Navigerer til testformular…', null);
+  await fetch('/browser/navigate', {method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({session_id: _brSessionId, url: 'https://httpbin.org/forms/post'})});
+  await fetch('/browser/fill', {method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({session_id: _brSessionId, selector: 'input[name=custname]', value: 'Test — Gate demo'})});
+  _brSessStatus('Klikker Submit — gate vises om et øjeblik…', null);
+  fetch('/browser/click', {method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({session_id: _brSessionId, selector: 'button', text: 'Submit order'})}).catch(()=>{});
+}
+
+async function _brPollPending() {
+  try {
+    const r = await fetch('/browser/pending');
+    if (!r.ok) return;
+    const d = await r.json();
+    const items = d.pending || [];
+    if (items.length > 0 && items[0].action_id !== _brPendingId) {
+      _brPendingId = items[0].action_id;
+      _brGateShow(items[0]);
+    } else if (items.length === 0 && _brPendingId) {
+      _brPendingId = null;
+      _brGateClose();
+    }
+  } catch(_) {}
+}
+
+function _brGateShow(item) {
+  document.getElementById('br-gate-method').textContent = item.method || '?';
+  document.getElementById('br-gate-url').textContent    = item.url    || '—';
+  document.getElementById('br-gate-reason').textContent = item.reason || '—';
+  const dataRow = document.getElementById('br-gate-data-row');
+  const dataEl  = document.getElementById('br-gate-data');
+  if (item.body_sample) {
+    if (dataRow) dataRow.style.display = '';
+    if (dataEl)  dataEl.textContent = item.body_sample;
+  } else {
+    if (dataRow) dataRow.style.display = 'none';
+  }
+  document.getElementById('br-gate-st').textContent = '';
+  document.getElementById('br-gate-ov').classList.add('open');
+}
+function _brGateClose() {
+  document.getElementById('br-gate-ov').classList.remove('open');
+}
+
+async function _brGateApprove() {
+  if (!_brPendingId) return;
+  const stEl = document.getElementById('br-gate-st');
+  if (stEl) { stEl.textContent = 'Godkender…'; stEl.style.color = 'rgba(0,212,255,.6)'; }
+  try {
+    const r = await fetch('/browser/confirm/' + _brPendingId, {method:'POST'});
+    if (r.ok) {
+      _brPendingId = null;
+      _brGateClose();
+      _brSessStatus('✓ Handling godkendt og udført', true);
+    } else {
+      const d = await r.json();
+      if (stEl) { stEl.textContent = 'Fejl: ' + (d.detail || 'ukendt'); stEl.style.color = '#ff4455'; }
+    }
+  } catch(e) {
+    if (stEl) { stEl.textContent = 'Netværksfejl'; stEl.style.color = '#ff4455'; }
+  }
+}
+
+async function _brGateReject() {
+  if (!_brPendingId) return;
+  const stEl = document.getElementById('br-gate-st');
+  if (stEl) { stEl.textContent = 'Afviser…'; stEl.style.color = 'rgba(255,120,60,.7)'; }
+  try {
+    const r = await fetch('/browser/reject/' + _brPendingId, {method:'POST'});
+    if (r.ok) {
+      _brPendingId = null;
+      _brGateClose();
+      _brSessStatus('Handling afvist', null);
+    } else {
+      const d = await r.json();
+      if (stEl) { stEl.textContent = 'Fejl: ' + (d.detail || 'ukendt'); stEl.style.color = '#ff4455'; }
+    }
+  } catch(e) {
+    if (stEl) { stEl.textContent = 'Netværksfejl'; stEl.style.color = '#ff4455'; }
+  }
+}
+
+function _brSessStatus(msg, ok) {
+  const el = document.getElementById('int-browser-status');
+  if (!el) return;
+  el.textContent = msg;
+  el.className = 'int-status' + (ok === true ? ' ok' : ok === false ? ' err' : '');
+}
 </script>
 
 <!-- BRUGERGUIDE OVERLAY -->
