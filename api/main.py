@@ -197,7 +197,7 @@ PROVIDER_DEFAULTS: dict[str, dict] = {
     },
     "moonshot": {
         "base_url":      "https://api.moonshot.ai/v1",
-        "default_model": "moonshot-v1-8k",
+        "default_model": "kimi-k2.6",   # moonshot-v1-* series retired; kimi-k2.6 = general 262k, non-thinking
         "auth_header":   "Authorization",
         "auth_prefix":   "Bearer ",
     },
@@ -2566,6 +2566,10 @@ def external_chat(req: ExternalChatRequest):
                 ],
                 "temperature": 0.2 if mode == "legal" else 0.4,
             }
+            if req.provider == "moonshot":
+                # Kimi k2.6+ non-reasoning mode requires temperature == 0.6.
+                payload["temperature"] = 0.6
+                payload["reasoning_effort"] = "none"
             r = httpx.post(f"{base_url}/chat/completions", headers=headers, json=payload, timeout=60)
             r.raise_for_status()
             answer = r.json()["choices"][0]["message"]["content"]
@@ -2672,11 +2676,13 @@ async def _debate_call_participant(
             f"Runde {round_num}: Du skal nu svare direkte på {others}' argumenter fra forrige runde. "
             f"Hvad er du uenig i? Hvad vil du revidere i din egen position? Vær konkret.{challenge_line}"
         )
-        # Begræns historik til ~6000 tegn så kontekstvinduet ikke overflower (moonshot-v1-8k = 8k tokens)
+        # Begræns historik så kontekstvinduet ikke overflower — de fleste paneldeltagere
+        # (Kimi k2.6 / GPT-4o / Gemini / DeepSeek) har rigelig kontekst, men vi holder
+        # prompten fokuseret på de seneste runder.
         recent = history[-8:]
         history_text = "\n".join(h["content"] for h in recent)
-        if len(history_text) > 6000:
-            history_text = "…(ældre bidrag udeladt)…\n" + history_text[-6000:]
+        if len(history_text) > 12000:
+            history_text = "…(ældre bidrag udeladt)…\n" + history_text[-12000:]
         messages = [
             {"role": "user",      "content": _utf8_clean(f"Emne: {topic}")},
             {"role": "assistant", "content": _utf8_clean(history_text)},
@@ -2710,6 +2716,12 @@ async def _debate_call_participant(
                 "temperature": 0.6,
                 "max_tokens":  600,
             }
+            if participant.provider == "moonshot":
+                # Kimi k2.6+ has two modes: reasoning (temp must be 1, burns
+                # ~500 hidden tokens) or reasoning_effort="none" (temp must be
+                # 0.6, all tokens go to the answer). Use the latter for panel
+                # debate — matches the other participants, no wasted tokens.
+                payload["reasoning_effort"] = "none"
             payload_bytes = json.dumps(payload, ensure_ascii=False).encode("utf-8")
             r = await client.post(
                 f"{base_url}/chat/completions",
@@ -2752,6 +2764,9 @@ async def _call_external_llm(client: httpx.AsyncClient, participant: "DebatePart
         return _utf8_clean(json.loads(body)["content"][0]["text"].strip())
     safe_prompt = _utf8_clean(prompt)
     payload = {"model": model, "messages": [{"role": "user", "content": safe_prompt}], "max_tokens": 800}
+    if participant.provider == "moonshot":
+        payload["temperature"] = 0.6
+        payload["reasoning_effort"] = "none"   # k2.6+ non-reasoning mode
     r = await client.post(f"{base_url}/chat/completions", headers=headers, json=payload, timeout=60)
     r.raise_for_status()
     return _utf8_clean(r.json()["choices"][0]["message"]["content"].strip())
