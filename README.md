@@ -1,149 +1,171 @@
 # NOUS — Locally-hosted Personal AI Assistant
 
-NOUS is a privacy-first, locally-hosted personal AI system. All data stays on your own hardware — nothing leaves your network unless you explicitly choose to use an external AI provider via the built-in external API feature.
+NOUS is a privacy-first, locally hosted personal AI system for document retrieval, voice interaction, and assisted workflows. Local content is processed on the owner's hardware by default. Optional external AI providers and connected services may transmit data when explicitly enabled; review the applicable access scopes before using them.
+
+> **Project status (November 2026):** This repository preserves the NOUS implementation and its verified improvements. Work on Gaia is separate and is intended to supersede NOUS in the future; NOUS has **not** been declared decommissioned here. The GitHub repository does not necessarily mirror every local experiment or deployed configuration.
 
 ## What it does
 
-- **RAG over your documents** — ingest PDFs, Word files and text, query them in natural language
-- **Voice interface** — wake-word detection → Whisper STT → local LLM → Piper TTS
-- **Web cockpit** — browser UI with wings (topic-based document collections), analysis mode, and scraper jobs
-- **Scope system** — documents tagged SECRET / PRIVATE / SWARM / PUBLIC with enforced access controls
-- **Optional external AI** — send queries to Anthropic, OpenAI, Groq or a custom endpoint; key stays in browser session only
-- **Multi-user** — admin user plus family profiles with configurable wing access
-- **Compute lending** — swarm nodes can delegate inference to idle peers during off-hours; SECRET/PRIVATE scope is hardcoded never to leave the originating node; credit system tracks contribution on both sides; automatic local fallback on peer failure
-- **GBrain** — graph inference over the Kuzu knowledge base; identifies alienation patterns and source-concentration across extracted facts
-- **Swarm shadow observer** — read-only telemetry agent verified over 24 h with zero boundary violations; monitors health, Qdrant, and isolation gates every minute
+- **Document RAG and ingestion** — ingest PDFs, Word and text files into topic-based collections (wings), then query them using natural language.
+- **Resilient ingestion** — retry transient ingest failures; quarantine documents without extractable text instead of silently dropping them. Permanent errors and operator recovery still require monitoring.
+- **Voice interface** — wake-word detection, Whisper speech recognition, local LLM and Piper speech synthesis.
+- **Web cockpit** — wings, analysis tools, scraper jobs and optional integrations.
+- **Scope controls** — SECRET / PRIVATE / SWARM / PUBLIC classifications with access and export rules.
+- **Optional external models** — support for multiple providers and custom endpoints, including a Kimi/Moonshot compatibility update for `kimi-k2.6`.
+- **Multi-user support** — admin and family profiles with configurable access.
+- **Compute lending** — optional swarm delegation with local fallback and scope restrictions.
+- **GBrain** — graph-based inference over a Kuzu knowledge base.
+- **Swarm shadow observer** — read-only telemetry; the documented 24-hour isolated observer test reported zero boundary violations.
+- **Browser interaction (opt-in)** — isolated browser agent, audit trail and a user-confirmation gate for actions detected as potentially consequential. Detection heuristics must not be treated as a guarantee that every irreversible action will be caught.
 
-## Hardware
+## Deployment hardware
 
-The system is designed for a two-device LAN setup, but can run on a single machine:
+NOUS supports a multi-device LAN configuration, or a single-machine setup with appropriately configured inference endpoints. Documented development hardware includes:
 
-| Device | Role | Tested on |
-|---|---|---|
-| Primary host (Pi 5 recommended) | API, RAG, ingest, web UI, proxy | Raspberry Pi 5 16GB |
-| Inference host | LLM + STT | Jetson Orin NX 16GB |
-| Swarm + compute node | Peer inference, knowledge sharing | Jetson Orin NX 8GB (permanent swarm node) |
+| Role | Example hardware |
+|---|---|
+| API, retrieval, ingest, web cockpit | Raspberry Pi 5 16 GB |
+| Local LLM and speech inference | Jetson Orin NX 16 GB |
+| Swarm / peer compute | Jetson Orin Nano 8 GB |
 
-Single-machine: point `NOUS_OLLAMA_URL` and `NOUS_WHISPER_URL` at `localhost`.
+The current services, host assignments and model availability depend on the actual deployment. Do not treat this table as a live inventory.
 
-## Multi-agent architecture
+To use one machine, configure `NOUS_OLLAMA_URL` and `NOUS_WHISPER_URL` for the appropriate local endpoints.
 
-NOUS uses specialised agents for different domains (household, legal, legacy).
-Each agent is designed to run its own model, but on constrained hardware
-models are shared intelligently:
+## Architecture and models
 
-- **Daily use** (supervisor, household, children): qwen2.5:7b — kept permanently
-  in memory for instant response
-- **Night analysis** (legal, inconsistency): qwen3:14b — loads on-demand
+NOUS separates task handling, document retrieval, local inference and optional external services. Model names in previous development notes were configuration examples rather than guaranteed built-in downloads. External-provider availability and exact model IDs can change; consult the current backend configuration before relying on a particular provider.
 
-When hardware with larger unified memory (32GB+) becomes available,
-or domain-specific models are released as GGUF, each agent can be
-configured with its own specialised model without architectural changes.
+The November 2026 merged fix updated the Kimi/Moonshot debate integration to `kimi-k2.6` with model-specific request settings. It does not establish that all external-provider paths have been retested against live APIs.
 
 ## Quick start
 
-### 1. Infrastructure (Docker)
+### 1. Infrastructure
 
 ```bash
 cd /srv/nous
-docker compose up -d        # starts Qdrant + SearXNG
+docker compose up -d
 ```
+
+The Docker configuration includes the project's retrieval/search infrastructure; check `docker-compose.yml` and local environment settings before exposing any service.
 
 ### 2. Python environment
 
 ```bash
 python3 -m venv pipeline/.venv
 source pipeline/.venv/bin/activate
-pip install -r pipeline/requirements.txt   # fastapi uvicorn httpx qdrant-client ...
+pip install -r pipeline/requirements.txt
 ```
 
 ### 3. Configuration
 
 ```bash
 cp .env.example .env
-# Edit .env — set NOUS_OWNER_NAME and network addresses
-
 cp config/wings.example.json config/wings.json
-# Edit wings.json — define your document collections
 ```
 
-### 4. Start the API
+Edit the new files for your own network addresses, inference endpoints, document collections and access rules. Do not commit runtime secrets, credentials, private keys, tokens or personal documents.
+
+### 4. API and web cockpit
 
 ```bash
 cd /srv/nous/api
 uvicorn main:app --host 0.0.0.0 --port 8000
 ```
 
-Open `web/index.html` in a browser (or serve it via nginx — see `docs/CREDITS.md`).
+Serve or open `web/index.html` as appropriate for the deployment; reverse-proxy configuration is environment-specific.
 
-### 5. Systemd service (optional)
+### 5. Optional system service
 
 ```bash
 sudo cp api/nous-api.service /etc/systemd/system/
 sudo systemctl enable --now nous-api.service
 ```
 
-## Wings and scopes
+Verify paths, permissions and dependencies in the service file before installing it.
 
-Wings are named document collections. Each wing has a **scope**:
+## Wings, scopes and ingestion
 
-| Scope | Who can see it | PII anonymization on export |
+| Scope | Typical access | Export handling |
 |---|---|---|
-| SECRET | Admin only | None |
-| PRIVATE | Admin only | None |
-| SWARM | All users | All PII masked |
-| PUBLIC | Everyone | CPR, phone, address, email masked |
+| SECRET | Admin only | Not automatically anonymised; subject to strict outbound restrictions |
+| PRIVATE | Admin only | Outbound use requires explicit scope confirmation |
+| SWARM | Shared users | PII masking applies to shared/exported content |
+| PUBLIC | Broad access | Defined personal identifiers are masked on export |
 
-Non-admin users can be blocked from specific wings via `blockedWings` in `web/index.html` → `USERS`.
+These are project-level rules; audit any external connector or deployment-specific changes before assuming protection is complete.
 
-Drop files into `incoming/<wing-name>/` for automatic ingest (picked up within ~10 seconds by the file watcher).
+Drop suitable files in `incoming/<wing-name>/` for the configured watcher to process. The updated ingest pipeline retries temporary failures and quarantines files without usable text; monitor its operational logs and quarantine state.
+
+## Optional integrations
+
+The repository includes integration code and setup flows for:
+
+- **Google services:** Gmail, Calendar, Drive and Docs-related workflows via the Google connector.
+- **Outlook/Hotmail:** Microsoft Graph OAuth setup and mail access.
+- **Proton Mail:** Bridge-based integration (requires a working Proton Mail Bridge environment).
+- **NAS:** opt-in, read-oriented mounted-file browsing and controlled import.
+- **Browser agent:** opt-in Playwright/Docker execution with session, isolation and confirmation-gate mechanisms.
+
+Availability depends on credentials, upstream providers, local services and opt-in configuration. Presence of a connector in the repository is not proof that it is enabled or live-tested on every deployment.
 
 ## Voice setup
 
-Requires: any USB microphone, Piper TTS model, Whisper running on inference host.
-
-> **Optional hardware:** ReSpeaker/XVF3800 users may install their vendor control tools separately — NOUS auto-detects the device by name. See your hardware vendor's documentation.
+Requires a compatible microphone, a Whisper-based ASR endpoint and Piper TTS model. Optional ReSpeaker/XVF3800 integration depends on the hardware and software installed on the host.
 
 ```bash
-# Download Danish Piper TTS model
 mkdir -p models/tts
-# Place da.onnx and da.onnx.json in models/tts/
-
-# Test voice pipeline
+# Place the required Danish Piper model and its JSON configuration in models/tts/
 bash scripts/voice_test.sh
 ```
 
-See `CLAUDE.md` for full architecture details.
-
-## External AI
-
-The web cockpit includes an optional external AI panel (🌐) in Analyse and Assistant modes. When enabled, queries are sent to Anthropic / OpenAI / Groq / custom endpoint after scope confirmation. The API key is never stored — it lives only in the browser session.
-
-PRIVATE wings require one confirmation click. SECRET wings require typing a confirmation phrase (configurable in `web/index.html`) before sending.
+See `CLAUDE.md` and deployment-specific configuration for additional architecture notes.
 
 ## Project structure
 
+```text
+api/          FastAPI backend and integration endpoints
+browser/      Opt-in isolated browser agent
+config/       Local configuration (sensitive runtime files should be gitignored)
+docs/         Architecture notes and project documentation
+integrations/ Connectors for external services and mounted NAS
+models/       Local model assets (not distributed in Git)
+pipeline/     Document ingestion, retrieval and safeguards
+proxy/        Proxy components for LAN-isolated inference
+scripts/      Operations, tests and CLI helpers
+web/          Web cockpit
 ```
-api/          FastAPI backend
-config/       wings.json, scraper_jobs.json (gitignored — use *.example.json)
-docs/         Architecture notes, credits
-models/       TTS + embedding models (gitignored)
-pipeline/     Ingest pipeline, privacy guard, task router
-proxy/        Lightweight internet proxy for LAN-isolated inference host
-scripts/      CLI tools: voice_chat.py, nous_chat.py, promote.py, ...
-web/          Single-file cockpit UI (index.html)
-```
 
-## Changelog
+## Verified changes and limitations
 
-### v0.2.0
-- Compute lending: swarm peers can serve delegated inference with scope-guard and credit tracking
-- GBrain: graph inference over Kuzu DB for pattern detection across facts
-- Swarm shadow observer: 24 h read-only telemetry verification with zero boundary violations
-- Jetson Orin NX 8GB added as permanent swarm + compute node
+### November 2026 — merged updates (PR #1)
 
-### v0.1.0
-- Initial release: RAG, voice, cockpit UI, scope system, swarm knowledge sharing, night pipeline
+- **Kimi/Moonshot:** migrated debate requests to `kimi-k2.6` and model-compatible settings. The project report records a live check on 2026-09-06; this PR's offline checks passed 4/4.
+- **Ingest:** retry transient errors, quarantine documents with no extractable text and remove dependency on sandbox telemetry. Ingest tests passed 14/14.
+- **External chat/debate scope checks:** 20/20 offline checks passed.
+
+**Not rerun for PR #1:** `tests/test_swarm_security.py` (it would modify live wing settings/database); the Kimi path through `external_chat` was not separately tested offline. These limitations remain open, not PASS.
+
+### August 2026 — repository features
+
+- Browser integration, isolated runtime and interactive user-confirmation flow (opt-in).
+- Connector and cockpit setup flows for Google services, Outlook/Hotmail, Proton Mail and mounted NAS.
+
+### v0.2.0 — prior documented release
+
+- Compute lending with scope guard and contribution accounting.
+- GBrain graph processing with Kuzu.
+- Swarm shadow observer with a documented 24-hour read-only trial.
+
+### v0.1.0 — initial release
+
+- Retrieval, voice, cockpit, access scopes and initial swarm features.
+
+## Security and operational notes
+
+- This is a **public repository**. Never push private keys, `.env` files, tokens, database contents, model weights or local logs containing personal information.
+- Confirmation gates and scope enforcement are safeguards, not blanket security guarantees. Test every connected provider and deployment boundary independently.
+- Backups, runtime model files and host-specific configuration are not reproduced by GitHub alone.
 
 ## License
 
